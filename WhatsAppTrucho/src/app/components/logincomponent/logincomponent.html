@@ -1,0 +1,164 @@
+<main class="login">
+    <section class="hero">
+        <img class="hero-img" src="assets/login.png" alt="Imagen Login">
+        <h1>Chatea con tus amigos y con la IA</h1>
+        <p>Mensajes, audios, fotos y seguridad en un solo lugar.</p>
+    </section>
+
+    <section class="panel">
+        @if (vista === 'login') {
+            <form class="form">
+                <h2>Iniciar sesión</h2>
+                <input type="text" name="usuario" [(ngModel)]="usuario"
+                       placeholder="Correo electrónico o nombre de usuario">
+                <input type="password" name="password" [(ngModel)]="password"
+                       placeholder="Contraseña">
+
+                @if (exito) {
+                    <p class="exito">{{ exito }}</p>
+                }
+                @if (error) {
+                    <p class="error">{{ error }}</p>
+                }
+
+                <button type="button" class="btn btn-primary" [disabled]="cargando"
+                        (click)="iniciarSesion()">Iniciar sesión
+                </button>
+                <a class="forgot" (click)="irA('recuperar')">¿Olvidaste tu contraseña?</a>
+                <button type="button" class="btn btn-outline" (click)="irA('registro')">
+                    Crear cuenta nueva
+                </button>
+            </form>
+        } @else if (vista === 'registro') {
+            <form class="form form-ancho">
+                <h2>Crear cuenta</h2>
+
+                <div class="fila">
+                    <div class="campo">
+                        <label for="nombre">Nombre completo</label>
+                        <input id="nombre" type="text" name="nombreCompleto"
+                               [(ngModel)]="registro.nombreCompleto" placeholder="Ej. Juan Pérez">
+                    </div>
+                    <div class="campo">
+                        <label for="usuario">Nombre de usuario</label>
+                        <input id="usuario" type="text" name="nombreUsuario"
+                               [(ngModel)]="registro.nombreUsuario" placeholder="Ej. juanperez99">
+                    </div>
+                </div>
+
+                <div class="fila">
+                    <div class="campo">
+                        <label for="correo">Correo electrónico</label>
+                        <input id="correo" type="email" name="correo"
+                               [(ngModel)]="registro.correo" placeholder="correo@ejemplo.com">
+                    </div>
+                    <div class="campo">
+                        <label for="telefono">Número de teléfono</label>
+                        <input id="telefono" type="tel" name="telefono"
+                               [(ngModel)]="registro.telefono" placeholder="320 000 0000">
+                    </div>
+                </div>
+
+                <div class="campo">
+                    <label for="nacimiento">Fecha de nacimiento</label>
+                    <input id="nacimiento" type="date" name="fechaNacimiento"
+                           [(ngModel)]="registro.fechaNacimiento">
+                </div>
+
+                <div class="fila">
+                    <div class="campo">
+                        <label for="pass">Contraseña</label>
+                        <input id="pass" type="password" name="clave"
+                               [(ngModel)]="registro.clave" placeholder="mínimo 12 caracteres">
+                    </div>
+                    <div class="campo">
+                        <label for="pass-confirm">Confirmar contraseña</label>
+                        <input id="pass-confirm" type="password" name="confirmarClave"
+                               [(ngModel)]="registro.confirmarClave" placeholder="Repite tu contraseña">
+                    </div>
+                </div>
+
+                @if (error) {
+                    <p class="error">{{ error }}</p>
+                }
+
+                <button type="button" class="btn btn-primary" [disabled]="cargando"
+                        (click)="crearCuenta()">Crear cuenta
+                </button>
+                <a class="forgot" (click)="irA('login')">¿Ya tienes cuenta? Inicia sesión</a>
+            </form>
+        } @else if (vista === 'verificacion') {
+            <form class="form">
+                <h2>Verifica tu correo</h2>
+                <p class="texto">
+                    Hemos enviado un código de verificación a {{ registro.correo }}.
+                    Escríbelo aquí para terminar de crear tu cuenta.
+                </p>
+                <input class="codigo" type="text" name="codigoRegistro"
+                       [(ngModel)]="codigoRegistro" maxlength="6" placeholder="000000">
+
+                @if (error) {
+                    <p class="error">{{ error }}</p>
+                }
+
+                <button type="button" class="btn btn-primary" [disabled]="cargando"
+                        (click)="verificarRegistro()">Verificar
+                </button>
+                <a class="forgot" (click)="irA('registro')">Volver</a>
+            </form>
+        } @else if (vista === 'recuperar') {
+            <form class="form">
+                <h2>Recuperar contraseña</h2>
+                <p class="texto">
+                    Escribe tu correo y te enviaremos un código para restablecer tu contraseña.
+                </p>
+                <input type="email" name="correoRecuperar" [(ngModel)]="correoRecuperar"
+                       placeholder="Correo electrónico">
+
+                @if (error) {
+                    <p class="error">{{ error }}</p>
+                }
+
+                <button type="button" class="btn btn-primary" [disabled]="cargando"
+                        (click)="enviarCodigoRecuperar()">Enviar código
+                </button>
+                <a class="forgot" (click)="irA('login')">Volver a iniciar sesión</a>
+            </form>
+        } @else if (vista === 'codigoRecuperar') {
+            <form class="form">
+                <h2>Revisa tu correo</h2>
+                <p class="texto">
+                    Hemos enviado un código a {{ correoRecuperar }}.
+                    Escríbelo aquí para continuar.
+                </p>
+                <input class="codigo" type="text" name="codigoRecuperar"
+                       [(ngModel)]="codigoRecuperar" maxlength="6" placeholder="000000">
+
+                @if (error) {
+                    <p class="error">{{ error }}</p>
+                }
+
+                <button type="button" class="btn btn-primary" [disabled]="cargando"
+                        (click)="verificarCodigoRecuperar()">Verificar código
+                </button>
+                <a class="forgot" (click)="irA('recuperar')">Volver</a>
+            </form>
+        } @else {
+            <form class="form">
+                <h2>Nueva contraseña</h2>
+                <input type="password" name="nuevaClave" [(ngModel)]="nueva.clave"
+                       placeholder="Nueva contraseña">
+                <input type="password" name="confirmarNueva" [(ngModel)]="nueva.confirmar"
+                       placeholder="Confirmar contraseña">
+
+                @if (error) {
+                    <p class="error">{{ error }}</p>
+                }
+
+                <button type="button" class="btn btn-primary" [disabled]="cargando"
+                        (click)="cambiarClave()">Cambiar contraseña
+                </button>
+            </form>
+        }
+    </section>
+</main>

@@ -158,3 +158,35 @@ input:-webkit-autofill {
     font-size: 1.6rem;
     letter-spacing: 12px;
 }
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.campo label {
+    margin-left: 18px;
+    color: #8b8f98;
+    font-size: 0.85rem;
+}
+
+.error {
+    margin: 0;
+    color: #e8203a;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.exito {
+    margin: 0;
+    color: #22c55e;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
