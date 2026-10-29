@@ -14,6 +14,7 @@ import {
 const API = 'http://localhost:8080/api';
 const USAR_MOCK = true;
 const TOKEN_FALSO = 'x.' + btoa('{"rol":"USER"}') + '.x';
+const TOKEN_ADMIN = 'x.' + btoa('{"role":"ADMIN"}') + '.x';
 
 @Injectable({providedIn: 'root'})
 export class AuthService {
@@ -22,6 +23,9 @@ export class AuthService {
 
     login(datos: LoginRequest): Observable<LoginResponse> {
         if (USAR_MOCK) {
+            if (datos.usuario === 'admin') {
+                return of({token: TOKEN_ADMIN});
+            }
             return of({token: TOKEN_FALSO});
         }
         return this.http.post<LoginResponse>(API + '/auth/login', datos);
@@ -71,7 +75,14 @@ export class AuthService {
     }
 
     estaLogueado(): boolean {
-        return this.obtenerToken() != null;
+        if (this.obtenerToken() == null) {
+            return false;
+        }
+        if (this.tokenVencido()) {
+            this.cerrarSesion();
+            return false;
+        }
+        return true;
     }
 
     cerrarSesion() {
@@ -79,16 +90,38 @@ export class AuthService {
     }
 
     obtenerRol(): string | null {
+        const datos = this.leerDatosDelToken();
+        if (datos == null) {
+            return null;
+        }
+        if (datos.role) {
+            return datos.role;
+        }
+        if (datos.rol) {
+            return datos.rol;
+        }
+        return null;
+    }
+
+    leerDatosDelToken(): any {
         const token = this.obtenerToken();
         if (token == null) {
             return null;
         }
         try {
             const partes = token.split('.');
-            const datos = JSON.parse(atob(partes[1]));
-            return datos.rol;
+            const texto = partes[1].replace(/-/g, '+').replace(/_/g, '/');
+            return JSON.parse(atob(texto));
         } catch (e) {
             return null;
         }
+    }
+
+    tokenVencido(): boolean {
+        const datos = this.leerDatosDelToken();
+        if (datos == null || datos.exp == null) {
+            return false;
+        }
+        return datos.exp * 1000 < Date.now();
     }
 }

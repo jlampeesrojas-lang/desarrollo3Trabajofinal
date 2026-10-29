@@ -10,6 +10,7 @@ import { RegistroRequest, LoginResponse } from '../../models/authentication';
     styleUrl: './logincomponent.css',
 })
 export class Logincomponent {
+    edadMinima = 18;
     vista = 'login';
     cargando = false;
     error = '';
@@ -42,8 +43,20 @@ export class Logincomponent {
     }
 
     mensajeDeError(e: any, mensajePorDefecto: string): string {
+        if (typeof e.error === 'string' && e.error !== '') {
+            return e.error;
+        }
         if (e.error && e.error.mensaje) {
             return e.error.mensaje;
+        }
+        if (e.status === 0) {
+            return 'No se pudo conectar con el servidor';
+        }
+        if (e.status === 403) {
+            return 'No tienes permiso para hacer esto';
+        }
+        if (e.status >= 500) {
+            return 'Error del servidor, intenta más tarde';
         }
         return mensajePorDefecto;
     }
@@ -63,7 +76,11 @@ export class Logincomponent {
                 componente.cargando = false;
                 componente.cdr.markForCheck();
                 componente.auth.guardarToken(respuesta.token);
-                componente.router.navigate(['/principal']);
+                if (componente.auth.obtenerRol() === 'ADMIN') {
+                    componente.router.navigate(['/admin']);
+                } else {
+                    componente.router.navigate(['/principal']);
+                }
             },
             error: function (e: any) {
                 componente.cargando = false;
@@ -86,7 +103,21 @@ export class Logincomponent {
             this.error = 'Las contraseñas no coinciden';
             return;
         }
+        const errorClave = this.validarClave(r.clave);
+        if (errorClave !== '') {
+            this.error = errorClave;
+            return;
+        }
 
+        const edad = this.calcularEdad(r.fechaNacimiento);
+        if (edad < 0 || edad > 120) {
+            this.error = 'La fecha de nacimiento no es válida';
+            return;
+        }
+        if (edad < this.edadMinima) {
+            this.error = 'Debes tener al menos ' + this.edadMinima + ' años para crear una cuenta';
+            return;
+        }
         const componente = this;
         this.error = '';
         this.cargando = true;
@@ -194,6 +225,12 @@ export class Logincomponent {
             return;
         }
 
+        const errorClave = this.validarClave(this.nueva.clave);
+        if (errorClave !== '') {
+            this.error = errorClave;
+            return;
+        }
+
         const componente = this;
         this.error = '';
         this.cargando = true;
@@ -215,5 +252,36 @@ export class Logincomponent {
                 componente.error = componente.mensajeDeError(e, 'No se pudo cambiar la contraseña');
             },
         });
+    }
+
+    validarClave(clave: string): string {
+        if (clave.length < 12) {
+            return 'La contraseña debe tener mínimo 12 caracteres';
+        }
+        if (!/[A-Z]/.test(clave)) {
+            return 'La contraseña debe tener al menos una mayúscula';
+        }
+        if (!/[0-9]/.test(clave)) {
+            return 'La contraseña debe tener al menos un número';
+        }
+        if (!/[^A-Za-z0-9]/.test(clave)) {
+            return 'La contraseña debe tener al menos un símbolo';
+        }
+        return '';
+    }
+
+    calcularEdad(fecha: string): number {
+        const partes = fecha.split('-');
+        const anio = Number(partes[0]);
+        const mes = Number(partes[1]);
+        const dia = Number(partes[2]);
+
+        const hoy = new Date();
+        let edad = hoy.getFullYear() - anio;
+        const mesActual = hoy.getMonth() + 1;
+        if (mesActual < mes || (mesActual === mes && hoy.getDate() < dia)) {
+            edad = edad - 1;
+        }
+        return edad;
     }
 }
