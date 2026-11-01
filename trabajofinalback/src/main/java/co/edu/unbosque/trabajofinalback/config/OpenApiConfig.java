@@ -25,7 +25,7 @@ public class OpenApiConfig {
    */
   @Bean
   public OpenAPI customOpenAPI() {
-    // Crear la descripción principal con HTML correctamente formateado
+
     String mainDescription =
         "<h2>Guía para principiantes de la API REST</h2><p>Esta API proporciona funcionalidades"
             + " para gestionar usuarios y autenticación mediante JWT.</p><h3>Conceptos"
@@ -51,7 +51,7 @@ public class OpenApiConfig {
             + " Recurso no encontrado</li>    <li><strong>409</strong>: Conflicto (por ejemplo,"
             + " nombre de usuario ya existente)</li></ul>";
 
-    // Crear la descripción del esquema de seguridad con HTML correctamente formateado
+    
     String securityDescription =
         "Autenticación mediante JWT (JSON Web Token)."
             + "<p>Para autenticarte, sigue estos pasos:</p>"
@@ -64,7 +64,7 @@ public class OpenApiConfig {
             + "</ol>"
             + "<p>Ahora podrás acceder a los endpoints protegidos.</p>";
 
-    // Crear objeto Info con la descripción HTML
+  
     io.swagger.v3.oas.models.info.Info info =
         new io.swagger.v3.oas.models.info.Info()
             .title("API de Primera Aplicación Spring")
@@ -80,7 +80,7 @@ public class OpenApiConfig {
                     .name("Licencia MIT")
                     .url("https://opensource.org/licenses/MIT"));
 
-    // Crear el esquema de seguridad
+ 
     io.swagger.v3.oas.models.security.SecurityScheme securityScheme =
         new io.swagger.v3.oas.models.security.SecurityScheme()
             .type(io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP)
