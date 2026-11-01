@@ -78,8 +78,7 @@ public class AuthService {
     this.auditService = auditService;
   }
 
-  // ------------------------------------------------------------------ REGISTRO
-
+  
   /**
    * Registra un usuario nuevo con rol USER, contraseña en hash BCrypt y correo sin confirmar, y le
    * envía el correo de confirmación.
