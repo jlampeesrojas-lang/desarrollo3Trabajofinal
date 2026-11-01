@@ -1,5 +1,5 @@
 export interface LoginRequest {
-    usuario: string;
+    identifier: string;
     password: string;
 }
 
@@ -29,10 +29,14 @@ export interface CambiarClaveRequest {
 }
 
 export interface LoginResponse {
-    token: string;
+    accessToken: string;
+    refreshToken: string;
+    tokenType: string;
+    expiresInSeconds: number;
+    username: string;
+    role: string;
 }
 
-export interface MensajeResponse {
-    ok?: boolean;
-    mensaje?: string;
+export interface MessageResponse {
+    message: string;
 }

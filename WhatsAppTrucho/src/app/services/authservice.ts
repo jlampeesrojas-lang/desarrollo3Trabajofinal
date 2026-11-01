@@ -5,16 +5,35 @@ import {
     LoginRequest,
     LoginResponse,
     RegistroRequest,
+    MessageResponse,
     VerificarCodigoRequest,
     RecuperarRequest,
     CambiarClaveRequest,
-    MensajeResponse,
 } from '../models/authentication';
 
-const API = 'http://localhost:8080/api';
-const USAR_MOCK = true;
-const TOKEN_FALSO = 'x.' + btoa('{"rol":"USER"}') + '.x';
-const TOKEN_ADMIN = 'x.' + btoa('{"role":"ADMIN"}') + '.x';
+const API = 'http://localhost:8080';
+const USAR_MOCK = false;
+
+const TOKEN_USER = 'x.' + btoa('{"role":"USER","sub":"usuario"}') + '.x';
+const TOKEN_ADMIN = 'x.' + btoa('{"role":"ADMIN","sub":"admin"}') + '.x';
+
+const RESPUESTA_USER: LoginResponse = {
+    accessToken: TOKEN_USER,
+    refreshToken: 'refresh-falso',
+    tokenType: 'Bearer',
+    expiresInSeconds: 900,
+    username: 'usuario',
+    role: 'USER',
+};
+
+const RESPUESTA_ADMIN: LoginResponse = {
+    accessToken: TOKEN_ADMIN,
+    refreshToken: 'refresh-falso',
+    tokenType: 'Bearer',
+    expiresInSeconds: 900,
+    username: 'admin',
+    role: 'ADMIN',
+};
 
 @Injectable({providedIn: 'root'})
 export class AuthService {
@@ -23,51 +42,64 @@ export class AuthService {
 
     login(datos: LoginRequest): Observable<LoginResponse> {
         if (USAR_MOCK) {
-            if (datos.usuario === 'admin') {
-                return of({token: TOKEN_ADMIN});
+            if (datos.identifier === 'admin') {
+                return of(RESPUESTA_ADMIN);
             }
-            return of({token: TOKEN_FALSO});
+            return of(RESPUESTA_USER);
         }
         return this.http.post<LoginResponse>(API + '/auth/login', datos);
     }
 
-    registro(datos: RegistroRequest): Observable<MensajeResponse> {
+    registro(datos: RegistroRequest): Observable<MessageResponse> {
         if (USAR_MOCK) {
-            return of({ok: true});
+            return of({message: 'ok'});
         }
-        return this.http.post<MensajeResponse>(API + '/auth/registro', datos);
+        const cuerpo = {
+            username: datos.nombreUsuario,
+            email: datos.correo,
+            password: datos.clave,
+        };
+        return this.http.post<MessageResponse>(API + '/auth/register', cuerpo);
     }
 
-    verificarRegistro(datos: VerificarCodigoRequest): Observable<MensajeResponse> {
+    confirmarCorreo(token: string): Observable<MessageResponse> {
         if (USAR_MOCK) {
-            return of({ok: true});
+            return of({message: 'ok'});
         }
-        return this.http.post<MensajeResponse>(API + '/auth/verificar-registro', datos);
+        return this.http.post<MessageResponse>(API + '/auth/confirm-email', {token: token});
     }
 
-    pedirCodigoRecuperar(datos: RecuperarRequest): Observable<MensajeResponse> {
+    reenviarConfirmacion(email: string): Observable<MessageResponse> {
         if (USAR_MOCK) {
-            return of({ok: true});
+            return of({message: 'ok'});
         }
-        return this.http.post<MensajeResponse>(API + '/auth/recuperar', datos);
+        return this.http.post<MessageResponse>(API + '/auth/resend-confirmation', {email: email});
     }
 
-    verificarCodigoRecuperar(datos: VerificarCodigoRequest): Observable<MensajeResponse> {
+    pedirCodigoRecuperar(datos: RecuperarRequest): Observable<MessageResponse> {
         if (USAR_MOCK) {
-            return of({ok: true});
+            return of({message: 'ok'});
         }
-        return this.http.post<MensajeResponse>(API + '/auth/verificar-codigo', datos);
+        return this.http.post<MessageResponse>(API + '/auth/recuperar', datos);
     }
 
-    cambiarClave(datos: CambiarClaveRequest): Observable<MensajeResponse> {
+    verificarCodigoRecuperar(datos: VerificarCodigoRequest): Observable<MessageResponse> {
         if (USAR_MOCK) {
-            return of({ok: true});
+            return of({message: 'ok'});
         }
-        return this.http.post<MensajeResponse>(API + '/auth/nueva-clave', datos);
+        return this.http.post<MessageResponse>(API + '/auth/verificar-codigo', datos);
     }
 
-    guardarToken(token: string) {
-        localStorage.setItem('token', token);
+    cambiarClave(datos: CambiarClaveRequest): Observable<MessageResponse> {
+        if (USAR_MOCK) {
+            return of({message: 'ok'});
+        }
+        return this.http.post<MessageResponse>(API + '/auth/nueva-clave', datos);
+    }
+
+    guardarSesion(respuesta: LoginResponse) {
+        localStorage.setItem('token', respuesta.accessToken);
+        localStorage.setItem('refreshToken', respuesta.refreshToken);
     }
 
     obtenerToken(): string | null {
@@ -86,21 +118,15 @@ export class AuthService {
     }
 
     cerrarSesion() {
+        const refresh = localStorage.getItem('refreshToken');
+        if (refresh != null && !USAR_MOCK) {
+            this.http.post(API + '/auth/logout', {refreshToken: refresh}).subscribe({
+                error: function () {
+                },
+            });
+        }
         localStorage.removeItem('token');
-    }
-
-    obtenerRol(): string | null {
-        const datos = this.leerDatosDelToken();
-        if (datos == null) {
-            return null;
-        }
-        if (datos.role) {
-            return datos.role;
-        }
-        if (datos.rol) {
-            return datos.rol;
-        }
-        return null;
+        localStorage.removeItem('refreshToken');
     }
 
     leerDatosDelToken(): any {
@@ -115,6 +141,22 @@ export class AuthService {
         } catch (e) {
             return null;
         }
+    }
+
+    obtenerRol(): string | null {
+        const datos = this.leerDatosDelToken();
+        if (datos == null || !datos.role) {
+            return null;
+        }
+        return datos.role;
+    }
+
+    obtenerUsuario(): string | null {
+        const datos = this.leerDatosDelToken();
+        if (datos == null || !datos.sub) {
+            return null;
+        }
+        return datos.sub;
     }
 
     tokenVencido(): boolean {

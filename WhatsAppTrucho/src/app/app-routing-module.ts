@@ -3,6 +3,7 @@ import {RouterModule, Routes} from '@angular/router';
 import {Paginaprincipalcomponent} from './components/paginaprincipalcomponent/paginaprincipalcomponent';
 import {Logincomponent} from './components/logincomponent/logincomponent';
 import {Admincomponent} from './components/admincomponent/admincomponent';
+import {Confirmaremailcomponent} from './components/confirmaremailcomponent/confirmaremailcomponent';
 import {authGuard} from './guards/authenticationguard';
 import {adminGuard} from './guards/adminguard';
 
@@ -11,6 +12,7 @@ const routes: Routes = [
     { path: 'login', component: Logincomponent },
     { path: 'principal', component: Paginaprincipalcomponent, canActivate: [authGuard] },
     { path: 'admin', component: Admincomponent, canActivate: [adminGuard] },
+    { path: 'confirm-email', component: Confirmaremailcomponent },
     { path: '**', redirectTo: 'login' },
 ];
 

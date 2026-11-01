@@ -28,7 +28,6 @@ export class Logincomponent {
         clave: '',
         confirmarClave: '',
     };
-    codigoRegistro = '';
 
     correoRecuperar = '';
     codigoRecuperar = '';
@@ -71,11 +70,11 @@ export class Logincomponent {
         this.error = '';
         this.cargando = true;
 
-        this.auth.login({ usuario: this.usuario, password: this.password }).subscribe({
+        this.auth.login({ identifier: this.usuario, password: this.password }).subscribe({
             next: function (respuesta: LoginResponse) {
                 componente.cargando = false;
                 componente.cdr.markForCheck();
-                componente.auth.guardarToken(respuesta.token);
+                componente.auth.guardarSesion(respuesta);
                 if (componente.auth.obtenerRol() === 'ADMIN') {
                     componente.router.navigate(['/admin']);
                 } else {
@@ -136,30 +135,22 @@ export class Logincomponent {
         });
     }
 
-    verificarRegistro() {
-        if (this.codigoRegistro === '') {
-            this.error = 'Escribe el código';
-            return;
-        }
-
+    reenviarCorreo() {
         const componente = this;
         this.error = '';
+        this.exito = '';
         this.cargando = true;
 
-        this.auth.verificarRegistro({
-            correo: this.registro.correo,
-            codigo: this.codigoRegistro,
-        }).subscribe({
+        this.auth.reenviarConfirmacion(this.registro.correo).subscribe({
             next: function () {
                 componente.cargando = false;
                 componente.cdr.markForCheck();
-                componente.irA('login');
-                componente.exito = 'Cuenta creada, ya puedes iniciar sesión';
+                componente.exito = 'Si el correo está pendiente de confirmar, recibirás un mensaje';
             },
             error: function (e: any) {
                 componente.cargando = false;
                 componente.cdr.markForCheck();
-                componente.error = componente.mensajeDeError(e, 'Código incorrecto o vencido');
+                componente.error = componente.mensajeDeError(e, 'No se pudo reenviar el correo');
             },
         });
     }

@@ -10,21 +10,23 @@ import { Paginaprincipalcomponent } from "./components/paginaprincipalcomponent/
 import { Logincomponent } from "./components/logincomponent/logincomponent";
 import { authenticationInterceptor } from "./interceptors/authenticationinterceptor";
 import { Admincomponent } from "./components/admincomponent/admincomponent";
+import { Confirmaremailcomponent } from "./components/confirmaremailcomponent/confirmaremailcomponent";
 
 @NgModule({
-  declarations: [
-    App,
-    Navbarcomponent,
-    Footercomponent,
-    Paginaprincipalcomponent,
-    Logincomponent,
-    Admincomponent,
-  ],
-  imports: [BrowserModule, FormsModule, AppRoutingModule],
-  providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withInterceptors([authenticationInterceptor])),
-  ],
-  bootstrap: [App],
+    declarations: [
+        App,
+        Navbarcomponent,
+        Footercomponent,
+        Paginaprincipalcomponent,
+        Logincomponent,
+        Admincomponent,
+        Confirmaremailcomponent,
+    ],
+    imports: [BrowserModule, FormsModule, AppRoutingModule],
+    providers: [
+        provideBrowserGlobalErrorListeners(),
+        provideHttpClient(withInterceptors([authenticationInterceptor])),
+    ],
+    bootstrap: [App],
 })
 export class AppModule {}

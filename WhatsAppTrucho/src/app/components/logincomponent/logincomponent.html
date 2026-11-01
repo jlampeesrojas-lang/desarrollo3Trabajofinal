@@ -13,14 +13,12 @@
                        placeholder="Correo electrónico o nombre de usuario">
                 <input type="password" name="password" [(ngModel)]="password"
                        placeholder="Contraseña">
-
                 @if (exito) {
                     <p class="exito">{{ exito }}</p>
                 }
                 @if (error) {
                     <p class="error">{{ error }}</p>
                 }
-
                 <button type="button" class="btn btn-primary" [disabled]="cargando"
                         (click)="iniciarSesion()">Iniciar sesión
                 </button>
@@ -32,7 +30,6 @@
         } @else if (vista === 'registro') {
             <form class="form form-ancho">
                 <h2>Crear cuenta</h2>
-
                 <div class="fila">
                     <div class="campo">
                         <label for="nombre">Nombre completo</label>
@@ -58,13 +55,11 @@
                                [(ngModel)]="registro.telefono" placeholder="320 000 0000">
                     </div>
                 </div>
-
                 <div class="campo">
                     <label for="nacimiento">Fecha de nacimiento</label>
                     <input id="nacimiento" type="date" name="fechaNacimiento"
                            [(ngModel)]="registro.fechaNacimiento">
                 </div>
-
                 <div class="fila">
                     <div class="campo">
                         <label for="pass">Contraseña</label>
@@ -77,11 +72,9 @@
                                [(ngModel)]="registro.confirmarClave" placeholder="Repite tu contraseña">
                     </div>
                 </div>
-
                 @if (error) {
                     <p class="error">{{ error }}</p>
                 }
-
                 <button type="button" class="btn btn-primary" [disabled]="cargando"
                         (click)="crearCuenta()">Crear cuenta
                 </button>
@@ -89,22 +82,22 @@
             </form>
         } @else if (vista === 'verificacion') {
             <form class="form">
-                <h2>Verifica tu correo</h2>
+                <h2>Revisa tu correo</h2>
                 <p class="texto">
-                    Hemos enviado un código de verificación a {{ registro.correo }}.
-                    Escríbelo aquí para terminar de crear tu cuenta.
+                    Te enviamos un enlace de confirmación a {{ registro.correo }}.
+                    Ábrelo para activar tu cuenta (vence en 24 horas y solo se usa una vez).
                 </p>
-                <input class="codigo" type="text" name="codigoRegistro"
-                       [(ngModel)]="codigoRegistro" maxlength="6" placeholder="000000">
 
+                @if (exito) {
+                    <p class="exito">{{ exito }}</p>
+                }
                 @if (error) {
                     <p class="error">{{ error }}</p>
                 }
-
                 <button type="button" class="btn btn-primary" [disabled]="cargando"
-                        (click)="verificarRegistro()">Verificar
+                        (click)="reenviarCorreo()">Reenviar correo
                 </button>
-                <a class="forgot" (click)="irA('registro')">Volver</a>
+                <a class="forgot" (click)="irA('login')">Ya confirmé, iniciar sesión</a>
             </form>
         } @else if (vista === 'recuperar') {
             <form class="form">
@@ -118,7 +111,6 @@
                 @if (error) {
                     <p class="error">{{ error }}</p>
                 }
-
                 <button type="button" class="btn btn-primary" [disabled]="cargando"
                         (click)="enviarCodigoRecuperar()">Enviar código
                 </button>
@@ -137,7 +129,6 @@
                 @if (error) {
                     <p class="error">{{ error }}</p>
                 }
-
                 <button type="button" class="btn btn-primary" [disabled]="cargando"
                         (click)="verificarCodigoRecuperar()">Verificar código
                 </button>
@@ -154,7 +145,6 @@
                 @if (error) {
                     <p class="error">{{ error }}</p>
                 }
-
                 <button type="button" class="btn btn-primary" [disabled]="cargando"
                         (click)="cambiarClave()">Cambiar contraseña
                 </button>
