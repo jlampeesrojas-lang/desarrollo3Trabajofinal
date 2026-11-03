@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Mensaje } from '../../modelsChat/mensajemodel';
+import { Mensaje } from '../../models/mensajemodel';
 
 @Component({
   selector: 'app-burbujamensajecomponent',

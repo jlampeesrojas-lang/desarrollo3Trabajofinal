@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Mensaje } from '../../modelsChat/mensajemodel';
+import { Mensaje } from '../../models/mensajemodel';
 import { Burbujamensajecomponent } from './burbujamensajecomponent';
 
 const base: Mensaje = {
