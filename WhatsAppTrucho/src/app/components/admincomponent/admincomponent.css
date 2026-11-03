@@ -1,0 +1,230 @@
+:host {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #0d0f12;
+    color: #f5f6f7;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+h1, h2, p { margin: 0; }
+
+.admin {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    height: 100%;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 24px 16px;
+    background: #15171b;
+    border-right: 1px solid #2a2d34;
+}
+
+.menu h2 { font-size: 1.1rem; font-weight: 600; }
+
+.rol {
+    margin-bottom: 20px;
+    color: #8b8f98;
+    font-size: 0.8rem;
+}
+
+.menu nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.menu nav a {
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: #8b8f98;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.menu nav a:hover {
+    background: #1b1e23;
+    color: #f5f6f7;
+}
+
+.menu nav a.activo {
+    background: rgba(232, 32, 58, 0.14);
+    color: #e8203a;
+}
+
+.menu .btn { margin-top: auto; }
+
+.contenido {
+    overflow-y: auto;
+    padding: 32px;
+}
+
+.bloque { margin-bottom: 56px; }
+
+.bloque h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.texto {
+    margin: 4px 0 20px;
+    color: #8b8f98;
+}
+
+.barra {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+input {
+    height: 44px;
+    min-width: 0;
+    padding: 0 18px;
+    border: 1px solid #2a2d34;
+    border-radius: 22px;
+    background: #0d0f12;
+    color: #f5f6f7;
+    font-size: 0.95rem;
+    color-scheme: dark;
+}
+
+.barra input { flex: 1; }
+
+input::placeholder { color: #8b8f98; }
+input:focus { outline: none; border-color: #e8203a; }
+
+.btn {
+    height: 44px;
+    padding: 0 22px;
+    border: 1px solid transparent;
+    border-radius: 22px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #e8203a;
+    color: #fff;
+}
+
+.btn-primary:hover { background: #c21a31; }
+
+.btn-outline {
+    background: transparent;
+    border-color: #2a2d34;
+    color: #f5f6f7;
+}
+
+.btn-outline:hover { border-color: #8b8f98; }
+
+td .btn {
+    height: 34px;
+    padding: 0 14px;
+    font-size: 0.8rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #15171b;
+    border: 1px solid #2a2d34;
+}
+
+th, td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid #2a2d34;
+}
+
+th {
+    color: #8b8f98;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+code { color: #e8203a; }
+
+.chats {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 16px;
+}
+
+.lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    background: #15171b;
+    border: 1px solid #2a2d34;
+    border-radius: 16px;
+}
+
+.chat {
+    padding: 12px 14px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.chat:hover { background: #1b1e23; }
+
+.activo {
+    border-color: #e8203a;
+    background: rgba(232, 32, 58, 0.14);
+}
+
+.visor {
+    padding: 16px;
+    background: #15171b;
+    border: 1px solid #2a2d34;
+    border-radius: 16px;
+}
+
+.aviso {
+    margin: -16px -16px 16px;
+    padding: 12px 16px;
+    border-radius: 16px 16px 0 0;
+    background: #e8203a;
+    font-weight: 600;
+}
+
+.mensaje {
+    max-width: 70%;
+    margin-bottom: 12px;
+    padding: 12px 16px;
+    border-radius: 16px;
+    background: #1b1e23;
+}
+
+.mensaje span {
+    color: #8b8f98;
+    font-size: 0.75rem;
+}
+
+.mensaje p {
+    margin-top: 4px;
+    color: #8b8f98;
+    font-family: Consolas, monospace;
+    font-size: 0.85rem;
+    word-break: break-all;
+}
+
+@media (max-width: 860px) {
+    .admin { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .menu { flex-direction: row; align-items: center; flex-wrap: wrap; }
+    .rol { display: none; }
+    .menu nav { flex-direction: row; }
+    .menu .btn { margin: 0 0 0 auto; }
+    .chats { grid-template-columns: 1fr; }
+    table { display: block; overflow-x: auto; }
+}

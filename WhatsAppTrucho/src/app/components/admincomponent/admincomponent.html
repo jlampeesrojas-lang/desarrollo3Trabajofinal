@@ -1,1 +1,159 @@
-<h1>admincomponent works!</h1>
+<main class="admin">
+    <aside class="menu">
+        <h2><img src="icono.png" alt="Imagen logo" height="40" weight="40">Sigma Chat</h2>
+        <p class="rol">Panel de administración</p>
+        <nav>
+            <a [class.activo]="seccion === 'usuarios'" (click)="seccion = 'usuarios'">Usuarios</a>
+            <a [class.activo]="seccion === 'auditoria'" (click)="seccion = 'auditoria'">Auditoría</a>
+            <a [class.activo]="seccion === 'chats'" (click)="seccion = 'chats'">Chats</a>
+        </nav>
+        <button type="button" class="btn btn-outline">Cerrar sesión</button>
+    </aside>
+
+    <section class="contenido">
+        @if (seccion === 'usuarios') {
+            <section class="bloque">
+                <h1>Usuarios</h1>
+                <p class="texto">Cuentas registradas, sus roles y sus claves secretas.</p>
+
+                <div class="barra">
+                    <input type="text" placeholder="Buscar por nombre, usuario o correo">
+                    <button type="button" class="btn btn-primary">Nuevo usuario</button>
+                </div>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Correo</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Clave secreta</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>admin</td>
+                        <td>adminchat.local</td>
+                        <td>ADMIN</td>
+                        <td>Verificado</td>
+                        <td><code>Xk9#vQ2m-4LpT</code></td>
+                        <td>
+                            <button type="button" class="btn btn-outline">Editar</button>
+                            <button type="button" class="btn btn-outline">Eliminar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>normaluser</td>
+                        <td>userchat.local</td>
+                        <td>USER</td>
+                        <td>Verificado</td>
+                        <td><code>mR7$bN3z-9QwE</code></td>
+                        <td>
+                            <button type="button" class="btn btn-outline">Editar</button>
+                            <button type="button" class="btn btn-outline">Eliminar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>thomas1</td>
+                        <td>thomas1correo.com</td>
+                        <td>USER</td>
+                        <td>Pendiente</td>
+                        <td><code>pH5!dK8s-2VcY</code></td>
+                        <td>
+                            <button type="button" class="btn btn-outline">Editar</button>
+                            <button type="button" class="btn btn-outline">Eliminar</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </section>
+        }
+
+        @if (seccion === 'auditoria') {
+            <section class="bloque">
+                <h1>Auditoría</h1>
+                <p class="texto">Registro de lo que ocurre en el sistema.</p>
+                <div class="barra">
+                    <input type="text" placeholder="Buscar por usuario, acción o IP">
+                    <input type="date">
+                </div>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Fecha y hora</th>
+                        <th>Usuario</th>
+                        <th>Acción</th>
+                        <th>Recurso</th>
+                        <th>IP</th>
+                        <th>Resultado</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>03/11/2026 10:42</td>
+                        <td>admin</td>
+                        <td>Ver clave secreta</td>
+                        <td>Usuario thomas1</td>
+                        <td>192.168.1.15</td>
+                        <td>Correcto</td>
+                    </tr>
+                    <tr>
+                        <td>03/11/2026 10:40</td>
+                        <td>admin</td>
+                        <td>Descifrar chat</td>
+                        <td>Chat #D90012</td>
+                        <td>192.168.1.15</td>
+                        <td>Correcto</td>
+                    </tr>
+                    <tr>
+                        <td>03/11/2026 09:57</td>
+                        <td>normaluser</td>
+                        <td>Inicio de sesión</td>
+                        <td>Sesión web</td>
+                        <td>186.28.40.12</td>
+                        <td>Fallido</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </section>
+        }
+
+        @if (seccion === 'chats') {
+            <section class="bloque">
+                <h1>Chats</h1>
+                <p class="texto">Los mensajes están cifrados. Escribe la clave secreta para leerlos.</p>
+                <div class="chats">
+                    <div class="lista">
+                        <input type="text" placeholder="Buscar chat">
+                        <a class="chat activo">#D90012 · thomas1 y normaluser</a>
+                        <a class="chat">#141412 · laura_m y normaluser</a>
+                        <a class="chat">#0A0A0A · thomas1 y laura_m</a>
+                    </div>
+
+                    <div class="visor">
+                        <p class="aviso">Estás viendo este chat como administrador</p>
+
+                        <div class="barra">
+                            <input type="password" placeholder="Clave secreta del chat">
+                            <button type="button" class="btn btn-primary">Desbloquear</button>
+                        </div>
+
+                        <div class="mensaje">
+                            <span>thomas1</span>
+                            <p>U2FsdGVkX1+9aQ3vK0mYp2xR7nLw8dTfE4hJzG1cBq0=</p>
+                        </div>
+                        <div class="mensaje">
+                            <span>normaluser</span>
+                            <p>U2FsdGVkX1/mT5pZ8eVx3kQw1aYn6RbH0sLd9uCjF2g=</p>
+                        </div>
+                        <div class="mensaje">
+                            <span>thomas1</span>
+                            <p>U2FsdGVkX19Wq7nB4yTz0cMe5rPk2hXaL8vJd1sGu3o=</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        }
+    </section>
+</main>
