@@ -11,7 +11,7 @@ import {
     CambiarClaveRequest,
 } from '../models/authentication';
 
-const API = 'http://localhost:8080';
+export const API = 'http://localhost:8080';
 const USAR_MOCK = false;
 
 const TOKEN_USER = 'x.' + btoa('{"role":"USER","sub":"usuario"}') + '.x';

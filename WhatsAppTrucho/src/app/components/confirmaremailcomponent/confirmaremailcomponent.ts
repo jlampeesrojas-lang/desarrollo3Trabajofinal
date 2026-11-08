@@ -24,21 +24,20 @@ export class Confirmaremailcomponent implements OnInit {
             return;
         }
 
-        const componente = this;
         this.auth.confirmarCorreo(token).subscribe({
-            next: function () {
-                componente.estado = 'ok';
-                componente.mensaje = 'Correo confirmado. Ya puedes iniciar sesión.';
-                componente.cdr.markForCheck();
+            next: () => {
+                this.estado = 'ok';
+                this.mensaje = 'Correo confirmado. Ya puedes iniciar sesión.';
+                this.cdr.markForCheck();
             },
-            error: function (e: any) {
-                componente.estado = 'error';
+            error: (e: any) => {
+                this.estado = 'error';
                 if (e.error && e.error.mensaje) {
-                    componente.mensaje = e.error.mensaje;
+                    this.mensaje = e.error.mensaje;
                 } else {
-                    componente.mensaje = 'No se pudo confirmar el correo';
+                    this.mensaje = 'No se pudo confirmar el correo';
                 }
-                componente.cdr.markForCheck();
+                this.cdr.markForCheck();
             },
         });
     }
