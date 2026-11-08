@@ -228,3 +228,122 @@ code { color: #e8203a; }
     .chats { grid-template-columns: 1fr; }
     table { display: block; overflow-x: auto; }
 }
+
+
+/* ===== Agregado: mensajes, ventanas y paginación ===== */
+
+.ok {
+    margin-bottom: 16px;
+    color: #22c55e;
+}
+
+.error {
+    margin-bottom: 16px;
+    color: #e8203a;
+}
+
+.nota {
+    margin-bottom: 16px;
+    color: #f59e0b;
+    font-size: 0.85rem;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+input:disabled,
+select:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+td.fallido {
+    color: #e8203a;
+    font-weight: 600;
+}
+
+td .btn + .btn {
+    margin-left: 8px;
+}
+
+.paginacion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+    color: #8b8f98;
+}
+
+.paginacion .btn {
+    height: 36px;
+}
+
+select {
+    height: 44px;
+    padding: 0 18px;
+    border: 1px solid #2a2d34;
+    border-radius: 22px;
+    background: #0d0f12;
+    color: #f5f6f7;
+    font-size: 0.95rem;
+    color-scheme: dark;
+}
+
+select:focus {
+    outline: none;
+    border-color: #e8203a;
+}
+
+.modal-fondo {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.65);
+}
+
+.modal {
+    width: 100%;
+    max-width: 420px;
+    padding: 24px;
+    border: 1px solid #2a2d34;
+    border-radius: 16px;
+    background: #15171b;
+}
+
+.modal h3 {
+    margin: 0 0 16px;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.campo-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.campo-form label {
+    margin-left: 14px;
+    color: #8b8f98;
+    font-size: 0.8rem;
+}
+
+.campo-form input,
+.campo-form select {
+    width: 100%;
+}
+
+.acciones-modal {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+}

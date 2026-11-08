@@ -3,22 +3,29 @@
         <h2><img src="icono.png" alt="Imagen logo" height="40" weight="40">Sigma Chat</h2>
         <p class="rol">Panel de administración</p>
         <nav>
-            <a [class.activo]="seccion === 'usuarios'" (click)="seccion = 'usuarios'">Usuarios</a>
-            <a [class.activo]="seccion === 'auditoria'" (click)="seccion = 'auditoria'">Auditoría</a>
-            <a [class.activo]="seccion === 'chats'" (click)="seccion = 'chats'">Chats</a>
+            <a [class.activo]="seccion === 'usuarios'" (click)="irASeccion('usuarios')">Usuarios</a>
+            <a [class.activo]="seccion === 'auditoria'" (click)="irASeccion('auditoria')">Auditoría</a>
+            <a [class.activo]="seccion === 'chats'" (click)="irASeccion('chats')">Chats</a>
         </nav>
-        <button type="button" class="btn btn-outline">Cerrar sesión</button>
+        <button type="button" class="btn btn-outline" (click)="salir()">Cerrar sesión</button>
     </aside>
 
     <section class="contenido">
         @if (seccion === 'usuarios') {
             <section class="bloque">
                 <h1>Usuarios</h1>
-                <p class="texto">Cuentas registradas, sus roles y sus claves secretas.</p>
+                <p class="texto">Cuentas registradas y sus roles.</p>
+
+                @if (mensaje) {
+                    <p class="ok">{{ mensaje }}</p>
+                }
+                @if (errorUsuarios) {
+                    <p class="error">{{ errorUsuarios }}</p>
+                }
 
                 <div class="barra">
-                    <input type="text" placeholder="Buscar por nombre, usuario o correo">
-                    <button type="button" class="btn btn-primary">Nuevo usuario</button>
+                    <input type="text" placeholder="Buscar por usuario, correo o rol" [(ngModel)]="busqueda">
+                    <button type="button" class="btn btn-primary" (click)="abrirCrear()">Nuevo usuario</button>
                 </div>
                 <table>
                     <thead>
@@ -27,44 +34,34 @@
                         <th>Correo</th>
                         <th>Rol</th>
                         <th>Estado</th>
-                        <th>Clave secreta</th>
                         <th>Acciones</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td>admin</td>
-                        <td>adminchat.local</td>
-                        <td>ADMIN</td>
-                        <td>Verificado</td>
-                        <td><code>Xk9#vQ2m-4LpT</code></td>
-                        <td>
-                            <button type="button" class="btn btn-outline">Editar</button>
-                            <button type="button" class="btn btn-outline">Eliminar</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>normaluser</td>
-                        <td>userchat.local</td>
-                        <td>USER</td>
-                        <td>Verificado</td>
-                        <td><code>mR7$bN3z-9QwE</code></td>
-                        <td>
-                            <button type="button" class="btn btn-outline">Editar</button>
-                            <button type="button" class="btn btn-outline">Eliminar</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>thomas1</td>
-                        <td>thomas1correo.com</td>
-                        <td>USER</td>
-                        <td>Pendiente</td>
-                        <td><code>pH5!dK8s-2VcY</code></td>
-                        <td>
-                            <button type="button" class="btn btn-outline">Editar</button>
-                            <button type="button" class="btn btn-outline">Eliminar</button>
-                        </td>
-                    </tr>
+                        @if (cargandoUsuarios && usuarios.length === 0) {
+                            <tr>
+                                <td colspan="5">Cargando usuarios...</td>
+                            </tr>
+                        }
+                        @if (!cargandoUsuarios && usuariosFiltrados().length === 0) {
+                            <tr>
+                                <td colspan="5">No hay usuarios para mostrar</td>
+                            </tr>
+                        }
+                        @for (u of usuariosFiltrados(); track u.id) {
+                            <tr>
+                                <td>{{ u.username }}</td>
+                                <td>{{ u.email }}</td>
+                                <td>{{ u.role }}</td>
+                                <td>{{ textoEstado(u) }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-outline" (click)="abrirEditar(u)">Editar</button>
+                                    <button type="button" class="btn btn-outline" [disabled]="esYo(u)"
+                                            (click)="pedirEliminar(u)">Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </section>
@@ -74,9 +71,16 @@
             <section class="bloque">
                 <h1>Auditoría</h1>
                 <p class="texto">Registro de lo que ocurre en el sistema.</p>
+
+                @if (errorAuditoria) {
+                    <p class="error">{{ errorAuditoria }}</p>
+                }
+
                 <div class="barra">
-                    <input type="text" placeholder="Buscar por usuario, acción o IP">
-                    <input type="date">
+                    <input type="text" placeholder="Buscar por usuario, acción, IP o lugar"
+                           [(ngModel)]="busquedaAuditoria" (ngModelChange)="paginaAuditoria = 0">
+                    <input type="date" [(ngModel)]="fechaAuditoria" (ngModelChange)="paginaAuditoria = 0">
+                    <button type="button" class="btn btn-outline" (click)="cargarAuditoria()">Actualizar</button>
                 </div>
                 <table>
                     <thead>
@@ -84,38 +88,47 @@
                         <th>Fecha y hora</th>
                         <th>Usuario</th>
                         <th>Acción</th>
-                        <th>Recurso</th>
+                        <th>Detalle</th>
                         <th>IP</th>
+                        <th>Lugar</th>
                         <th>Resultado</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td>03/11/2026 10:42</td>
-                        <td>admin</td>
-                        <td>Ver clave secreta</td>
-                        <td>Usuario thomas1</td>
-                        <td>192.168.1.15</td>
-                        <td>Correcto</td>
-                    </tr>
-                    <tr>
-                        <td>03/11/2026 10:40</td>
-                        <td>admin</td>
-                        <td>Descifrar chat</td>
-                        <td>Chat #D90012</td>
-                        <td>192.168.1.15</td>
-                        <td>Correcto</td>
-                    </tr>
-                    <tr>
-                        <td>03/11/2026 09:57</td>
-                        <td>normaluser</td>
-                        <td>Inicio de sesión</td>
-                        <td>Sesión web</td>
-                        <td>186.28.40.12</td>
-                        <td>Fallido</td>
-                    </tr>
+                        @if (cargandoAuditoria && registros.length === 0) {
+                            <tr>
+                                <td colspan="7">Cargando auditoría...</td>
+                            </tr>
+                        }
+                        @if (!cargandoAuditoria && auditoriaFiltrada().length === 0) {
+                            <tr>
+                                <td colspan="7">No hay registros para mostrar</td>
+                            </tr>
+                        }
+                        @for (r of auditoriaPagina(); track r.id) {
+                            <tr>
+                                <td>{{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                                <td>{{ r.username ? r.username : '—' }}</td>
+                                <td>{{ nombreAccion(r.action) }}</td>
+                                <td>{{ r.detail ? r.detail : '—' }}</td>
+                                <td>{{ r.ip ? r.ip : '—' }}</td>
+                                <td>{{ r.location ? r.location : '—' }}</td>
+                                <td [class.fallido]="resultadoAuditoria(r) === 'Fallido'">{{ resultadoAuditoria(r) }}</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
+
+                <div class="paginacion">
+                    <button type="button" class="btn btn-outline" [disabled]="paginaAuditoria === 0"
+                            (click)="paginaAnterior()">Anterior
+                    </button>
+                    <span>Página {{ paginaAuditoria + 1 }} de {{ totalPaginasAuditoria() }}</span>
+                    <button type="button" class="btn btn-outline"
+                            [disabled]="paginaAuditoria >= totalPaginasAuditoria() - 1"
+                            (click)="paginaSiguiente()">Siguiente
+                    </button>
+                </div>
             </section>
         }
 
@@ -157,3 +170,67 @@
         }
     </section>
 </main>
+
+@if (modalAbierto) {
+    <div class="modal-fondo">
+        <div class="modal">
+            <h3>{{ modo === 'crear' ? 'Nuevo usuario' : 'Editar usuario' }}</h3>
+
+            <div class="campo-form">
+                <label for="m-usuario">Nombre de usuario</label>
+                <input id="m-usuario" type="text" [(ngModel)]="formulario.username"
+                       [disabled]="modo === 'editar' && formulario.username === miUsuario">
+            </div>
+
+            <div class="campo-form">
+                <label for="m-correo">Correo electrónico</label>
+                <input id="m-correo" type="email" [(ngModel)]="formulario.email"
+                       [disabled]="modo === 'editar'">
+            </div>
+
+            <div class="campo-form">
+                <label for="m-clave">Contraseña</label>
+                <input id="m-clave" type="password" [(ngModel)]="formulario.password"
+                       [placeholder]="modo === 'crear' ? 'Contraseña' : 'Dejar vacío para no cambiarla'">
+            </div>
+
+            <div class="campo-form">
+                <label for="m-rol">Rol</label>
+                <select id="m-rol" [(ngModel)]="formulario.role"
+                        [disabled]="modo === 'editar' && formulario.username === miUsuario">
+                    <option value="USER">USER</option>
+                    <option value="ADMIN">ADMIN</option>
+                </select>
+            </div>
+
+            @if (errorModal) {
+                <p class="error">{{ errorModal }}</p>
+            }
+
+            <div class="acciones-modal">
+                <button type="button" class="btn btn-outline" (click)="cerrarModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" [disabled]="guardando"
+                        (click)="guardarUsuario()">Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (usuarioAEliminar) {
+    <div class="modal-fondo">
+        <div class="modal">
+            <h3>Eliminar usuario</h3>
+            <p class="texto">
+                ¿Seguro que quieres eliminar a {{ usuarioAEliminar.username }}?
+                Esta acción no se puede deshacer.
+            </p>
+            <div class="acciones-modal">
+                <button type="button" class="btn btn-outline" (click)="cancelarEliminar()">Cancelar</button>
+                <button type="button" class="btn btn-primary" [disabled]="eliminando"
+                        (click)="confirmarEliminar()">Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+}
