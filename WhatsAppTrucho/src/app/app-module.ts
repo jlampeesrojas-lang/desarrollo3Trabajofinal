@@ -8,7 +8,7 @@ import { Navbarcomponent } from "./components/navbarcomponent/navbarcomponent";
 import { Footercomponent } from "./components/footercomponent/footercomponent";
 import { Paginaprincipalcomponent } from "./components/paginaprincipalcomponent/paginaprincipalcomponent";
 import { Logincomponent } from "./components/logincomponent/logincomponent";
-import { authenticationInterceptor } from "./interceptors/authenticationinterceptor";
+import { authenticationInterceptor } from "./interceptors/authentication-interceptor";
 import { Admincomponent } from "./components/admincomponent/admincomponent";
 import { Confirmaremailcomponent } from "./components/confirmaremailcomponent/confirmaremailcomponent";
 

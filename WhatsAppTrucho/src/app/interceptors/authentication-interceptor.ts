@@ -4,13 +4,11 @@ import { HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpRequest } from '@angul
 import { Observable, catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/authservice';
 
-
 export function authenticationInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
     const auth = inject(AuthService);
     const router = inject(Router);
     const esDeAuth = req.url.indexOf('/auth/') !== -1;
     const token = auth.obtenerToken();
-
     let peticion = req;
     if (token != null && !esDeAuth) {
         peticion = req.clone({

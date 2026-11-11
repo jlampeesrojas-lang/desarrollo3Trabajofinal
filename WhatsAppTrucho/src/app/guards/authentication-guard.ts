@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/authservice';
 
-export function authGuard(): boolean {
+export function authenticationGuard(): boolean {
     const auth = inject(AuthService);
     const router = inject(Router);
 

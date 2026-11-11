@@ -4,13 +4,13 @@ import {Paginaprincipalcomponent} from './components/paginaprincipalcomponent/pa
 import {Logincomponent} from './components/logincomponent/logincomponent';
 import {Admincomponent} from './components/admincomponent/admincomponent';
 import {Confirmaremailcomponent} from './components/confirmaremailcomponent/confirmaremailcomponent';
-import {authGuard} from './guards/authenticationguard';
-import {adminGuard} from './guards/adminguard';
+import {authenticationGuard} from './guards/authentication-guard';
+import {adminGuard} from './guards/admin-guard';
 
 const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
     { path: 'login', component: Logincomponent },
-    { path: 'principal', component: Paginaprincipalcomponent, canActivate: [authGuard] },
+    { path: 'principal', component: Paginaprincipalcomponent, canActivate: [authenticationGuard] },
     { path: 'admin', component: Admincomponent, canActivate: [adminGuard] },
     { path: 'confirm-email', component: Confirmaremailcomponent },
     { path: '**', redirectTo: 'login' },
