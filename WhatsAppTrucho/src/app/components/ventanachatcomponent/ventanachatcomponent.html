@@ -1,0 +1,41 @@
+@if (cargando()) {
+  <p class="centro">Cargando conversación…</p>
+} @else if (noExiste()) {
+  <p class="centro">Este chat no existe.</p>
+} @else if (errorCarga()) {
+  <p class="centro">No se pudo cargar el chat.</p>
+} @else {
+ @if (chat(); as c) {
+  <header class="encabezado">
+    <a class="volver" routerLink="/chats" aria-label="Volver a la lista">←</a>
+    <span class="avatar">
+        @if (avatar(c); as foto) { <img [src]="foto" [alt]="nombre(c)" /> } @else { {{ iniciales(c) }} }
+      </span>
+    <div class="titulo">
+      <strong>{{ nombre(c) }}</strong>
+      <small>Código: {{ c.codigo }}</small>
+    </div>
+  </header>
+
+  <div class="mensajes" #scroller>
+    @if (hayAnteriores()) {
+      <button class="anteriores" (click)="cargarAnteriores()" [disabled]="cargandoAnteriores()">
+        {{ cargandoAnteriores() ? 'Cargando…' : 'Cargar mensajes anteriores' }}
+      </button>
+    }
+    @if (mensajes().length === 0) {
+      <p class="centro">Aún no hay mensajes. ¡Escribe el primero!</p>
+    }
+    @for (m of mensajes(); track m.id) {
+      <app-burbujamensajecomponent [mensaje]="m" [esMio]="m.remitenteId === miId" (reintentar)="reintentar($event)" />
+    }
+  </div>
+
+  <form class="envio" (ngSubmit)="enviar()">
+    <textarea name="texto" rows="1" placeholder="Escribe un mensaje…" title="Enter envía · Shift+Enter salto de línea"
+              [(ngModel)]="texto" (keydown.enter)="enter($event)"></textarea>
+    <button type="submit" [disabled]="!texto.trim()">Enviar</button>
+  </form>
+ }
+}
+  

@@ -1,0 +1,10 @@
+.fila { display: flex; padding: .15rem 0; }
+.fila.mio { justify-content: flex-end; }
+.burbuja { max-width: min(75%, 34rem); padding: .45rem .7rem; border-radius: 18px 18px 18px 4px; background: var(--chat-superficie); color: var(--chat-texto); border: 1px solid var(--chat-borde); overflow-wrap: anywhere; }
+.mio .burbuja { border-radius: 18px 18px 4px 18px; background: var(--chat-primario); color: var(--chat-primario-texto); border-color: transparent; }
+.burbuja.error, .mio .burbuja.error { background: #2b0a0e; color: #ffd9dc; border-color: var(--chat-primario); }
+.autor { font-size: .75rem; font-weight: 600; color: #ff4d5e; margin-bottom: .1rem; }
+.texto { white-space: pre-wrap; }
+.meta { display: flex; gap: .5rem; justify-content: flex-end; align-items: center; font-size: .7rem; opacity: .8; margin-top: .15rem; }
+.reintentar { border: 1px solid currentColor; background: transparent; color: inherit; border-radius: 4px; font-size: .7rem; padding: .05rem .4rem; }
+  

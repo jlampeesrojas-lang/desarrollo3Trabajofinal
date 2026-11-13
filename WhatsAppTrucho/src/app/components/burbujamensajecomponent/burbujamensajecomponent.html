@@ -1,0 +1,20 @@
+<div class="fila" [class.mio]="esMio">
+  <div class="burbuja" [class.error]="mensaje.estado === 'ERROR'">
+    @if (!esMio) { <div class="autor">{{ mensaje.remitenteNombre }}</div> }
+    <div class="texto">{{ mensaje.contenido }}</div>
+    <div class="meta">
+      <span>{{ hora }}</span>
+      @if (esMio) {
+        @switch (mensaje.estado) {
+          @case ('ENVIANDO') { <span class="estado">Enviando…</span> }
+          @case ('ENVIADO') { <span class="estado" title="Enviado">✓</span> }
+          @case ('ERROR') {
+            <span class="estado">No se pudo enviar</span>
+            <button type="button" class="reintentar" (click)="reintentar.emit(mensaje)">Reintentar</button>
+          }
+        }
+      }
+    </div>
+  </div>
+</div>
+  
