@@ -66,25 +66,24 @@ export class Logincomponent {
             return;
         }
 
-        const componente = this;
         this.error = '';
         this.cargando = true;
 
         this.auth.login({ identifier: this.usuario, password: this.password }).subscribe({
-            next: function (respuesta: LoginResponse) {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.auth.guardarSesion(respuesta);
-                if (componente.auth.obtenerRol() === 'ADMIN') {
-                    componente.router.navigate(['/admin']);
+            next: (respuesta: LoginResponse) => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.auth.guardarSesion(respuesta);
+                if (this.auth.obtenerRol() === 'ADMIN') {
+                    this.router.navigate(['/admin']);
                 } else {
-                    componente.router.navigate(['/principal']);
+                    this.router.navigate(['/principal']);
                 }
             },
-            error: function (e: any) {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.error = componente.mensajeDeError(e, 'Usuario o contraseña incorrectos');
+            error: (e: any) => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.error = this.mensajeDeError(e, 'Usuario o contraseña incorrectos');
             },
         });
     }
@@ -117,40 +116,39 @@ export class Logincomponent {
             this.error = 'Debes tener al menos ' + this.edadMinima + ' años para crear una cuenta';
             return;
         }
-        const componente = this;
+
         this.error = '';
         this.cargando = true;
 
         this.auth.registro(r).subscribe({
-            next: function () {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.irA('verificacion');
+            next: () => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.irA('verificacion');
             },
-            error: function (e: any) {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.error = componente.mensajeDeError(e, 'No se pudo crear la cuenta');
+            error: (e: any) => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.error = this.mensajeDeError(e, 'No se pudo crear la cuenta');
             },
         });
     }
 
     reenviarCorreo() {
-        const componente = this;
         this.error = '';
         this.exito = '';
         this.cargando = true;
 
         this.auth.reenviarConfirmacion(this.registro.correo).subscribe({
-            next: function () {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.exito = 'Si el correo está pendiente de confirmar, recibirás un mensaje';
+            next: () => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.exito = 'Si el correo está pendiente de confirmar, recibirás un mensaje';
             },
-            error: function (e: any) {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.error = componente.mensajeDeError(e, 'No se pudo reenviar el correo');
+            error: (e: any) => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.error = this.mensajeDeError(e, 'No se pudo reenviar el correo');
             },
         });
     }
@@ -161,20 +159,19 @@ export class Logincomponent {
             return;
         }
 
-        const componente = this;
         this.error = '';
         this.cargando = true;
 
         this.auth.pedirCodigoRecuperar({ correo: this.correoRecuperar }).subscribe({
-            next: function () {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.irA('codigoRecuperar');
+            next: () => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.irA('codigoRecuperar');
             },
-            error: function (e: any) {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.error = componente.mensajeDeError(e, 'No se pudo enviar el código');
+            error: (e: any) => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.error = this.mensajeDeError(e, 'No se pudo enviar el código');
             },
         });
     }
@@ -185,7 +182,6 @@ export class Logincomponent {
             return;
         }
 
-        const componente = this;
         this.error = '';
         this.cargando = true;
 
@@ -193,15 +189,15 @@ export class Logincomponent {
             correo: this.correoRecuperar,
             codigo: this.codigoRecuperar,
         }).subscribe({
-            next: function () {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.irA('nuevaClave');
+            next: () => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.irA('nuevaClave');
             },
-            error: function (e: any) {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.error = componente.mensajeDeError(e, 'Código incorrecto o vencido');
+            error: (e: any) => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.error = this.mensajeDeError(e, 'Código incorrecto o vencido');
             },
         });
     }
@@ -222,7 +218,6 @@ export class Logincomponent {
             return;
         }
 
-        const componente = this;
         this.error = '';
         this.cargando = true;
 
@@ -231,16 +226,16 @@ export class Logincomponent {
             codigo: this.codigoRecuperar,
             clave: this.nueva.clave,
         }).subscribe({
-            next: function () {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.irA('login');
-                componente.exito = 'Contraseña cambiada, ya puedes iniciar sesión';
+            next: () => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.irA('login');
+                this.exito = 'Contraseña cambiada, ya puedes iniciar sesión';
             },
-            error: function (e: any) {
-                componente.cargando = false;
-                componente.cdr.markForCheck();
-                componente.error = componente.mensajeDeError(e, 'No se pudo cambiar la contraseña');
+            error: (e: any) => {
+                this.cargando = false;
+                this.cdr.markForCheck();
+                this.error = this.mensajeDeError(e, 'No se pudo cambiar la contraseña');
             },
         });
     }
