@@ -6,8 +6,9 @@ import { AdminService } from "../../services/adminservice";
 import { EditarUsuario, RegistroAuditoria, UsuarioAdmin } from "../../models/admin";
 
 const POR_PAGINA = 10;
+
 const ACCIONES: { [clave: string]: string } = {
-    REGISTER: "Cuenta creada ",
+    REGISTER: "Cuenta creada",
     EMAIL_CONFIRMED: "Correo confirmado felicidades ya puedes ingresar",
     CONFIRMATION_RESENT: "Reenvío de confirmación",
     LOGIN_OK: "Inicio de sesión",
@@ -15,7 +16,7 @@ const ACCIONES: { [clave: string]: string } = {
     LOGOUT: "Cierre de sesión",
     TOKEN_REFRESH: "Renovación de sesión",
     TOKEN_REUSE_DETECTED: "Token reutilizado -_-",
-    PASSWORD_RESET_REQUESTED: "Recuperar contraseñasolicitud",
+    PASSWORD_RESET_REQUESTED: "Recuperar contraseña",
     PASSWORD_RESET_DONE: "Contraseña cambiada",
     MESSAGE_SENT: "Mensaje enviado",
     ADMIN_READ_CHAT: "Chat leído por admin",
@@ -59,6 +60,14 @@ export class Admincomponent implements OnInit {
     }
 
     ngOnInit() {
+        if (!this.auth.estaLogueado()) {
+            this.router.navigate(["/login"]);
+            return;
+        }
+        if (this.auth.obtenerRol() !== "ADMIN") {
+            this.router.navigate(["/principal"]);
+            return;
+        }
         this.miUsuario = this.auth.obtenerUsuario();
         this.cargarUsuarios();
     }
@@ -80,6 +89,11 @@ export class Admincomponent implements OnInit {
     }
 
     mensajeDeError(e: any, mensajePorDefecto: string): string {
+        if (e.status === 401) {
+            this.auth.cerrarSesion();
+            this.router.navigate(["/login"]);
+            return "Tu sesión venció, inicia sesión de nuevo";
+        }
         if (typeof e.error === "string" && e.error !== "") {
             return e.error;
         }
@@ -94,7 +108,6 @@ export class Admincomponent implements OnInit {
         }
         return mensajePorDefecto;
     }
-
 
     cargarUsuarios() {
         this.cargandoUsuarios = true;
@@ -208,6 +221,7 @@ export class Admincomponent implements OnInit {
         }
 
         this.guardando = true;
+
         if (this.modo === "crear") {
             this.admin.crearUsuario({
                 username: f.username.trim(),
@@ -269,9 +283,7 @@ export class Admincomponent implements OnInit {
         if (u == null) {
             return;
         }
-
         this.eliminando = true;
-
         this.admin.eliminarUsuario(u.id).subscribe({
             next: () => {
                 this.eliminando = false;
