@@ -229,9 +229,6 @@ code { color: #e8203a; }
     table { display: block; overflow-x: auto; }
 }
 
-
-/* ===== Agregado: mensajes, ventanas y paginación ===== */
-
 .ok {
     margin-bottom: 16px;
     color: #22c55e;
@@ -347,3 +344,12 @@ select:focus {
     gap: 12px;
     margin-top: 8px;
 }
+
+.mensaje p.claro {
+    color: #f5f6f7;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 0.95rem;
+    word-break: normal;
+}
+
+.barra select { min-width: 0; }

@@ -3,7 +3,7 @@ import { Router } from "@angular/router";
 import { HttpResponse } from "@angular/common/http";
 import { AuthService } from "../../services/authservice";
 import { AdminService } from "../../services/adminservice";
-import { EditarUsuario, RegistroAuditoria, UsuarioAdmin } from "../../models/admin";
+import { ChatAdmin, ClaveChat, EditarUsuario, MensajeAdmin, RegistroAuditoria, UsuarioAdmin } from "../../models/admin";
 
 const POR_PAGINA = 10;
 
@@ -54,6 +54,20 @@ export class Admincomponent implements OnInit {
     busquedaAuditoria = "";
     fechaAuditoria = "";
     paginaAuditoria = 0;
+    accionAuditoria = "";
+    acciones = Object.keys(ACCIONES);
+
+    chats: ChatAdmin[] = [];
+    cargandoChats = false;
+    errorChats = "";
+    busquedaChat = "";
+    chatSeleccionado: ChatAdmin | null = null;
+    mensajes: MensajeAdmin[] = [];
+    cargandoMensajes = false;
+    claveChat = "";
+    claveVisible = false;
+    desbloqueado = false;
+    errorClave = "";
 
     constructor(private auth: AuthService, private admin: AdminService,
                 private router: Router, private cdr: ChangeDetectorRef) {
@@ -80,6 +94,9 @@ export class Admincomponent implements OnInit {
         }
         if (seccion === "auditoria") {
             this.cargarAuditoria();
+        }
+        if (seccion === "chats") {
+            this.cargarChats();
         }
     }
 
@@ -156,7 +173,7 @@ export class Admincomponent implements OnInit {
         return "—";
     }
 
-    esYo(u: UsuarioAdmin): boolean {
+    esElMismo(u: UsuarioAdmin): boolean {
         return u.username === this.miUsuario;
     }
 
@@ -345,6 +362,9 @@ export class Admincomponent implements OnInit {
             if (this.fechaAuditoria !== "" && r.createdAt.substring(0, 10) !== this.fechaAuditoria) {
                 continue;
             }
+            if (this.accionAuditoria !== "" && r.action !== this.accionAuditoria) {
+                continue;
+            }
             if (texto !== "") {
                 const todo = ((r.username ? r.username : "") + " " + this.nombreAccion(r.action) + " " +
                     (r.ip ? r.ip : "") + " " + (r.location ? r.location : "") + " " +
@@ -381,5 +401,125 @@ export class Admincomponent implements OnInit {
         if (this.paginaAuditoria < this.totalPaginasAuditoria() - 1) {
             this.paginaAuditoria = this.paginaAuditoria + 1;
         }
+    }
+
+    cargarChats() {
+        this.cargandoChats = true;
+        this.errorChats = "";
+
+        this.admin.listarChats().subscribe({
+            next: (lista: ChatAdmin[]) => {
+                if (lista == null) {
+                    this.chats = [];
+                } else {
+                    this.chats = lista;
+                }
+                this.cargandoChats = false;
+                this.cdr.markForCheck();
+            },
+            error: (e: any) => {
+                this.cargandoChats = false;
+                this.errorChats = this.mensajeDeError(e, "No se pudieron cargar los chats");
+                this.cdr.markForCheck();
+            },
+        });
+    }
+
+    chatsFiltrados(): ChatAdmin[] {
+        const texto = this.busquedaChat.trim().toLowerCase();
+        if (texto === "") {
+            return this.chats;
+        }
+        const resultado: ChatAdmin[] = [];
+        for (const c of this.chats) {
+            const todo = (c.code + " " + c.participants.join(" ")).toLowerCase();
+            if (todo.indexOf(texto) !== -1) {
+                resultado.push(c);
+            }
+        }
+        return resultado;
+    }
+
+    tituloChat(c: ChatAdmin): string {
+        return "#" + c.code + " · " + c.participants.join(" y ");
+    }
+
+    abrirChat(c: ChatAdmin) {
+        this.chatSeleccionado = c;
+        this.mensajes = [];
+        this.desbloqueado = false;
+        this.claveChat = "";
+        this.claveVisible = false;
+        this.errorClave = "";
+    }
+
+    verClaveSecreta() {
+        const c = this.chatSeleccionado;
+        if (c == null) {
+            return;
+        }
+        this.errorClave = "";
+        this.admin.claveDeChat(c.id).subscribe({
+            next: (r: ClaveChat) => {
+                this.claveChat = r.key;
+                this.claveVisible = true;
+                this.cdr.markForCheck();
+            },
+            error: (e: any) => {
+                this.errorClave = this.mensajeDeError(e, "No se pudo obtener la clave");
+                this.cdr.markForCheck();
+            },
+        });
+    }
+
+    desbloquearChat() {
+        const c = this.chatSeleccionado;
+        if (c == null) {
+            return;
+        }
+        this.errorClave = "";
+        if (this.claveChat.length !== 16) {
+            this.errorClave = "La clave del chat tiene 16 caracteres";
+            return;
+        }
+
+        this.cargandoMensajes = true;
+        this.admin.mensajesDeChat(c.id, this.claveChat).subscribe({
+            next: (lista: MensajeAdmin[]) => {
+                const copia: MensajeAdmin[] = [];
+                if (lista != null) {
+                    for (let i = lista.length - 1; i >= 0; i--) {
+                        copia.push(lista[i]);
+                    }
+                }
+                this.mensajes = copia;
+                this.desbloqueado = true;
+                this.cargandoMensajes = false;
+                this.cdr.markForCheck();
+            },
+            error: (e: any) => {
+                this.cargandoMensajes = false;
+                this.desbloqueado = false;
+                this.errorClave = this.mensajeDeError(e, "Clave incorrecta");
+                this.cdr.markForCheck();
+            },
+        });
+    }
+
+    bloquearChat() {
+        this.mensajes = [];
+        this.desbloqueado = false;
+        this.claveChat = "";
+        this.claveVisible = false;
+    }
+
+    contenidoMensaje(m: MensajeAdmin): string {
+        if (m.type === "IMAGEN") {
+            return "[Imagen]";
+        }
+        if (m.type === "AUDIO") {
+            return "[Audio]";
+        }
+        return m.content;
     }
 }

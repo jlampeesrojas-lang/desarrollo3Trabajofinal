@@ -40,7 +40,7 @@
                     <tbody>
                         @if (cargandoUsuarios && usuarios.length === 0) {
                             <tr>
-                                <td colspan="5">Cargando usuarios...</td>
+                                <td colspan="5">Cargando usuarios</td>
                             </tr>
                         }
                         @if (!cargandoUsuarios && usuariosFiltrados().length === 0) {
@@ -55,8 +55,9 @@
                                 <td>{{ u.role }}</td>
                                 <td>{{ textoEstado(u) }}</td>
                                 <td>
-                                    <button type="button" class="btn btn-outline" (click)="abrirEditar(u)">Editar</button>
-                                    <button type="button" class="btn btn-outline" [disabled]="esYo(u)"
+                                    <button type="button" class="btn btn-outline" (click)="abrirEditar(u)">Editar
+                                    </button>
+                                    <button type="button" class="btn btn-outline" [disabled]="esElMismo(u)"
                                             (click)="pedirEliminar(u)">Eliminar
                                     </button>
                                 </td>
@@ -80,6 +81,12 @@
                     <input type="text" placeholder="Buscar por usuario, acción, IP o lugar"
                            [(ngModel)]="busquedaAuditoria" (ngModelChange)="paginaAuditoria = 0">
                     <input type="date" [(ngModel)]="fechaAuditoria" (ngModelChange)="paginaAuditoria = 0">
+                    <select [(ngModel)]="accionAuditoria" (ngModelChange)="paginaAuditoria = 0">
+                        <option value="">Todas las acciones</option>
+                        @for (a of acciones; track a) {
+                            <option [value]="a">{{ nombreAccion(a) }}</option>
+                        }
+                    </select>
                     <button type="button" class="btn btn-outline" (click)="cargarAuditoria()">Actualizar</button>
                 </div>
                 <table>
@@ -108,11 +115,27 @@
                         @for (r of auditoriaPagina(); track r.id) {
                             <tr>
                                 <td>{{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-                                <td>{{ r.username ? r.username : '—' }}</td>
+                                <td>@if (r.username) {
+                                    {{ r.username }}
+                                } @else {
+                                    —
+                                }</td>
                                 <td>{{ nombreAccion(r.action) }}</td>
-                                <td>{{ r.detail ? r.detail : '—' }}</td>
-                                <td>{{ r.ip ? r.ip : '—' }}</td>
-                                <td>{{ r.location ? r.location : '—' }}</td>
+                                <td>@if (r.detail) {
+                                    {{ r.detail }}
+                                } @else {
+                                    —
+                                }</td>
+                                <td>@if (r.ip) {
+                                    {{ r.ip }}
+                                } @else {
+                                    —
+                                }</td>
+                                <td>@if (r.location) {
+                                    {{ r.location }}
+                                } @else {
+                                    —
+                                }</td>
                                 <td [class.fallido]="resultadoAuditoria(r) === 'Fallido'">{{ resultadoAuditoria(r) }}</td>
                             </tr>
                         }
@@ -135,35 +158,81 @@
         @if (seccion === 'chats') {
             <section class="bloque">
                 <h1>Chats</h1>
-                <p class="texto">Los mensajes están cifrados. Escribe la clave secreta para leerlos.</p>
+                <p class="texto">Los mensajes están cifrados. Escribe la clave secreta del chat (o pídela al sistema)
+                    para leerlos.</p>
+
+                @if (errorChats) {
+                    <p class="error">{{ errorChats }}</p>
+                }
+
                 <div class="chats">
                     <div class="lista">
-                        <input type="text" placeholder="Buscar chat">
-                        <a class="chat activo">#D90012 · thomas1 y normaluser</a>
-                        <a class="chat">#141412 · laura_m y normaluser</a>
-                        <a class="chat">#0A0A0A · thomas1 y laura_m</a>
+                        <input type="text" placeholder="Buscar chat o participante" [(ngModel)]="busquedaChat">
+                        @if (cargandoChats && chats.length === 0) {
+                            <p class="texto">Cargando chats...</p>
+                        }
+                        @if (!cargandoChats && chatsFiltrados().length === 0) {
+                            <p class="texto">No hay chats para mostrar</p>
+                        }
+                        @for (c of chatsFiltrados(); track c.id) {
+                            <a class="chat" [class.activo]="chatSeleccionado?.id === c.id" (click)="abrirChat(c)">
+                                {{ tituloChat(c) }}
+                            </a>
+                        }
                     </div>
 
                     <div class="visor">
-                        <p class="aviso">Estás viendo este chat como administrador</p>
+                        @if (chatSeleccionado == null) {
+                            <p class="aviso">Selecciona un chat de la lista</p>
+                        } @else {
+                            <p class="aviso">Estás viendo el chat #{{ chatSeleccionado.code }} como administrador</p>
 
-                        <div class="barra">
-                            <input type="password" placeholder="Clave secreta del chat">
-                            <button type="button" class="btn btn-primary">Desbloquear</button>
-                        </div>
+                            <div class="barra">
+                                @if (claveVisible) {
+                                    <input type="text" maxlength="16"
+                                           placeholder="Clave secreta del chat" [(ngModel)]="claveChat"
+                                           (keyup.enter)="desbloquearChat()">
+                                } @else {
+                                    <input type="password" maxlength="16"
+                                           placeholder="Clave secreta del chat" [(ngModel)]="claveChat"
+                                           (keyup.enter)="desbloquearChat()">
+                                }
+                                <button type="button" class="btn btn-outline" (click)="verClaveSecreta()">Ver clave
+                                </button>
+                                @if (desbloqueado) {
+                                    <button type="button" class="btn btn-outline" (click)="bloquearChat()">Bloquear
+                                    </button>
+                                } @else {
+                                    <button type="button" class="btn btn-primary" (click)="desbloquearChat()">
+                                        Desbloquear
+                                    </button>
+                                }
+                            </div>
 
-                        <div class="mensaje">
-                            <span>thomas1</span>
-                            <p>U2FsdGVkX1+9aQ3vK0mYp2xR7nLw8dTfE4hJzG1cBq0=</p>
-                        </div>
-                        <div class="mensaje">
-                            <span>normaluser</span>
-                            <p>U2FsdGVkX1/mT5pZ8eVx3kQw1aYn6RbH0sLd9uCjF2g=</p>
-                        </div>
-                        <div class="mensaje">
-                            <span>thomas1</span>
-                            <p>U2FsdGVkX19Wq7nB4yTz0cMe5rPk2hXaL8vJd1sGu3o=</p>
-                        </div>
+                            @if (errorClave) {
+                                <p class="error">{{ errorClave }}</p>
+                            }
+                            @if (cargandoMensajes) {
+                                <p class="texto">Cargando mensajes...</p>
+                            }
+                            @if (!desbloqueado && !cargandoMensajes) {
+                                <p class="texto">Los mensajes están cifrados. Escribe la clave para leerlos.</p>
+                            }
+                            @if (desbloqueado && mensajes.length === 0) {
+                                <p class="texto">Este chat no tiene mensajes</p>
+                            }
+
+                            @for (m of mensajes; track m.id) {
+                                <div class="mensaje">
+                                    <span>@if (m.sender) {
+                                        {{ m.sender }}
+                                    } @else {
+                                        IA
+                                    } · {{ m.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                                    <p class="claro">{{ contenidoMensaje(m) }}</p>
+                                </div>
+                            }
+                        }
                     </div>
                 </div>
             </section>
@@ -174,7 +243,11 @@
 @if (modalAbierto) {
     <div class="modal-fondo">
         <div class="modal">
-            <h3>{{ modo === 'crear' ? 'Nuevo usuario' : 'Editar usuario' }}</h3>
+            @if (modo === 'crear') {
+                <h3>Nuevo usuario</h3>
+            } @else {
+                <h3>Editar usuario</h3>
+            }
 
             <div class="campo-form">
                 <label for="m-usuario">Nombre de usuario</label>
@@ -190,8 +263,13 @@
 
             <div class="campo-form">
                 <label for="m-clave">Contraseña</label>
-                <input id="m-clave" type="password" [(ngModel)]="formulario.password"
-                       [placeholder]="modo === 'crear' ? 'Contraseña' : 'Dejar vacío para no cambiarla'">
+                @if (modo === 'crear') {
+                    <input id="m-clave" type="password" [(ngModel)]="formulario.password"
+                           placeholder="Contraseña">
+                } @else {
+                    <input id="m-clave" type="password" [(ngModel)]="formulario.password"
+                           placeholder="Dejar vacío para no cambiarla">
+                }
             </div>
 
             <div class="campo-form">
