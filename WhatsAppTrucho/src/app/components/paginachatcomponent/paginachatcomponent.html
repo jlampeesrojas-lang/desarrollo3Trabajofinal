@@ -1,13 +1,21 @@
-<div class="contenedor" [class.con-chat]="hayChat()">
-  <aside class="panel-lista"><app-chatlistacomponent /></aside>
-  <section class="panel-ventana">
-    <router-outlet />
-    @if (!hayChat()) {
-      <div class="vacio">
-        <div class="icono">💬</div>
-        <p>Selecciona un chat para ver los mensajes</p>
-      </div>
-    }
-  </section>
+<div class="contenedor" [class.con-chat]="chatActivo">
+    <aside class="panel-lista">
+        <app-chatlistacomponent [chats]="chats" [activoId]="chatActivoId" [miId]="miId"
+                                (seleccionar)="seleccionarChat($event)"></app-chatlistacomponent>
+    </aside>
+
+    <section class="panel-ventana">
+        @if (chatActivo; as chat) {
+            <app-ventanachatcomponent [chat]="chat" [mensajes]="mensajesActivos" [miId]="miId"
+                                      [conexion]="conexion" [conexionRestablecida]="conexionRestablecida"
+                                      (enviar)="enviar($event)" (reintentar)="reintentar($event)"
+                                      (volver)="volver()" (simularCaida)="simularCaida()"></app-ventanachatcomponent>
+        } @else {
+            <div class="vacio">
+                <div class="icono">💬</div>
+                <p>Selecciona un chat para ver los mensajes</p>
+            </div>
+        }
+    </section>
+
 </div>
-  

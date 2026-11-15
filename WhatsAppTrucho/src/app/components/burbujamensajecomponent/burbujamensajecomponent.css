@@ -7,4 +7,3 @@
 .texto { white-space: pre-wrap; }
 .meta { display: flex; gap: .5rem; justify-content: flex-end; align-items: center; font-size: .7rem; opacity: .8; margin-top: .15rem; }
 .reintentar { border: 1px solid currentColor; background: transparent; color: inherit; border-radius: 4px; font-size: .7rem; padding: .05rem .4rem; }
-  

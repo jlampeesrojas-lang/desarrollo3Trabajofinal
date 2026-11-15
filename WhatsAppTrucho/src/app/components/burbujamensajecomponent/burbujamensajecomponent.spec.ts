@@ -1,45 +1,65 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Mensaje } from '../../models/mensajemodel';
+import { Mensaje } from '../../models/chat';
 import { Burbujamensajecomponent } from './burbujamensajecomponent';
 
-const base: Mensaje = {
-  id: 1, chatId: 1, remitenteId: 1, remitenteNombre: 'Luis', contenido: 'Hola',
-  tipo: 'TEXTO', fechaEnvio: new Date().toISOString(), estado: 'ENVIADO',
-};
-
 describe('Burbujamensajecomponent', () => {
-  let fixture: ComponentFixture<Burbujamensajecomponent>;
+    let component: Burbujamensajecomponent;
+    let fixture: ComponentFixture<Burbujamensajecomponent>;
 
-  function crear(m: Mensaje, esMio: boolean) {
-    fixture.componentRef.setInput('mensaje', m);
-    fixture.componentRef.setInput('esMio', esMio);
-    fixture.detectChanges();
-  }
+    const base: Mensaje = {
+        id: 'm-1',
+        chatId: 1,
+        remitenteId: 1,
+        remitenteNombre: 'Tú',
+        contenido: 'Hola',
+        fechaEnvio: new Date().toISOString(),
+        estado: 'ENVIADO',
+    };
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [Burbujamensajecomponent] }).compileComponents();
-    fixture = TestBed.createComponent(Burbujamensajecomponent);
-  });
+    function mostrar(mensaje: Mensaje, esMio: boolean): HTMLElement {
+        fixture.componentRef.setInput('mensaje', mensaje);
+        fixture.componentRef.setInput('esMio', esMio);
+        fixture.detectChanges();
+        return fixture.nativeElement as HTMLElement;
+    }
 
-  it('muestra el contenido y el autor cuando el mensaje es ajeno', () => {
-    crear({ ...base, remitenteNombre: 'Valentina' }, false);
-    const t = fixture.nativeElement.textContent;
-    expect(t).toContain('Hola');
-    expect(t).toContain('Valentina');
-  });
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            declarations: [Burbujamensajecomponent],
+        }).compileComponents();
 
-  it('muestra "Enviando…" mientras se envía', () => {
-    crear({ ...base, estado: 'ENVIANDO' }, true);
-    expect(fixture.nativeElement.textContent).toContain('Enviando…');
-  });
+        fixture = TestBed.createComponent(Burbujamensajecomponent);
+        component = fixture.componentInstance;
+    });
 
-  it('en error muestra "Reintentar" y emite el mensaje', () => {
-    const m = { ...base, estado: 'ERROR' as const };
-    crear(m, true);
-    let emitido: Mensaje | undefined;
-    fixture.componentInstance.reintentar.subscribe((x: Mensaje) => (emitido = x));
-    fixture.nativeElement.querySelector('.reintentar').click();
-    expect(emitido).toEqual(m);
-  });
+    it('should create', () => {
+        mostrar(base, true);
+        expect(component).toBeTruthy();
+    });
+
+    it('muestra el texto y el visto cuando el mensaje es mío y fue enviado', () => {
+        const el = mostrar(base, true);
+        expect(el.textContent).toContain('Hola');
+        expect(el.querySelector('.estado')?.textContent).toContain('✓');
+        expect(el.querySelector('.autor')).toBeNull();
+    });
+
+    it('muestra el nombre del autor en los mensajes recibidos', () => {
+        const el = mostrar({ ...base, remitenteId: 100, remitenteNombre: 'IA' }, false);
+        expect(el.querySelector('.autor')?.textContent).toContain('IA');
+        expect(el.querySelector('.estado')).toBeNull();
+    });
+
+    it('muestra "Enviando…" mientras se envía', () => {
+        const el = mostrar({ ...base, estado: 'ENVIANDO' }, true);
+        expect(el.querySelector('.estado')?.textContent).toContain('Enviando');
+    });
+
+    it('en error muestra "Reintentar" y avisa al hacer clic', () => {
+        const el = mostrar({ ...base, estado: 'ERROR' }, true);
+        let emitido: Mensaje | undefined;
+        component.reintentar.subscribe((m: Mensaje) => (emitido = m));
+        (el.querySelector('.reintentar') as HTMLButtonElement).click();
+        expect(emitido?.id).toBe('m-1');
+    });
 });

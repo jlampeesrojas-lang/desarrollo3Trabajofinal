@@ -1,32 +1,72 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { provideRouter } from '@angular/router';
-import { ChatApi, CHAT_USUARIO_ID, CHAT_USUARIO_NOMBRE } from '../../services/chatapi';
-import { ChatEventosService } from '../../services/chateventosservice';
-import { ChatMockService } from '../../services/chatmockservice';
 import { Paginachatcomponent } from './paginachatcomponent';
+import { Chatlistacomponent } from '../chatlistacomponent/chatlistacomponent';
+import { Ventanachatcomponent } from '../ventanachatcomponent/ventanachatcomponent';
+import { Burbujamensajecomponent } from '../burbujamensajecomponent/burbujamensajecomponent';
 
 describe('Paginachatcomponent', () => {
-  let fixture: ComponentFixture<Paginachatcomponent>;
+    let component: Paginachatcomponent;
+    let fixture: ComponentFixture<Paginachatcomponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [Paginachatcomponent],
-      providers: [
-        provideRouter([]),
-        { provide: CHAT_USUARIO_ID, useValue: 1 },
-        { provide: CHAT_USUARIO_NOMBRE, useValue: 'usuario' },
-        { provide: ChatApi, useClass: ChatMockService },
-        ChatEventosService,
-      ],
-    }).compileComponents();
-    fixture = TestBed.createComponent(Paginachatcomponent);
-    fixture.detectChanges();
-  });
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            declarations: [Paginachatcomponent, Chatlistacomponent, Ventanachatcomponent, Burbujamensajecomponent],
+        }).compileComponents();
 
-  it('se crea y pide seleccionar un chat si no hay ninguno abierto', () => {
-    expect(fixture.componentInstance).toBeTruthy();
-    expect(fixture.componentInstance.hayChat()).toBe(false);
-    expect(fixture.nativeElement.textContent).toContain('Selecciona un chat');
-  });
+        fixture = TestBed.createComponent(Paginachatcomponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+        await fixture.whenStable();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
+
+    it('empieza con un solo chat (IA) y sin chat activo', () => {
+        expect(component.chats.length).toBe(1);
+        expect(component.chats[0].participantes[1].nombre).toBe('IA');
+        expect(component.chatActivo).toBeNull();
+    });
+
+    it('al enviar, el mensaje pasa de ENVIANDO a ENVIADO (sin respuesta automática)', () => {
+        vi.useFakeTimers();
+        component.seleccionarChat(1);
+        component.enviar('hola');
+        expect(component.mensajesActivos[0].estado).toBe('ENVIANDO');
+        vi.advanceTimersByTime(600);
+        expect(component.mensajesActivos[0].estado).toBe('ENVIADO');
+        vi.advanceTimersByTime(5000);
+        expect(component.mensajesActivos.length).toBe(1);
+    });
+
+    it('#error deja el mensaje en ERROR y reintentar lo envía', () => {
+        vi.useFakeTimers();
+        component.seleccionarChat(1);
+        component.enviar('prueba #error');
+        vi.advanceTimersByTime(600);
+        const fallido = component.mensajesActivos[0];
+        expect(fallido.estado).toBe('ERROR');
+        component.reintentar({ ...fallido, contenido: 'prueba' });
+        vi.advanceTimersByTime(600);
+        expect(component.mensajesActivos[0].estado).toBe('ENVIADO');
+    });
+
+    it('sin conexión el envío falla y al reconectar vuelve a CONECTADO', () => {
+        vi.useFakeTimers();
+        component.seleccionarChat(1);
+        component.simularCaida();
+        expect(component.conexion).toBe('RECONECTANDO');
+        component.enviar('hola');
+        vi.advanceTimersByTime(600);
+        expect(component.mensajesActivos[0].estado).toBe('ERROR');
+        vi.advanceTimersByTime(4000);
+        expect(component.conexion).toBe('CONECTADO');
+        expect(component.conexionRestablecida).toBe(true);
+    });
+
 });

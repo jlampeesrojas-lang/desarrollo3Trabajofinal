@@ -10,7 +10,10 @@ import { Paginaprincipalcomponent } from "./components/paginaprincipalcomponent/
 import { Logincomponent } from "./components/logincomponent/logincomponent";
 import { Admincomponent } from "./components/admincomponent/admincomponent";
 import { Confirmaremailcomponent } from "./components/confirmaremailcomponent/confirmaremailcomponent";
-
+import { Burbujamensajecomponent } from "./components/burbujamensajecomponent/burbujamensajecomponent";
+import { Chatlistacomponent } from "./components/chatlistacomponent/chatlistacomponent";
+import { Ventanachatcomponent } from "./components/ventanachatcomponent/ventanachatcomponent";
+import { Paginachatcomponent } from "./components/paginachatcomponent/paginachatcomponent";
 @NgModule({
     declarations: [
         App,

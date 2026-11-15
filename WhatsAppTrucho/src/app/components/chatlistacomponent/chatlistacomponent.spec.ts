@@ -1,82 +1,89 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChatApi, CHAT_USUARIO_ID, CHAT_USUARIO_NOMBRE } from '../../services/chatapi';
-import { ChatEventosService } from '../../services/chateventosservice';
-import { ChatMockService } from '../../services/chatmockservice';
+import { Chat } from '../../models/chat';
 import { Chatlistacomponent } from './chatlistacomponent';
 
 describe('Chatlistacomponent', () => {
-  let fixture: ComponentFixture<Chatlistacomponent>;
+    let component: Chatlistacomponent;
+    let fixture: ComponentFixture<Chatlistacomponent>;
+    let el: HTMLElement;
 
-  beforeEach(async () => {
-    vi.useFakeTimers();
-    await TestBed.configureTestingModule({
-      imports: [Chatlistacomponent],
-      providers: [
-        provideRouter([]),
-        { provide: CHAT_USUARIO_ID, useValue: 1 },
-        { provide: CHAT_USUARIO_NOMBRE, useValue: 'usuario' },
-        { provide: ChatApi, useClass: ChatMockService },
-        ChatEventosService,
-      ],
-    }).compileComponents();
-  });
-  afterEach(() => vi.useRealTimers());
+    const chatIa: Chat = {
+        id: 1,
+        codigo: 'CH-IA0001',
+        participantes: [{ id: 1, nombre: 'Tú' }, { id: 100, nombre: 'IA', avatarUrl: 'ia.jpg' }],
+        ultimoMensaje: null,
+        noLeidos: 0,
+    };
 
-  const el = () => fixture.nativeElement as HTMLElement;
-  const esperar = async () => {
-    await vi.advanceTimersByTimeAsync(400);
-    fixture.detectChanges();
-  };
-  const cargar = async () => {
-    fixture = TestBed.createComponent(Chatlistacomponent);
-    fixture.detectChanges();
-    await esperar();
-  };
-  const abrirPanel = async () => {
-    (el().querySelector('.nuevo') as HTMLButtonElement).click();
-    await esperar();
-  };
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            declarations: [Chatlistacomponent],
+        }).compileComponents();
 
-  it('muestra "Cargando" y luego un único chat: IA, vacío y con su foto', async () => {
-    fixture = TestBed.createComponent(Chatlistacomponent);
-    fixture.detectChanges();
-    expect(el().textContent).toContain('Cargando chats');
-    await esperar();
-    expect(el().querySelectorAll('a.item').length).toBe(1);
-    const item = el().querySelector('a.item')!;
-    expect(item.textContent).toContain('IA');
-    expect(item.textContent).toContain('Sin mensajes todavía');
-    expect(item.querySelector('img')?.getAttribute('src')).toBe('ia.jpg');
-  });
+        fixture = TestBed.createComponent(Chatlistacomponent);
+        component = fixture.componentInstance;
+        el = fixture.nativeElement as HTMLElement;
+        fixture.componentRef.setInput('chats', [chatIa]);
+        fixture.detectChanges();
+    });
 
-  it('el panel "Nuevo chat" avisa que aún no hay contactos', async () => {
-    await cargar();
-    await abrirPanel();
-    expect(el().textContent).toContain('Nuevo chat');
-    expect(el().textContent).toContain('No tienes contactos todavía');
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 
-  it('crear un chat con un contacto lo agrega a la lista y navega a él', async () => {
-    (TestBed.inject(ChatApi) as ChatMockService).contactos = [{ id: 2, nombre: 'Ana Gómez' }];
-    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    await cargar();
-    await abrirPanel();
-    (el().querySelector('button.contacto') as HTMLButtonElement).click();
-    await esperar();
-    await esperar(); // refresco de la lista
-    expect(navegar).toHaveBeenCalledWith(['/chats', 2]);
-    expect(el().querySelectorAll('a.item').length).toBe(2);
-  });
+    it('muestra el chat IA con su foto de perfil y sin mensajes', () => {
+        const items = el.querySelectorAll('.item');
+        expect(items.length).toBe(1);
+        expect(items[0].querySelector('.nombre')?.textContent).toContain('IA');
+        expect(items[0].querySelector('img')?.getAttribute('src')).toBe('ia.jpg');
+        expect(items[0].querySelector('.previa')?.textContent).toContain('Sin mensajes');
+    });
 
-  it('filtra por nombre o código', async () => {
-    await cargar();
-    fixture.componentInstance.busqueda.set('zzz');
-    fixture.detectChanges();
-    expect(el().textContent).toContain('Ningún chat coincide');
-    fixture.componentInstance.busqueda.set('ia');
-    fixture.detectChanges();
-    expect(el().querySelectorAll('a.item').length).toBe(1);
-  });
+    it('si la foto no carga, muestra las iniciales', () => {
+        (el.querySelector('img') as HTMLImageElement).dispatchEvent(new Event('error'));
+        fixture.detectChanges();
+        expect(el.querySelector('img')).toBeNull();
+        expect(el.querySelector('.avatar')?.textContent).toContain('I');
+    });
+
+    it('filtra por nombre o por código', () => {
+        const caja = el.querySelector('.buscar') as HTMLInputElement;
+        caja.value = 'zzz';
+        caja.dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+        expect(el.querySelectorAll('.item').length).toBe(0);
+        expect(el.querySelector('.estado')?.textContent).toContain('Ningún chat');
+
+        caja.value = 'ch-ia';
+        caja.dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+        expect(el.querySelectorAll('.item').length).toBe(1);
+    });
+
+    it('al hacer clic avisa qué chat se eligió y lo marca como activo', () => {
+        let elegido: number | undefined;
+        component.seleccionar.subscribe((id: number) => (elegido = id));
+        (el.querySelector('.item') as HTMLButtonElement).click();
+        expect(elegido).toBe(1);
+
+        fixture.componentRef.setInput('activoId', 1);
+        fixture.detectChanges();
+        expect(el.querySelector('.item')?.classList.contains('activo')).toBe(true);
+    });
+
+    it('muestra la vista previa, la hora y los no leídos cuando hay mensajes', () => {
+        const conMensaje: Chat = {
+            ...chatIa,
+            noLeidos: 2,
+            ultimoMensaje: {
+                id: 'm-1', chatId: 1, remitenteId: 100, remitenteNombre: 'IA', contenido: 'Hola, soy IA',
+                fechaEnvio: new Date().toISOString(), estado: 'ENVIADO',
+            },
+        };
+        fixture.componentRef.setInput('chats', [conMensaje]);
+        fixture.detectChanges();
+        expect(el.querySelector('.previa')?.textContent).toContain('Hola, soy IA');
+        expect(el.querySelector('.badge')?.textContent).toContain('2');
+        expect(el.querySelector('.hora')?.textContent?.trim()).not.toBe('');
+    });
 });

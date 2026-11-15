@@ -1,85 +1,86 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChatApi, CHAT_USUARIO_ID, CHAT_USUARIO_NOMBRE } from '../../services/chatapi';
-import { ChatEventosService } from '../../services/chateventosservice';
-import { ChatMockService } from '../../services/chatmockservice';
+import { Chat, Mensaje } from '../../models/chat';
 import { Ventanachatcomponent } from './ventanachatcomponent';
-
-const esperar = (ms = 400) => vi.advanceTimersByTimeAsync(ms);
-
-/** Prepara el módulo, agrega `extras` mensajes al chat 1 (el de IA) y recién entonces crea el componente. */
-async function iniciar(id: string, extras = 0): Promise<ComponentFixture<Ventanachatcomponent>> {
-  TestBed.configureTestingModule({
-    imports: [Ventanachatcomponent],
-    providers: [
-      provideRouter([]),
-      { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id })) } },
-      { provide: CHAT_USUARIO_ID, useValue: 1 },
-      { provide: CHAT_USUARIO_NOMBRE, useValue: 'usuario' },
-      { provide: ChatApi, useClass: ChatMockService },
-      ChatEventosService,
-    ],
-  });
-  const api = TestBed.inject(ChatApi);
-  for (let i = 1; i <= extras; i++) {
-    api.enviarMensaje(1, `mensaje ${i}`).subscribe();
-    await esperar();
-  }
-  const fixture = TestBed.createComponent(Ventanachatcomponent);
-  fixture.detectChanges();
-  await esperar();
-  fixture.detectChanges();
-  return fixture;
-}
+import { Burbujamensajecomponent } from '../burbujamensajecomponent/burbujamensajecomponent';
 
 describe('Ventanachatcomponent', () => {
-  let fixture: ComponentFixture<Ventanachatcomponent>;
+    let component: Ventanachatcomponent;
+    let fixture: ComponentFixture<Ventanachatcomponent>;
+    let el: HTMLElement;
 
-  beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
+    const chat: Chat = {
+        id: 1,
+        codigo: 'CH-IA0001',
+        participantes: [{ id: 1, nombre: 'Tú' }, { id: 100, nombre: 'IA' }],
+        ultimoMensaje: null,
+        noLeidos: 0,
+    };
 
-  it('muestra el chat de IA vacío, con su foto y su código', async () => {
-    fixture = await iniciar('1');
-    const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).toMatch(/Código: CH-[A-Z0-9]{6}/);
-    expect(el.querySelector('.encabezado img')?.getAttribute('src')).toBe('ia.jpg');
-    expect(el.textContent).toContain('Aún no hay mensajes');
-    expect(el.querySelectorAll('app-burbujamensajecomponent').length).toBe(0);
-  });
+    function crear(n: number): Mensaje[] {
+        return Array.from({ length: n }, (_, i) => ({
+            id: `m-${i}`, chatId: 1, remitenteId: 1, remitenteNombre: 'Tú',
+            contenido: `msg ${i}`, fechaEnvio: new Date().toISOString(), estado: 'ENVIADO' as const,
+        }));
+    }
 
-  it('historial paginado: 20 mensajes y luego los anteriores (25 en total)', async () => {
-    fixture = await iniciar('1', 25);
-    expect(fixture.nativeElement.querySelectorAll('app-burbujamensajecomponent').length).toBe(20);
-    fixture.componentInstance.cargarAnteriores();
-    await esperar();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelectorAll('app-burbujamensajecomponent').length).toBe(25);
-    await esperar(1000);
-  });
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            declarations: [Ventanachatcomponent, Burbujamensajecomponent],
+        }).compileComponents();
 
-  it('envía un mensaje: pasa de ENVIANDO a ENVIADO', async () => {
-    fixture = await iniciar('1');
-    fixture.componentInstance.texto = 'Hola';
-    fixture.componentInstance.enviar();
-    expect(fixture.componentInstance.mensajes().at(-1)?.estado).toBe('ENVIANDO');
-    await esperar();
-    expect(fixture.componentInstance.mensajes().at(-1)?.estado).toBe('ENVIADO');
-    await esperar(1000);
-  });
+        fixture = TestBed.createComponent(Ventanachatcomponent);
+        component = fixture.componentInstance;
+        el = fixture.nativeElement as HTMLElement;
+        fixture.componentRef.setInput('chat', chat);
+        fixture.detectChanges();
+        await fixture.whenStable();
+    });
 
-  it('un mensaje con #error queda en ERROR', async () => {
-    fixture = await iniciar('1');
-    fixture.componentInstance.texto = 'falla #error';
-    fixture.componentInstance.enviar();
-    await esperar();
-    expect(fixture.componentInstance.mensajes().at(-1)?.estado).toBe('ERROR');
-    await esperar(1000);
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 
-  it('avisa cuando el chat no existe', async () => {
-    fixture = await iniciar('99');
-    expect(fixture.nativeElement.textContent).toContain('Este chat no existe');
-  });
+    it('muestra nombre y código del chat', () => {
+        expect(el.textContent).toContain('IA');
+        expect(el.textContent).toContain('CH-IA0001');
+    });
+
+    it('muestra aviso cuando no hay mensajes', () => {
+        expect(el.textContent).toContain('Aún no hay mensajes');
+    });
+
+    it('solo muestra la última página y permite cargar anteriores', () => {
+        vi.useFakeTimers();
+        fixture.componentRef.setInput('mensajes', crear(45));
+        fixture.detectChanges();
+        expect(el.querySelectorAll('app-burbujamensajecomponent').length).toBe(20);
+        component.cargarAnteriores();
+        vi.advanceTimersByTime(400);
+        fixture.detectChanges();
+        expect(el.querySelectorAll('app-burbujamensajecomponent').length).toBe(40);
+        vi.useRealTimers();
+    });
+
+    it('emite enviar con el texto y limpia la caja', () => {
+        const textos: string[] = [];
+        component.enviar.subscribe((t: string) => textos.push(t));
+        const caja = el.querySelector('textarea') as HTMLTextAreaElement;
+        caja.value = '  hola  ';
+        component.enviarTexto();
+        expect(textos).toEqual(['hola']);
+        expect(caja.value).toBe('');
+    });
+
+    it('no emite si el texto está vacío', () => {
+        let llamadas = 0;
+        component.enviar.subscribe(() => llamadas++);
+        component.enviarTexto();
+        expect(llamadas).toBe(0);
+    });
+
+    it('muestra banner de reconexión', () => {
+        fixture.componentRef.setInput('conexion', 'RECONECTANDO');
+        fixture.detectChanges();
+        expect(el.textContent).toContain('Reconectando');
+    });
 });
