@@ -215,20 +215,16 @@
                             @if (cargandoMensajes) {
                                 <p class="texto">Cargando mensajes...</p>
                             }
-                            @if (!desbloqueado && !cargandoMensajes) {
+                            @if (mostrarAvisoCifrado) {
                                 <p class="texto">Los mensajes están cifrados. Escribe la clave para leerlos.</p>
                             }
-                            @if (desbloqueado && mensajes.length === 0) {
+                            @if (mostrarChatVacio) {
                                 <p class="texto">Este chat no tiene mensajes</p>
                             }
 
                             @for (m of mensajes; track m.id) {
                                 <div class="mensaje">
-                                    <span>@if (m.sender) {
-                                        {{ m.sender }}
-                                    } @else {
-                                        IA
-                                    } · {{ m.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                                    <span>{{ obtenerRemitente(m) }} · {{ m.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
                                     <p class="claro">{{ contenidoMensaje(m) }}</p>
                                 </div>
                             }

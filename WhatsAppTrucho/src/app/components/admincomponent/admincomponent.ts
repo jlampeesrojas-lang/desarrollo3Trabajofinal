@@ -1,9 +1,9 @@
-import { ChangeDetectorRef, Component, OnInit } from "@angular/core";
-import { Router } from "@angular/router";
-import { HttpResponse } from "@angular/common/http";
-import { AuthService } from "../../services/authservice";
-import { AdminService } from "../../services/adminservice";
-import { ChatAdmin, ClaveChat, EditarUsuario, MensajeAdmin, RegistroAuditoria, UsuarioAdmin } from "../../models/admin";
+import {ChangeDetectorRef, Component, OnInit} from "@angular/core";
+import {Router} from "@angular/router";
+import {HttpResponse} from "@angular/common/http";
+import {AuthService} from "../../services/authservice";
+import {AdminService} from "../../services/adminservice";
+import {ChatAdmin, ClaveChat, EditarUsuario, MensajeAdmin, RegistroAuditoria, UsuarioAdmin} from "../../models/admin";
 
 const POR_PAGINA = 10;
 
@@ -521,5 +521,17 @@ export class Admincomponent implements OnInit {
             return "[Audio]";
         }
         return m.content;
+    }
+
+    get mostrarAvisoCifrado(): boolean {
+        return !this.desbloqueado && !this.cargandoMensajes;
+    }
+
+    get mostrarChatVacio(): boolean {
+        return this.desbloqueado && this.mensajes.length === 0;
+    }
+
+    obtenerRemitente(m: any): string {
+        return m.sender ? m.sender : 'IA';
     }
 }

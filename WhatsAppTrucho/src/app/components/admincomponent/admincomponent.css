@@ -63,7 +63,17 @@ h1, h2, p { margin: 0; }
 .contenido {
     overflow-y: auto;
     padding: 32px;
+    background:
+            linear-gradient(rgba(13, 15, 18, 0.78), rgba(13, 15, 18, 0.78)),
+            url("/assets/fondo-admin.jpeg") center / cover no-repeat;
 }
+
+.contenido h1,
+.contenido .texto {
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+
+.contenido .texto { color: #a9adb6; }
 
 .bloque { margin-bottom: 56px; }
 
@@ -229,18 +239,21 @@ code { color: #e8203a; }
     table { display: block; overflow-x: auto; }
 }
 
-.ok {
+.ok,
+.error,
+.nota {
+    display: inline-block;
     margin-bottom: 16px;
-    color: #22c55e;
+    padding: 8px 16px;
+    border-radius: 12px;
+    background: rgba(13, 15, 18, 0.92);
 }
 
-.error {
-    margin-bottom: 16px;
-    color: #e8203a;
-}
+.ok { color: #22c55e; }
+
+.error { color: #ff4d63; }
 
 .nota {
-    margin-bottom: 16px;
     color: #f59e0b;
     font-size: 0.85rem;
 }
@@ -266,6 +279,7 @@ td .btn + .btn {
 }
 
 .paginacion {
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
     display: flex;
     align-items: center;
     justify-content: center;
