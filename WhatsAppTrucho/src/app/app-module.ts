@@ -14,6 +14,7 @@ import { Burbujamensajecomponent } from "./components/burbujamensajecomponent/bu
 import { Chatlistacomponent } from "./components/chatlistacomponent/chatlistacomponent";
 import { Ventanachatcomponent } from "./components/ventanachatcomponent/ventanachatcomponent";
 import { Paginachatcomponent } from "./components/paginachatcomponent/paginachatcomponent";
+
 @NgModule({
     declarations: [
         App,
@@ -23,6 +24,10 @@ import { Paginachatcomponent } from "./components/paginachatcomponent/paginachat
         Logincomponent,
         Admincomponent,
         Confirmaremailcomponent,
+        Burbujamensajecomponent,
+        Chatlistacomponent,
+        Ventanachatcomponent,
+        Paginachatcomponent,
     ],
     imports: [BrowserModule, FormsModule, AppRoutingModule],
     providers: [

@@ -12,7 +12,7 @@ import {
 } from '../models/authentication';
 
 export const API = 'http://localhost:8080';
-export const USAR_MOCK = true;
+const USAR_MOCK = false;
 
 const TOKEN_USER = 'x.' + btoa('{"role":"USER","sub":"usuario"}') + '.x';
 const TOKEN_ADMIN = 'x.' + btoa('{"role":"ADMIN","sub":"admin"}') + '.x';

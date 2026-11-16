@@ -10,7 +10,7 @@ import { Chat, EstadoConexion, Mensaje, Participante } from '../../models/chat';
 export class Paginachatcomponent implements OnDestroy {
     miId = 1;
     yo: Participante = { id: 1, nombre: 'Tú' };
-    ia: Participante = { id: 100, nombre: 'IA', avatarUrl: 'ia.jpg' };
+    ia: Participante = { id: 100, nombre: 'IA', avatarUrl: 'assets/ia.jpg' };
 
     chats: Chat[] = [
         { id: 1, codigo: 'CH-IA0001', participantes: [this.yo, this.ia], ultimoMensaje: null, noLeidos: 0 },
@@ -129,3 +129,4 @@ export class Paginachatcomponent implements OnDestroy {
         this.temporizadores.push(t);
     }
 }
+
