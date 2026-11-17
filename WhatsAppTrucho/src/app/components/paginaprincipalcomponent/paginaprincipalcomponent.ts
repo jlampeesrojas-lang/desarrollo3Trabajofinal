@@ -32,7 +32,6 @@ export class Paginaprincipalcomponent implements OnInit {
         private router: Router
     ) {}
 
-    // Se ejecuta cuando se abre la página principal
     ngOnInit(): void {
         this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
     }
