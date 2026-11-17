@@ -11,30 +11,29 @@ import { AuthService } from '../../services/authservice';
 })
 export class Paginaprincipalcomponent implements OnInit {
 
-
     seccion: 'chats' | 'ia' | 'contactos' = 'chats';
 
-    miUsuario: string = 'Usuario';
+    miUsuario = 'Usuario';
 
-    busquedaChat: string = '';
-    mensajeNuevo: string = '';
+    busquedaChat = '';
+    mensajeNuevo = '';
 
+    preguntaIA = '';
 
-    preguntaIA: string = '';
-
-
-    busquedaContacto: string = '';
-    mensajeContacto: string = '';
-    errorContacto: string = '';
+    busquedaContacto = '';
+    mensajeContacto = '';
+    errorContacto = '';
 
     constructor(
         private auth: AuthService,
         private router: Router
     ) {}
 
+    
     ngOnInit(): void {
         this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
     }
+
 
     irASeccion(
         seccion: 'chats' | 'ia' | 'contactos'
@@ -44,6 +43,7 @@ export class Paginaprincipalcomponent implements OnInit {
         this.mensajeContacto = '';
         this.errorContacto = '';
     }
+
 
     salir(): void {
         this.auth.cerrarSesion();
