@@ -251,7 +251,7 @@ select:focus {
     background: rgba(0, 0, 0, 0.65);
 }
 
-.modal {
+.ventana {
     width: 100%;
     max-width: 420px;
     padding: 24px;
@@ -260,7 +260,7 @@ select:focus {
     background: #15171b;
 }
 
-.modal h3 {
+.ventana h3 {
     margin: 0 0 16px;
     font-size: 1.15rem;
     font-weight: 600;
