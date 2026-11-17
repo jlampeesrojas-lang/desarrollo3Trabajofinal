@@ -1,6 +1,7 @@
-import {Component, OnInit} from '@angular/core';
-import {AuthService} from "../../services/authservice";
-import {Router} from "@angular/router";
+
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/authservice';
 
 @Component({
     selector: 'app-paginaprincipalcomponent',
@@ -9,12 +10,44 @@ import {Router} from "@angular/router";
     templateUrl: './paginaprincipalcomponent.html',
 })
 export class Paginaprincipalcomponent implements OnInit {
-    constructor(private auth: AuthService, private router: Router) {
+
+
+    seccion: 'chats' | 'ia' | 'contactos' = 'chats';
+
+    miUsuario: string = 'Usuario';
+
+    busquedaChat: string = '';
+    mensajeNuevo: string = '';
+
+
+    preguntaIA: string = '';
+
+
+    busquedaContacto: string = '';
+    mensajeContacto: string = '';
+    errorContacto: string = '';
+
+    constructor(
+        private auth: AuthService,
+        private router: Router
+    ) {}
+
+    // Se ejecuta cuando se abre la página principal
+    ngOnInit(): void {
+        this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
     }
 
-    ngOnInit() {
-        if (!this.auth.estaLogueado()) {
-            this.router.navigate(['/login']);
-        }
+    irASeccion(
+        seccion: 'chats' | 'ia' | 'contactos'
+    ): void {
+        this.seccion = seccion;
+
+        this.mensajeContacto = '';
+        this.errorContacto = '';
+    }
+
+    salir(): void {
+        this.auth.cerrarSesion();
+        this.router.navigate(['/login']);
     }
 }
