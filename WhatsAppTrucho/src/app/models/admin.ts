@@ -28,3 +28,24 @@ export interface RegistroAuditoria {
     detail: string | null;
     createdAt: string;
 }
+
+export interface ChatAdmin {
+    id: number;
+    code: string;
+    participants: string[];
+    lastMessageAt: string | null;
+    messageCount: number;
+}
+
+export interface MensajeAdmin {
+    id: number;
+    sender: string | null;
+    type: 'TEXTO' | 'IMAGEN' | 'AUDIO' | 'IA';
+    content: string;
+    mediaId: number | null;
+    createdAt: string;
+}
+
+export interface ClaveChat {
+    key: string;
+}

@@ -10,22 +10,21 @@ import { Paginaprincipalcomponent } from "./components/paginaprincipalcomponent/
 import { Logincomponent } from "./components/logincomponent/logincomponent";
 import { Admincomponent } from "./components/admincomponent/admincomponent";
 import { Confirmaremailcomponent } from "./components/confirmaremailcomponent/confirmaremailcomponent";
+import { Adminchatscomponent } from "./components/adminchatscomponent/adminchatscomponent";
 
 @NgModule({
-    declarations: [
-        App,
-        Navbarcomponent,
-        Footercomponent,
-        Paginaprincipalcomponent,
-        Logincomponent,
-        Admincomponent,
-        Confirmaremailcomponent,
-    ],
-    imports: [BrowserModule, FormsModule, AppRoutingModule],
-    providers: [
-        provideBrowserGlobalErrorListeners(),
-        provideHttpClient(),
-    ],
-    bootstrap: [App],
+  declarations: [
+    App,
+    Navbarcomponent,
+    Footercomponent,
+    Paginaprincipalcomponent,
+    Logincomponent,
+    Admincomponent,
+    Confirmaremailcomponent,
+    Adminchatscomponent,
+  ],
+  imports: [BrowserModule, FormsModule, AppRoutingModule],
+  providers: [provideBrowserGlobalErrorListeners(), provideHttpClient()],
+  bootstrap: [App],
 })
 export class AppModule {}

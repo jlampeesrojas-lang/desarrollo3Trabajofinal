@@ -1,9 +1,9 @@
-import { ChangeDetectorRef, Component, OnInit } from "@angular/core";
-import { Router } from "@angular/router";
-import { HttpResponse } from "@angular/common/http";
-import { AuthService } from "../../services/authservice";
-import { AdminService } from "../../services/adminservice";
-import { EditarUsuario, RegistroAuditoria, UsuarioAdmin } from "../../models/admin";
+import {ChangeDetectorRef, Component, OnInit} from "@angular/core";
+import {Router} from "@angular/router";
+import {HttpErrorResponse, HttpResponse} from "@angular/common/http";
+import {AuthService} from "../../services/authservice";
+import {AdminService} from "../../services/adminservice";
+import {EditarUsuario, RegistroAuditoria, UsuarioAdmin} from "../../models/admin";
 
 const POR_PAGINA = 10;
 
@@ -29,6 +29,7 @@ const ACCIONES: { [clave: string]: string } = {
     styleUrl: "./admincomponent.css",
     templateUrl: "./admincomponent.html",
 })
+
 export class Admincomponent implements OnInit {
     seccion: "usuarios" | "auditoria" | "chats" = "usuarios";
 
@@ -54,6 +55,8 @@ export class Admincomponent implements OnInit {
     busquedaAuditoria = "";
     fechaAuditoria = "";
     paginaAuditoria = 0;
+    accionAuditoria = "";
+    acciones = Object.keys(ACCIONES);
 
     constructor(private auth: AuthService, private admin: AdminService,
                 private router: Router, private cdr: ChangeDetectorRef) {
@@ -88,22 +91,22 @@ export class Admincomponent implements OnInit {
         this.router.navigate(["/login"]);
     }
 
-    mensajeDeError(e: any, mensajePorDefecto: string): string {
-        if (e.status === 401) {
+    mensajeDeError(fallo: HttpErrorResponse, mensajePorDefecto: string): string {
+        if (fallo.status === 401) {
             this.auth.cerrarSesion();
             this.router.navigate(["/login"]);
             return "Tu sesión venció, inicia sesión de nuevo";
         }
-        if (typeof e.error === "string" && e.error !== "") {
-            return e.error;
+        if (typeof fallo.error === "string" && fallo.error !== "") {
+            return fallo.error;
         }
-        if (e.error && e.error.mensaje) {
-            return e.error.mensaje;
+        if (fallo.error?.mensaje) {
+            return fallo.error.mensaje;
         }
-        if (e.status === 0) {
+        if (fallo.status === 0) {
             return "No se pudo conectar con el servidor";
         }
-        if (e.status === 403) {
+        if (fallo.status === 403) {
             return "No tienes permiso para hacer esto";
         }
         return mensajePorDefecto;
@@ -123,9 +126,9 @@ export class Admincomponent implements OnInit {
                 this.cargandoUsuarios = false;
                 this.cdr.markForCheck();
             },
-            error: (e: any) => {
+            error: (fallo: HttpErrorResponse) => {
                 this.cargandoUsuarios = false;
-                this.errorUsuarios = this.mensajeDeError(e, "No se pudieron cargar los usuarios");
+                this.errorUsuarios = this.mensajeDeError(fallo, "No se pudieron cargar los usuarios");
                 this.cdr.markForCheck();
             },
         });
@@ -156,7 +159,8 @@ export class Admincomponent implements OnInit {
         return "—";
     }
 
-    esYo(u: UsuarioAdmin): boolean {
+    /** Dice si el usuario de la fila es el administrador que tiene la sesión abierta. */
+    esElMismo(u: UsuarioAdmin): boolean {
         return u.username === this.miUsuario;
     }
 
@@ -174,6 +178,20 @@ export class Admincomponent implements OnInit {
         this.formulario = {id: u.id, username: u.username, email: u.email, password: "", role: u.role};
         this.errorModal = "";
         this.modalAbierto = true;
+    }
+
+    get tituloModal(): string {
+        if (this.modo === "crear") {
+            return "Nuevo usuario";
+        }
+        return "Editar usuario";
+    }
+
+    get placeholderClave(): string {
+        if (this.modo === "crear") {
+            return "Contraseña";
+        }
+        return "Dejar vacío para no cambiarla";
     }
 
     cerrarModal() {
@@ -236,9 +254,9 @@ export class Admincomponent implements OnInit {
                     this.cargarUsuarios();
                     this.cdr.markForCheck();
                 },
-                error: (e: any) => {
+                error: (fallo: HttpErrorResponse) => {
                     this.guardando = false;
-                    this.errorModal = this.mensajeDeError(e, "No se pudo crear el usuario");
+                    this.errorModal = this.mensajeDeError(fallo, "No se pudo crear el usuario");
                     this.cdr.markForCheck();
                 },
             });
@@ -260,9 +278,9 @@ export class Admincomponent implements OnInit {
                     }
                     this.cdr.markForCheck();
                 },
-                error: (e: any) => {
+                error: (fallo: HttpErrorResponse) => {
                     this.guardando = false;
-                    this.errorModal = this.mensajeDeError(e, "No se pudo actualizar el usuario");
+                    this.errorModal = this.mensajeDeError(fallo, "No se pudo actualizar el usuario");
                     this.cdr.markForCheck();
                 },
             });
@@ -292,10 +310,10 @@ export class Admincomponent implements OnInit {
                 this.cargarUsuarios();
                 this.cdr.markForCheck();
             },
-            error: (e: any) => {
+            error: (fallo: HttpErrorResponse) => {
                 this.eliminando = false;
                 this.usuarioAEliminar = null;
-                this.errorUsuarios = this.mensajeDeError(e, "No se pudo eliminar el usuario");
+                this.errorUsuarios = this.mensajeDeError(fallo, "No se pudo eliminar el usuario");
                 this.cdr.markForCheck();
             },
         });
@@ -316,9 +334,9 @@ export class Admincomponent implements OnInit {
                 this.cargandoAuditoria = false;
                 this.cdr.markForCheck();
             },
-            error: (e: any) => {
+            error: (fallo: HttpErrorResponse) => {
                 this.cargandoAuditoria = false;
-                this.errorAuditoria = this.mensajeDeError(e, "No se pudo cargar la auditoría");
+                this.errorAuditoria = this.mensajeDeError(fallo, "No se pudo cargar la auditoría");
                 this.cdr.markForCheck();
             },
         });
@@ -343,6 +361,9 @@ export class Admincomponent implements OnInit {
         const resultado: RegistroAuditoria[] = [];
         for (const r of this.registros) {
             if (this.fechaAuditoria !== "" && r.createdAt.substring(0, 10) !== this.fechaAuditoria) {
+                continue;
+            }
+            if (this.accionAuditoria !== "" && r.action !== this.accionAuditoria) {
                 continue;
             }
             if (texto !== "") {

@@ -1,0 +1,70 @@
+<section class="bloque">
+    <h1>Chats</h1>
+    <p class="texto">Los mensajes están cifrados. Escribe la clave secreta del chat (o pídela al sistema)
+        para leerlos.</p>
+
+    @if (errorChats) {
+        <p class="error">{{ errorChats }}</p>
+    }
+
+    <div class="chats">
+        <div class="lista">
+            <input type="text" placeholder="Buscar chat o participante" [(ngModel)]="busquedaChat">
+            @if (cargandoChats && chats.length === 0) {
+                <p class="texto">Cargando chats...</p>
+            }
+            @if (!cargandoChats && chatsFiltrados().length === 0) {
+                <p class="texto">No hay chats para mostrar</p>
+            }
+            @for (chat of chatsFiltrados(); track chat.id) {
+                <a class="chat" [class.activo]="chatSeleccionado?.id === chat.id" (click)="abrirChat(chat)">
+                    #{{ chat.code }} · {{ participantesDe(chat) }}
+                </a>
+            }
+        </div>
+
+        <div class="visor">
+            @if (chatSeleccionado == null) {
+                <p class="aviso">Selecciona un chat de la lista</p>
+            } @else {
+                <p class="aviso">Estás viendo el chat #{{ chatSeleccionado.code }} como administrador</p>
+
+                <div class="barra">
+                    <input [type]="tipoCampoClave" maxlength="16"
+                           placeholder="Clave secreta del chat" [(ngModel)]="claveChat"
+                           (keyup.enter)="desbloquearChat()">
+                    <button type="button" class="btn btn-outline" (click)="verClaveSecreta()">Ver clave
+                    </button>
+                    @if (desbloqueado) {
+                        <button type="button" class="btn btn-outline" (click)="bloquearChat()">Bloquear
+                        </button>
+                    } @else {
+                        <button type="button" class="btn btn-primary" (click)="desbloquearChat()">
+                            Desbloquear
+                        </button>
+                    }
+                </div>
+
+                @if (errorClave) {
+                    <p class="error">{{ errorClave }}</p>
+                }
+                @if (cargandoMensajes) {
+                    <p class="texto">Cargando mensajes...</p>
+                }
+                @if (mostrarAvisoCifrado) {
+                    <p class="texto">Los mensajes están cifrados. Escribe la clave para leerlos.</p>
+                }
+                @if (mostrarChatVacio) {
+                    <p class="texto">Este chat no tiene mensajes</p>
+                }
+
+                @for (mensaje of mensajes; track mensaje.id) {
+                    <div class="mensaje">
+                        <span>{{ mensaje.sender || 'IA' }} · {{ mensaje.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                        <p class="claro">{{ contenidoMensaje(mensaje) }}</p>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</section>
