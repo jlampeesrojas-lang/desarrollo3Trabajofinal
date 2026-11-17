@@ -11,6 +11,7 @@ import {ChatAdmin, ClaveChat, MensajeAdmin} from "../../models/admin";
     styleUrl: "./adminchatscomponent.css",
     templateUrl: "./adminchatscomponent.html",
 })
+/** Visor de chats del administrador: lista los chats y muestra sus mensajes al ingresar la clave. */
 export class Adminchatscomponent implements OnInit {
     chats: ChatAdmin[] = [];
     cargandoChats = false;
@@ -30,10 +31,12 @@ export class Adminchatscomponent implements OnInit {
                 private router: Router, private cdr: ChangeDetectorRef) {
     }
 
+    /** Al abrir la sección se cargan los chats. */
     ngOnInit() {
         this.cargarChats();
     }
 
+    /** Convierte un error HTTP en un texto para el usuario. 401 cierra la sesión y 403 avisa que no hay permiso. */
     mensajeDeError(fallo: HttpErrorResponse, mensajePorDefecto: string): string {
         if (fallo.status === 401) {
             this.auth.cerrarSesion();
@@ -43,7 +46,7 @@ export class Adminchatscomponent implements OnInit {
         if (typeof fallo.error === "string" && fallo.error !== "") {
             return fallo.error;
         }
-        if (fallo.error && fallo.error.mensaje) {
+        if (fallo.error?.mensaje) {
             return fallo.error.mensaje;
         }
         if (fallo.status === 0) {
@@ -55,6 +58,7 @@ export class Adminchatscomponent implements OnInit {
         return mensajePorDefecto;
     }
 
+    /** Pide al back la lista de chats. */
     cargarChats() {
         this.cargandoChats = true;
         this.errorChats = "";
@@ -77,6 +81,7 @@ export class Adminchatscomponent implements OnInit {
         });
     }
 
+    /** Chats que coinciden con lo escrito en el buscador (por código o participante). */
     chatsFiltrados(): ChatAdmin[] {
         const texto = this.busquedaChat.trim().toLowerCase();
         if (texto === "") {
@@ -92,10 +97,12 @@ export class Adminchatscomponent implements OnInit {
         return resultado;
     }
 
+    /** Nombres de los participantes de un chat separados por una "y". */
     participantesDe(chat: ChatAdmin): string {
         return chat.participants.join(this.separadorParticipantes);
     }
 
+    /** Selecciona un chat y lo deja bloqueado hasta que se ingrese la clave. */
     abrirChat(chat: ChatAdmin) {
         this.chatSeleccionado = chat;
         this.mensajes = [];
@@ -105,6 +112,7 @@ export class Adminchatscomponent implements OnInit {
         this.errorClave = "";
     }
 
+    /** Pide al back la clave secreta del chat (solo admin) y la deja escrita en el campo. */
     verClaveSecreta() {
         const chat = this.chatSeleccionado;
         if (chat == null) {
@@ -124,6 +132,7 @@ export class Adminchatscomponent implements OnInit {
         });
     }
 
+    /** Manda la clave al back. Si es correcta, recibe los mensajes ya descifrados. */
     desbloquearChat() {
         const chat = this.chatSeleccionado;
         if (chat == null) {
@@ -158,6 +167,7 @@ export class Adminchatscomponent implements OnInit {
         });
     }
 
+    /** Vuelve a ocultar los mensajes y borra la clave escrita. */
     bloquearChat() {
         this.mensajes = [];
         this.desbloqueado = false;
@@ -165,6 +175,7 @@ export class Adminchatscomponent implements OnInit {
         this.claveVisible = false;
     }
 
+    /** Texto de un mensaje. Las imágenes y los audios se muestran con una etiqueta. */
     contenidoMensaje(mensaje: MensajeAdmin): string {
         const etiqueta = this.textosMedia[mensaje.type];
         if (etiqueta) {

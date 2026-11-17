@@ -29,6 +29,7 @@ const ACCIONES: { [clave: string]: string } = {
     styleUrl: "./admincomponent.css",
     templateUrl: "./admincomponent.html",
 })
+
 export class Admincomponent implements OnInit {
     seccion: "usuarios" | "auditoria" | "chats" = "usuarios";
 
@@ -99,7 +100,7 @@ export class Admincomponent implements OnInit {
         if (typeof fallo.error === "string" && fallo.error !== "") {
             return fallo.error;
         }
-        if (fallo.error && fallo.error.mensaje) {
+        if (fallo.error?.mensaje) {
             return fallo.error.mensaje;
         }
         if (fallo.status === 0) {
@@ -158,6 +159,7 @@ export class Admincomponent implements OnInit {
         return "—";
     }
 
+    /** Dice si el usuario de la fila es el administrador que tiene la sesión abierta. */
     esElMismo(u: UsuarioAdmin): boolean {
         return u.username === this.miUsuario;
     }

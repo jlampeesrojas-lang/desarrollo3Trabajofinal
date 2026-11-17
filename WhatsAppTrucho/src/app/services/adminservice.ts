@@ -173,6 +173,7 @@ export class AdminService {
         });
     }
 
+    /** Pide al back la lista de chats. */
     listarChats(): Observable<ChatAdmin[]> {
         if (USAR_MOCK) {
             return of(this.chatsMock);
@@ -182,6 +183,7 @@ export class AdminService {
         });
     }
 
+    /** Manda la clave del chat al back y recibe los mensajes ya descifrados. Si la clave está mal, responde 400. */
     mensajesDeChat(chatId: number, clave: string): Observable<MensajeAdmin[]> {
         if (USAR_MOCK) {
             if (chatId === 1 && clave === "Xk29Lm4QpR7vTb1Z") {
@@ -197,6 +199,7 @@ export class AdminService {
         });
     }
 
+    /** Pide al back la clave secreta de un chat (solo admin). */
     claveDeChat(chatId: number): Observable<ClaveChat> {
         if (USAR_MOCK) {
             if (chatId === 1) {
