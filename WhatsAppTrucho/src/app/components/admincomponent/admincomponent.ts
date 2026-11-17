@@ -1,9 +1,9 @@
 import {ChangeDetectorRef, Component, OnInit} from "@angular/core";
 import {Router} from "@angular/router";
-import {HttpResponse} from "@angular/common/http";
+import {HttpErrorResponse, HttpResponse} from "@angular/common/http";
 import {AuthService} from "../../services/authservice";
 import {AdminService} from "../../services/adminservice";
-import {ChatAdmin, ClaveChat, EditarUsuario, MensajeAdmin, RegistroAuditoria, UsuarioAdmin} from "../../models/admin";
+import {EditarUsuario, RegistroAuditoria, UsuarioAdmin} from "../../models/admin";
 
 const POR_PAGINA = 10;
 
@@ -57,18 +57,6 @@ export class Admincomponent implements OnInit {
     accionAuditoria = "";
     acciones = Object.keys(ACCIONES);
 
-    chats: ChatAdmin[] = [];
-    cargandoChats = false;
-    errorChats = "";
-    busquedaChat = "";
-    chatSeleccionado: ChatAdmin | null = null;
-    mensajes: MensajeAdmin[] = [];
-    cargandoMensajes = false;
-    claveChat = "";
-    claveVisible = false;
-    desbloqueado = false;
-    errorClave = "";
-
     constructor(private auth: AuthService, private admin: AdminService,
                 private router: Router, private cdr: ChangeDetectorRef) {
     }
@@ -95,9 +83,6 @@ export class Admincomponent implements OnInit {
         if (seccion === "auditoria") {
             this.cargarAuditoria();
         }
-        if (seccion === "chats") {
-            this.cargarChats();
-        }
     }
 
     salir() {
@@ -105,22 +90,22 @@ export class Admincomponent implements OnInit {
         this.router.navigate(["/login"]);
     }
 
-    mensajeDeError(e: any, mensajePorDefecto: string): string {
-        if (e.status === 401) {
+    mensajeDeError(fallo: HttpErrorResponse, mensajePorDefecto: string): string {
+        if (fallo.status === 401) {
             this.auth.cerrarSesion();
             this.router.navigate(["/login"]);
             return "Tu sesión venció, inicia sesión de nuevo";
         }
-        if (typeof e.error === "string" && e.error !== "") {
-            return e.error;
+        if (typeof fallo.error === "string" && fallo.error !== "") {
+            return fallo.error;
         }
-        if (e.error && e.error.mensaje) {
-            return e.error.mensaje;
+        if (fallo.error && fallo.error.mensaje) {
+            return fallo.error.mensaje;
         }
-        if (e.status === 0) {
+        if (fallo.status === 0) {
             return "No se pudo conectar con el servidor";
         }
-        if (e.status === 403) {
+        if (fallo.status === 403) {
             return "No tienes permiso para hacer esto";
         }
         return mensajePorDefecto;
@@ -140,9 +125,9 @@ export class Admincomponent implements OnInit {
                 this.cargandoUsuarios = false;
                 this.cdr.markForCheck();
             },
-            error: (e: any) => {
+            error: (fallo: HttpErrorResponse) => {
                 this.cargandoUsuarios = false;
-                this.errorUsuarios = this.mensajeDeError(e, "No se pudieron cargar los usuarios");
+                this.errorUsuarios = this.mensajeDeError(fallo, "No se pudieron cargar los usuarios");
                 this.cdr.markForCheck();
             },
         });
@@ -191,6 +176,20 @@ export class Admincomponent implements OnInit {
         this.formulario = {id: u.id, username: u.username, email: u.email, password: "", role: u.role};
         this.errorModal = "";
         this.modalAbierto = true;
+    }
+
+    get tituloModal(): string {
+        if (this.modo === "crear") {
+            return "Nuevo usuario";
+        }
+        return "Editar usuario";
+    }
+
+    get placeholderClave(): string {
+        if (this.modo === "crear") {
+            return "Contraseña";
+        }
+        return "Dejar vacío para no cambiarla";
     }
 
     cerrarModal() {
@@ -253,9 +252,9 @@ export class Admincomponent implements OnInit {
                     this.cargarUsuarios();
                     this.cdr.markForCheck();
                 },
-                error: (e: any) => {
+                error: (fallo: HttpErrorResponse) => {
                     this.guardando = false;
-                    this.errorModal = this.mensajeDeError(e, "No se pudo crear el usuario");
+                    this.errorModal = this.mensajeDeError(fallo, "No se pudo crear el usuario");
                     this.cdr.markForCheck();
                 },
             });
@@ -277,9 +276,9 @@ export class Admincomponent implements OnInit {
                     }
                     this.cdr.markForCheck();
                 },
-                error: (e: any) => {
+                error: (fallo: HttpErrorResponse) => {
                     this.guardando = false;
-                    this.errorModal = this.mensajeDeError(e, "No se pudo actualizar el usuario");
+                    this.errorModal = this.mensajeDeError(fallo, "No se pudo actualizar el usuario");
                     this.cdr.markForCheck();
                 },
             });
@@ -309,10 +308,10 @@ export class Admincomponent implements OnInit {
                 this.cargarUsuarios();
                 this.cdr.markForCheck();
             },
-            error: (e: any) => {
+            error: (fallo: HttpErrorResponse) => {
                 this.eliminando = false;
                 this.usuarioAEliminar = null;
-                this.errorUsuarios = this.mensajeDeError(e, "No se pudo eliminar el usuario");
+                this.errorUsuarios = this.mensajeDeError(fallo, "No se pudo eliminar el usuario");
                 this.cdr.markForCheck();
             },
         });
@@ -333,9 +332,9 @@ export class Admincomponent implements OnInit {
                 this.cargandoAuditoria = false;
                 this.cdr.markForCheck();
             },
-            error: (e: any) => {
+            error: (fallo: HttpErrorResponse) => {
                 this.cargandoAuditoria = false;
-                this.errorAuditoria = this.mensajeDeError(e, "No se pudo cargar la auditoría");
+                this.errorAuditoria = this.mensajeDeError(fallo, "No se pudo cargar la auditoría");
                 this.cdr.markForCheck();
             },
         });
@@ -401,137 +400,5 @@ export class Admincomponent implements OnInit {
         if (this.paginaAuditoria < this.totalPaginasAuditoria() - 1) {
             this.paginaAuditoria = this.paginaAuditoria + 1;
         }
-    }
-
-    cargarChats() {
-        this.cargandoChats = true;
-        this.errorChats = "";
-
-        this.admin.listarChats().subscribe({
-            next: (lista: ChatAdmin[]) => {
-                if (lista == null) {
-                    this.chats = [];
-                } else {
-                    this.chats = lista;
-                }
-                this.cargandoChats = false;
-                this.cdr.markForCheck();
-            },
-            error: (e: any) => {
-                this.cargandoChats = false;
-                this.errorChats = this.mensajeDeError(e, "No se pudieron cargar los chats");
-                this.cdr.markForCheck();
-            },
-        });
-    }
-
-    chatsFiltrados(): ChatAdmin[] {
-        const texto = this.busquedaChat.trim().toLowerCase();
-        if (texto === "") {
-            return this.chats;
-        }
-        const resultado: ChatAdmin[] = [];
-        for (const c of this.chats) {
-            const todo = (c.code + " " + c.participants.join(" ")).toLowerCase();
-            if (todo.indexOf(texto) !== -1) {
-                resultado.push(c);
-            }
-        }
-        return resultado;
-    }
-
-    tituloChat(c: ChatAdmin): string {
-        return "#" + c.code + " · " + c.participants.join(" y ");
-    }
-
-    abrirChat(c: ChatAdmin) {
-        this.chatSeleccionado = c;
-        this.mensajes = [];
-        this.desbloqueado = false;
-        this.claveChat = "";
-        this.claveVisible = false;
-        this.errorClave = "";
-    }
-
-    verClaveSecreta() {
-        const c = this.chatSeleccionado;
-        if (c == null) {
-            return;
-        }
-        this.errorClave = "";
-        this.admin.claveDeChat(c.id).subscribe({
-            next: (r: ClaveChat) => {
-                this.claveChat = r.key;
-                this.claveVisible = true;
-                this.cdr.markForCheck();
-            },
-            error: (e: any) => {
-                this.errorClave = this.mensajeDeError(e, "No se pudo obtener la clave");
-                this.cdr.markForCheck();
-            },
-        });
-    }
-
-    desbloquearChat() {
-        const c = this.chatSeleccionado;
-        if (c == null) {
-            return;
-        }
-        this.errorClave = "";
-        if (this.claveChat.length !== 16) {
-            this.errorClave = "La clave del chat tiene 16 caracteres";
-            return;
-        }
-
-        this.cargandoMensajes = true;
-        this.admin.mensajesDeChat(c.id, this.claveChat).subscribe({
-            next: (lista: MensajeAdmin[]) => {
-                const copia: MensajeAdmin[] = [];
-                if (lista != null) {
-                    for (let i = lista.length - 1; i >= 0; i--) {
-                        copia.push(lista[i]);
-                    }
-                }
-                this.mensajes = copia;
-                this.desbloqueado = true;
-                this.cargandoMensajes = false;
-                this.cdr.markForCheck();
-            },
-            error: (e: any) => {
-                this.cargandoMensajes = false;
-                this.desbloqueado = false;
-                this.errorClave = this.mensajeDeError(e, "Clave incorrecta");
-                this.cdr.markForCheck();
-            },
-        });
-    }
-
-    bloquearChat() {
-        this.mensajes = [];
-        this.desbloqueado = false;
-        this.claveChat = "";
-        this.claveVisible = false;
-    }
-
-    contenidoMensaje(m: MensajeAdmin): string {
-        if (m.type === "IMAGEN") {
-            return "[Imagen]";
-        }
-        if (m.type === "AUDIO") {
-            return "[Audio]";
-        }
-        return m.content;
-    }
-
-    get mostrarAvisoCifrado(): boolean {
-        return !this.desbloqueado && !this.cargandoMensajes;
-    }
-
-    get mostrarChatVacio(): boolean {
-        return this.desbloqueado && this.mensajes.length === 0;
-    }
-
-    obtenerRemitente(m: any): string {
-        return m.sender ? m.sender : 'IA';
     }
 }

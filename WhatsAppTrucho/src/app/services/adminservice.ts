@@ -92,7 +92,7 @@ export class AdminService {
     private headers(): HttpHeaders {
         const token = this.auth.obtenerToken();
         if (token != null) {
-            return new HttpHeaders({Authorization: "Bearer " + token});
+            return new HttpHeaders({Authorization: `Bearer ${token}`});
         }
         return new HttpHeaders();
     }
@@ -101,7 +101,7 @@ export class AdminService {
         if (USAR_MOCK) {
             return of(this.usuariosMock);
         }
-        return this.http.get<UsuarioAdmin[]>(API + "/user/getall", {
+        return this.http.get<UsuarioAdmin[]>(`${API}/user/getall`, {
             headers: this.headers(),
         });
     }
@@ -118,7 +118,7 @@ export class AdminService {
             this.usuariosMock.push(nuevo);
             return of(new HttpResponse<string>({status: 201, body: "Usuario creado"}));
         }
-        return this.http.post(API + "/user/createjson", datos, {
+        return this.http.post(`${API}/user/createjson`, datos, {
             headers: this.headers(),
             responseType: "text",
             observe: "response",
@@ -136,7 +136,7 @@ export class AdminService {
             return of(new HttpResponse<string>({status: 202, body: "Usuario actualizado"}));
         }
         const params = new HttpParams().set("id", id);
-        return this.http.put(API + "/user/updatejson", datos, {
+        return this.http.put(`${API}/user/updatejson`, datos, {
             headers: this.headers(),
             params: params,
             responseType: "text",
@@ -155,7 +155,7 @@ export class AdminService {
             this.usuariosMock = quedan;
             return of(new HttpResponse<string>({status: 202, body: "Usuario eliminado"}));
         }
-        return this.http.delete(API + "/user/deletebyid/" + id, {
+        return this.http.delete(`${API}/user/deletebyid/${id}`, {
             headers: this.headers(),
             responseType: "text",
             observe: "response",
@@ -167,7 +167,7 @@ export class AdminService {
             return of(this.auditoriaMock);
         }
         const params = new HttpParams().set("limit", limite);
-        return this.http.get<RegistroAuditoria[]>(API + "/admin/audit", {
+        return this.http.get<RegistroAuditoria[]>(`${API}/admin/audit`, {
             headers: this.headers(),
             params: params,
         });
@@ -177,7 +177,7 @@ export class AdminService {
         if (USAR_MOCK) {
             return of(this.chatsMock);
         }
-        return this.http.get<ChatAdmin[]>(API + "/admin/chats", {
+        return this.http.get<ChatAdmin[]>(`${API}/admin/chats`, {
             headers: this.headers(),
         });
     }
@@ -190,11 +190,9 @@ export class AdminService {
             if (chatId === 2 && clave === "Qw8Er5Ty2Ui0Op3A") {
                 return of(this.mensajesChat2);
             }
-            return throwError(function () {
-                return new HttpErrorResponse({status: 400, error: "Clave incorrecta"});
-            });
+            return throwError(() => new HttpErrorResponse({status: 400, error: "Clave incorrecta"}));
         }
-        return this.http.post<MensajeAdmin[]>(API + "/admin/chats/" + chatId + "/messages", {key: clave}, {
+        return this.http.post<MensajeAdmin[]>(`${API}/admin/chats/${chatId}/messages`, {key: clave}, {
             headers: this.headers(),
         });
     }
@@ -206,7 +204,7 @@ export class AdminService {
             }
             return of({key: "Qw8Er5Ty2Ui0Op3A"});
         }
-        return this.http.get<ClaveChat>(API + "/admin/chats/" + chatId + "/key", {
+        return this.http.get<ClaveChat>(`${API}/admin/chats/${chatId}/key`, {
             headers: this.headers(),
         });
     }
