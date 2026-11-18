@@ -24,17 +24,25 @@ export class Paginaprincipalcomponent implements OnInit {
     mensajeContacto = '';
     errorContacto = '';
 
-    
+    /**
+     * Inicializa los servicios de autenticación y navegación.
+     */
     constructor(
         private auth: AuthService,
         private router: Router
     ) {}
 
+    /**
+     * Obtiene el nombre del usuario al iniciar el componente.
+     */
     ngOnInit(): void {
         this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
     }
 
-
+    /**
+     * Cambia la sección que se muestra en la página principal.
+     * @param seccion Sección a la que se desea navegar.
+     */
     irASeccion(
         seccion: 'chats' | 'ia' | 'contactos'
     ): void {
@@ -43,6 +51,10 @@ export class Paginaprincipalcomponent implements OnInit {
         this.mensajeContacto = '';
         this.errorContacto = '';
     }
+
+    /**
+     * Cierra la sesión y redirige al usuario al inicio de sesión.
+     */
     salir(): void {
         this.auth.cerrarSesion();
         this.router.navigate(['/login']);
