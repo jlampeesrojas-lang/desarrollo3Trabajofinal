@@ -24,12 +24,12 @@ export class Paginaprincipalcomponent implements OnInit {
     mensajeContacto = '';
     errorContacto = '';
 
+    
     constructor(
         private auth: AuthService,
         private router: Router
     ) {}
 
-    
     ngOnInit(): void {
         this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
     }
@@ -43,8 +43,6 @@ export class Paginaprincipalcomponent implements OnInit {
         this.mensajeContacto = '';
         this.errorContacto = '';
     }
-
-
     salir(): void {
         this.auth.cerrarSesion();
         this.router.navigate(['/login']);
