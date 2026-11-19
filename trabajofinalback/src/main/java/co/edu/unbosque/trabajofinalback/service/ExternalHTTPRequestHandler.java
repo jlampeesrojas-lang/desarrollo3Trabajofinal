@@ -5,7 +5,10 @@ import co.edu.unbosque.trabajofinalback.dto.GiphyImagesDTO;
 import co.edu.unbosque.trabajofinalback.dto.GiphyImageVariantDTO;
 import co.edu.unbosque.trabajofinalback.dto.GiphyItemDTO;
 import co.edu.unbosque.trabajofinalback.dto.GiphySearchResponseDTO;
+import co.edu.unbosque.trabajofinalback.dto.IpApiResponseDTO;
+import co.edu.unbosque.trabajofinalback.dto.IpLocationDTO;
 import co.edu.unbosque.trabajofinalback.exception.GifApiException;
+import co.edu.unbosque.trabajofinalback.exception.IpApiException;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.net.URI;
@@ -112,5 +115,72 @@ public class ExternalHTTPRequestHandler {
       lista.add(dto);
     }
     return lista;
+  }
+
+  /**
+   * Consulta ip-api.com y devuelve la ubicación ya convertida al formato de este back.
+   *
+   * @param url dirección completa, con la IP y los campos pedidos
+   * @throws IpApiException si la API no responde, rechaza la IP o devuelve algo inesperado
+   */
+  public static IpLocationDTO consultarUbicacionIp(String url) throws IpApiException {
+    HttpRequest request =
+        HttpRequest.newBuilder()
+            .GET()
+            .uri(URI.create(url))
+            .header("Accept", "application/json")
+            .timeout(Duration.ofSeconds(4))
+            .build();
+
+    HttpResponse<String> response = null;
+    try {
+      response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      e.printStackTrace();
+    }
+
+    if (response == null || response.statusCode() != 200) {
+      throw new IpApiException();
+    }
+    return convertirAUbicacion(response.body());
+  }
+
+  /**
+   * Convierte el JSON de ip-api.com en un IpLocationDTO.
+   *
+   * @param json cuerpo de la respuesta de ip-api.com
+   * @throws IpApiException si el JSON no es válido o la API dice que falló (status distinto de
+   *     success)
+   */
+  public static IpLocationDTO convertirAUbicacion(String json) throws IpApiException {
+    IpApiResponseDTO respuesta = null;
+    try {
+      respuesta = new Gson().fromJson(json, IpApiResponseDTO.class);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    if (respuesta == null || respuesta.getStatus() == null) {
+      throw new IpApiException("La API de ubicación devolvio una respuesta inesperada.");
+    }
+    if (!"success".equals(respuesta.getStatus())) {
+      throw new IpApiException("No se pudo ubicar la IP: " + respuesta.getMessage());
+    }
+
+    String texto = respuesta.getCountry();
+    if (respuesta.getCity() != null && !respuesta.getCity().isBlank()) {
+      texto = respuesta.getCity() + ", " + respuesta.getCountry();
+    }
+    return new IpLocationDTO(
+        respuesta.getQuery(),
+        respuesta.getCountry(),
+        respuesta.getRegionName(),
+        respuesta.getCity(),
+        respuesta.getLat(),
+        respuesta.getLon(),
+        texto);
   }
 }

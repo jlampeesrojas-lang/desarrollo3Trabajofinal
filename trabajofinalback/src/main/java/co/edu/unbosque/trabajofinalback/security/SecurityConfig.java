@@ -58,6 +58,8 @@ public class SecurityConfig {
 						.permitAll() // documentación y página de error
 						.requestMatchers("/user/getall", "/user/count", "/user/exists/**", "/user/getbyid/**")
 						.hasAnyRole("USER", "ADMIN").requestMatchers("/gif/**").hasAnyRole("USER", "ADMIN")
+	                    .requestMatchers("/ip/**")
+	                    .hasRole("ADMIN")
 						.requestMatchers("/user/**", "/admin/**").hasRole("ADMIN").anyRequest().authenticated())
 				.exceptionHandling(ex -> ex
 						.authenticationEntryPoint((req, res, e) -> writeJson(res, HttpServletResponse.SC_UNAUTHORIZED,
