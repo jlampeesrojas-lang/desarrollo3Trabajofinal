@@ -1,7 +1,7 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/authservice';
-import { RegistroRequest, LoginResponse } from '../../models/authentication';
+import {ChangeDetectorRef, Component} from '@angular/core';
+import {Router} from '@angular/router';
+import {AuthService} from '../../services/authservice';
+import {RegistroRequest, LoginResponse} from '../../models/authentication';
 
 @Component({
     selector: 'app-login',
@@ -10,7 +10,7 @@ import { RegistroRequest, LoginResponse } from '../../models/authentication';
     styleUrl: './logincomponent.css',
 })
 export class Logincomponent {
-    edadMinima = 18;
+    edadMinima = 15;
     vista = 'login';
     cargando = false;
     error = '';
@@ -28,12 +28,12 @@ export class Logincomponent {
         clave: '',
         confirmarClave: '',
     };
-
     correoRecuperar = '';
     codigoRecuperar = '';
-    nueva = { clave: '', confirmar: '' };
+    nueva = {clave: '', confirmar: ''};
 
-    constructor(private router: Router, private auth: AuthService, private cdr: ChangeDetectorRef) {}
+    constructor(private router: Router, private auth: AuthService, private cdr: ChangeDetectorRef) {
+    }
 
     irA(vista: string) {
         this.vista = vista;
@@ -69,7 +69,7 @@ export class Logincomponent {
         this.error = '';
         this.cargando = true;
 
-        this.auth.login({ identifier: this.usuario, password: this.password }).subscribe({
+        this.auth.login({identifier: this.usuario, password: this.password}).subscribe({
             next: (respuesta: LoginResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
@@ -162,7 +162,7 @@ export class Logincomponent {
         this.error = '';
         this.cargando = true;
 
-        this.auth.pedirCodigoRecuperar({ correo: this.correoRecuperar }).subscribe({
+        this.auth.pedirCodigoRecuperar({correo: this.correoRecuperar}).subscribe({
             next: () => {
                 this.cargando = false;
                 this.cdr.markForCheck();

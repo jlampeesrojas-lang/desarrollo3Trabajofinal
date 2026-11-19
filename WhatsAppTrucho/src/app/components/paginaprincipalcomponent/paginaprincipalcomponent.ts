@@ -1,6 +1,8 @@
-import {Component, OnInit} from '@angular/core';
+import {GifService} from "../../services/gifservice";
+import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {Router} from '@angular/router';
 import {AuthService} from '../../services/authservice';
+import {Gif} from "../../models/gif";
 
 @Component({
     selector: 'app-paginaprincipalcomponent',
@@ -9,14 +11,13 @@ import {AuthService} from '../../services/authservice';
     templateUrl: './paginaprincipalcomponent.html',
 })
 export class Paginaprincipalcomponent implements OnInit {
-
     seccion: 'chats' | 'ia' | 'contactos' = 'chats';
-
     miUsuario = 'Usuario';
-
     busquedaChat = '';
     mensajeNuevo = '';
-
+    gifs: Gif[] = [];
+    buscandoGif = false;
+    avisoGif = '';
     preguntaIA = '';
 
     busquedaContacto = '';
@@ -28,6 +29,8 @@ export class Paginaprincipalcomponent implements OnInit {
      */
     constructor(
         private auth: AuthService,
+        private gifsApi: GifService,
+        private cdr: ChangeDetectorRef,
         private router: Router
     ) {
     }
@@ -43,15 +46,34 @@ export class Paginaprincipalcomponent implements OnInit {
         this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
     }
 
+    buscarGifs(texto: string): void {
+        const query = texto.trim();
+        if (!query || this.buscandoGif) return;
+        this.buscandoGif = true;
+        this.gifs = [];
+        this.avisoGif = '';
+        this.gifsApi.buscar(query).subscribe({
+            next: lista => {
+                this.gifs = lista;
+                this.avisoGif = lista.length ? '' : 'No se encontraron GIFs.';
+                this.buscandoGif = false;
+                this.cdr.markForCheck();
+            },
+            error: fallo => {
+                this.avisoGif = typeof fallo.error === 'string' ? fallo.error : 'No se pudieron cargar los GIFs.';
+                this.buscandoGif = false;
+                this.cdr.markForCheck();
+            }
+        });
+    }
+
     /**
      * Cambia la sección que se muestra en la página principal.
-     * @param seccion Sección a la que se desea navegar.
      */
     irASeccion(
         seccion: 'chats' | 'ia' | 'contactos'
     ): void {
         this.seccion = seccion;
-
         this.mensajeContacto = '';
         this.errorContacto = '';
     }

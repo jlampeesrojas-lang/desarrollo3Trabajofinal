@@ -1,26 +1,18 @@
-
 <main class="usuario">
-
     <aside class="menu">
         <h2>Sigma Chat</h2>
         <p class="rol">Panel de usuario</p>
 
         <nav>
-            <button type="button"
-                    [class.activo]="seccion === 'chats'"
-                    (click)="seccion = 'chats'">
+            <button type="button" [class.activo]="seccion === 'chats'" (click)="seccion = 'chats'">
                 Mis chats
             </button>
 
-            <button type="button"
-                    [class.activo]="seccion === 'ia'"
-                    (click)="seccion = 'ia'">
+            <button type="button" [class.activo]="seccion === 'ia'" (click)="seccion = 'ia'">
                 Chat con IA
             </button>
 
-            <button type="button"
-                    [class.activo]="seccion === 'contactos'"
-                    (click)="irAContactos()">
+            <button type="button" [class.activo]="seccion === 'contactos'" (click)="irAContactos()">
                 Agregar contactos
             </button>
         </nav>
@@ -34,21 +26,17 @@
                 </div>
             </div>
 
-            <button type="button" class="btn btn-outline" disabled>
-                Cerrar sesión
-            </button>
+            <button type="button" class="btn btn-outline" disabled>Cerrar sesión</button>
         </div>
     </aside>
 
     <section class="contenido">
-
         @if (seccion === 'chats') {
             <section class="bloque">
                 <h1>Mis chats</h1>
                 <p class="texto">Conversa con tus amigos en Sigma Chat.</p>
 
                 <div class="chats">
-
                     <div class="lista">
                         <input type="text" placeholder="Buscar conversación...">
 
@@ -62,18 +50,8 @@
 
                         <div class="chat">
                             <div class="avatar">
-                                <img src="https://i.pinimg.com/236x/96/53/f7/9653f749c03eb888c0dde626b925437b.jpg" height="45" width="45"
-
-                                     style="
-                                width: 100%;
-                                height: 100%;
-                                border-radius: 50%;
-                                object-fit: cover;
-                                object-position: center;
-                                display: block;
-                                "
-                                >
-
+                                <img src="https://i.pinimg.com/236x/96/53/f7/9653f749c03eb888c0dde626b925437b.jpg"
+                                     alt="Sigma Boy">
                             </div>
                             <div class="chat-datos">
                                 <strong>Sigma Boy</strong>
@@ -102,7 +80,7 @@
                         <div class="mensajes">
                             <div class="mensaje recibido">
                                 <p>¡Hola! ¿Cómo estás?</p>
-                                <span>10:67</span>
+                                <span>10:28</span>
                             </div>
 
                             <div class="mensaje enviado">
@@ -116,12 +94,33 @@
                             </div>
                         </div>
 
-                        <div class="barra-enviar">
-                            <button class="btn-icono" type="button" disabled>📎</button>
-                            <input type="text" placeholder="Escribe un mensaje..." disabled>
-                            <button class="btn btn-primary" type="button" disabled>
-                                Enviar
+                        <form class="barra-enviar" (ngSubmit)="buscarGifs(termino.value)">
+                            <input #termino type="text" placeholder="Buscar GIF"
+                                   aria-label="Buscar GIF" [disabled]="buscandoGif">
+
+                            <button type="submit" class="btn btn-primary" [disabled]="buscandoGif">
+                                {{ buscandoGif ? 'Buscando…' : 'Buscar GIF' }}
                             </button>
+                        </form>
+
+                        @if (avisoGif) {
+                            <p role="status">{{ avisoGif }}</p>
+                        }
+
+                        @if (gifs.length > 0) {
+                            <div class="lista-gifs">
+                                @for (gif of gifs; track gif.id) {
+                                    <a [href]="gif.originalUrl" target="_blank" rel="noopener">
+                                        <img [src]="gif.previewUrl" [alt]="gif.title || 'Ver GIF'">
+                                    </a>
+                                }
+                            </div>
+                        }
+
+                        <div class="barra-enviar">
+                            <button type="button" class="btn-icono" disabled>📎</button>
+                            <input type="text" placeholder="Escribe un mensaje..." disabled>
+                            <button type="button" class="btn btn-primary" disabled>Enviar</button>
                         </div>
                     </div>
                 </div>
@@ -135,10 +134,7 @@
 
                 <div class="visor-chat visor-ia">
                     <div class="cabecera-chat">
-                        <div class="avatar avatar-ia"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-robot" viewBox="0 0 16 16">
-                            <path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5M3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.6 26.6 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.93.93 0 0 1-.765.935c-.845.147-2.34.346-4.235.346s-3.39-.2-4.235-.346A.93.93 0 0 1 3 9.219zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a25 25 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25 25 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.135"/>
-                            <path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2zM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5"/>
-                        </svg></div>
+                        <div class="avatar avatar-ia">🤖</div>
                         <div>
                             <strong>Asistente Sigma IA</strong>
                             <p>Asistente virtual</p>
@@ -155,12 +151,8 @@
                     </div>
 
                     <div class="barra-enviar">
-                        <input type="text"
-                               placeholder="Escribe tu pregunta..."
-                               disabled>
-                        <button class="btn btn-primary" type="button" disabled>
-                            Enviar
-                        </button>
+                        <input type="text" placeholder="Escribe tu pregunta..." disabled>
+                        <button type="button" class="btn btn-primary" disabled>Enviar</button>
                     </div>
                 </div>
             </section>
@@ -169,23 +161,15 @@
         @if (seccion === 'contactos') {
             <section class="bloque">
                 <h1>Mis contactos</h1>
-                <p class="texto">
-                    Busca usuarios y agrégalos a tus contactos.
-                </p>
+                <p class="texto">Busca usuarios y agrégalos a tus contactos.</p>
 
                 <div class="tarjeta">
                     <h2>Agregar contacto</h2>
-                    <p class="texto">
-                        Escribe el ID de la persona.
-                    </p>
+                    <p class="texto">Escribe el ID de la persona.</p>
 
                     <div class="barra">
-                        <input type="text"
-                               placeholder="Nombre de usuario"
-                               disabled>
-                        <button class="btn btn-primary" type="button" disabled>
-                            Agregar
-                        </button>
+                        <input type="text" placeholder="Nombre de usuario" disabled>
+                        <button type="button" class="btn btn-primary" disabled>Agregar</button>
                     </div>
                 </div>
 
@@ -195,32 +179,21 @@
                     <div class="avatar">C</div>
                     <div class="contacto-datos">
                         <strong>Camila</strong>
-
                     </div>
-                    <span class="estado"> En línea</span>
+                    <span class="estado">En línea</span>
                 </div>
 
                 <div class="contacto">
                     <div class="avatar">
-                        <img src="https://i.pinimg.com/736x/a9/e8/d0/a9e8d037b5d81118c5486d1a46176254.jpg" width="45" height="45"
-                             style="
-                                border-radius: 50%;
-                                object-fit: cover;
-                                object-position: center;
-                                display: block;
-                                ">
-
-
+                        <img src="https://i.pinimg.com/736x/a9/e8/d0/a9e8d037b5d81118c5486d1a46176254.jpg"
+                             alt="Messi" width="45" height="45">
                     </div>
                     <div class="contacto-datos">
                         <strong>Messi</strong>
-
                     </div>
                     <span class="estado">En línea</span>
                 </div>
             </section>
         }
-
     </section>
 </main>
-

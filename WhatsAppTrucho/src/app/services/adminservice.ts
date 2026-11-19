@@ -23,7 +23,7 @@ export class AdminService {
             username: "thomas1",
             action: "MESSAGE_SENT",
             ip: "181.52.10.4",
-            location: "Bogotá, Colombia",
+            location: null,
             detail: "TEXTO",
             createdAt: "2026-11-15T10:30:00"
         },
@@ -159,6 +159,13 @@ export class AdminService {
             headers: this.headers(),
             responseType: "text",
             observe: "response",
+        });
+    }
+
+    ubicarIp(ip: string): Observable<{text: string}> {
+        return this.http.get<{text: string}>(`${API}/ip/ubicacion`, {
+            headers: this.headers(),
+            params: {ip}
         });
     }
 

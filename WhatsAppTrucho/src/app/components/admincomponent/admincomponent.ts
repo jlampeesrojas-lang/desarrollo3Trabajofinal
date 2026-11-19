@@ -59,6 +59,9 @@ export class Admincomponent implements OnInit {
     accionAuditoria = "";
     acciones = Object.keys(ACCIONES);
 
+    registroUbicacion: RegistroAuditoria | null = null;
+    resultadoIp = "";
+
     constructor(private auth: AuthService, private admin: AdminService,
                 private router: Router, private cdr: ChangeDetectorRef) {
     }
@@ -332,6 +335,37 @@ export class Admincomponent implements OnInit {
                 this.errorUsuarios = this.mensajeDeError(fallo, "No se pudo eliminar el usuario");
                 this.cdr.markForCheck();
             },
+        });
+    }
+
+    abrirUbicacion(registro: RegistroAuditoria) {
+        this.registroUbicacion = registro;
+
+        if (registro.location) {
+            this.resultadoIp = "La acción fue realizada desde " + registro.location + ".";
+            return;
+        }
+
+        if (!registro.ip) {
+            this.resultadoIp = "Este registro no tiene una IP para consultar.";
+            return;
+        }
+
+        this.resultadoIp = "Consultando la ubicación de la IP…";
+
+        this.admin.ubicarIp(registro.ip).subscribe({
+            next: ubicacion => {
+                if (this.registroUbicacion !== registro) return;
+
+                this.resultadoIp = "Ubicación aproximada de la IP: " + ubicacion.text + ".";
+                this.cdr.markForCheck();
+            },
+            error: fallo => {
+                if (this.registroUbicacion !== registro) return;
+
+                this.resultadoIp = this.mensajeDeError(fallo, "No se pudo ubicar esta IP.");
+                this.cdr.markForCheck();
+            }
         });
     }
 
