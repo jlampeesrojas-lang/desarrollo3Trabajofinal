@@ -13,22 +13,30 @@ import { Confirmaremailcomponent } from "./components/confirmaremailcomponent/co
 import { Adminchatscomponent } from "./components/adminchatscomponent/adminchatscomponent";
 import { Contactoscomponent } from "./components/contactoscomponent/contactoscomponent";
 import { Errorcomponent } from "./components/errorcomponent/errorcomponent";
+import { Burbujamensajecomponent } from "./components/burbujamensajecomponent/burbujamensajecomponent";
+import { Chatlistacomponent } from "./components/chatlistacomponent/chatlistacomponent";
+import { Ventanachatcomponent } from "./components/ventanachatcomponent/ventanachatcomponent";
+import { Paginachatcomponent } from "./components/paginachatcomponent/paginachatcomponent";
 
 @NgModule({
-  declarations: [
-    App,
-    Navbarcomponent,
-    Footercomponent,
-    Paginaprincipalcomponent,
-    Logincomponent,
-    Admincomponent,
-    Confirmaremailcomponent,
-    Adminchatscomponent,
-    Contactoscomponent,
-    Errorcomponent,
-  ],
-  imports: [BrowserModule, FormsModule, AppRoutingModule],
-  providers: [provideBrowserGlobalErrorListeners(), provideHttpClient()],
-  bootstrap: [App],
+    declarations: [
+        App,
+        Navbarcomponent,
+        Footercomponent,
+        Paginaprincipalcomponent,
+        Logincomponent,
+        Admincomponent,
+        Confirmaremailcomponent,
+        Adminchatscomponent,
+        Contactoscomponent,
+        Errorcomponent,
+        Burbujamensajecomponent,
+        Chatlistacomponent,
+        Ventanachatcomponent,
+        Paginachatcomponent,
+    ],
+    imports: [BrowserModule, FormsModule, AppRoutingModule],
+    providers: [provideBrowserGlobalErrorListeners(), provideHttpClient()],
+    bootstrap: [App],
 })
 export class AppModule {}

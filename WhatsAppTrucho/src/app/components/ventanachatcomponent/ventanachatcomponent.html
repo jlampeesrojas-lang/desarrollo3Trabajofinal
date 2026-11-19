@@ -1,0 +1,53 @@
+<header class="encabezado">
+    <button type="button" class="volver" aria-label="Volver a la lista" (click)="volver.emit()">←</button>
+    <span class="avatar">
+        @if (avatar; as url) {
+            <img [src]="url" [alt]="nombre" (error)="foto = false">
+        } @else {
+            {{ iniciales }}
+        }
+    </span>
+    <div class="titulo">
+        <strong>{{ nombre }}</strong>
+        <small>Código: {{ chat.codigo }}</small>
+    </div>
+    <span class="conexion" [class.reconectando]="conexion === 'RECONECTANDO'">
+        {{ conexion === 'CONECTADO' ? 'En línea' : 'Reconectando…' }}
+    </span>
+    <button type="button" class="boton-demo" title="Solo para la demostración" [disabled]="conexion !== 'CONECTADO'"
+            (click)="simularCaida.emit()">
+        Simular desconexión
+    </button>
+</header>
+
+@if (conexion === 'RECONECTANDO') {
+    <div class="aviso reconectando">
+        Se perdió la conexión. Reconectando… Los mensajes que envíes ahora quedarán con error y podrás reintentarlos.
+    </div>
+}
+@if (conexionRestablecida && conexion === 'CONECTADO') {
+    <div class="aviso restablecida">Conexión restablecida.</div>
+}
+
+<div class="mensajes" #scroller (scroll)="alScroll()">
+    @if (hayAnteriores) {
+        <button type="button" class="anteriores" [disabled]="cargandoAnteriores" (click)="cargarAnteriores()">
+            {{ cargandoAnteriores ? 'Cargando…' : 'Cargar mensajes anteriores' }}
+        </button>
+    }
+    @if (mensajes.length === 0) {
+        <p class="centro">Aún no hay mensajes. ¡Escribe el primero!</p>
+    }
+
+    @for (m of visibles; track m.id) {
+        <app-burbujamensajecomponent [mensaje]="m" [esMio]="m.remitenteId === miId"
+                                     (reintentar)="reintentar.emit($event)"></app-burbujamensajecomponent>
+    }
+
+</div>
+
+<div class="envio">
+    <textarea #caja rows="1" placeholder="Escribe un mensaje…" title="Enter envía · Shift+Enter salto de línea"
+              (input)="texto = caja.value" (keydown.enter)="enter($event)"></textarea>
+    <button type="button" [disabled]="!texto.trim()" (click)="enviarTexto()">Enviar</button>
+</div>
