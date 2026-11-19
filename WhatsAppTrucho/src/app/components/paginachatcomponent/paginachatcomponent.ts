@@ -27,7 +27,7 @@ export class Paginachatcomponent implements OnDestroy {
     constructor(private cdr: ChangeDetectorRef) {}
 
     ngOnDestroy(): void {
-        this.temporizadores.forEach(t => clearTimeout(t));
+        this.temporizadores.forEach(temporizador => clearTimeout(temporizador));
     }
 
     get chatActivo(): Chat | null {
@@ -122,11 +122,10 @@ export class Paginachatcomponent implements OnDestroy {
     }
 
     private programar(accion: () => void, ms: number): void {
-        const t = setTimeout(() => {
+        const temporizador = setTimeout(() => {
             accion();
             this.cdr.detectChanges();
         }, ms);
-        this.temporizadores.push(t);
+        this.temporizadores.push(temporizador);
     }
 }
-

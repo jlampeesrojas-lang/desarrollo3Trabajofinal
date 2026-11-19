@@ -16,10 +16,10 @@ export class Ventanachatcomponent implements OnChanges, OnDestroy {
     @Input() conexion: EstadoConexion = 'CONECTADO';
     @Input() conexionRestablecida = false;
 
-    @Output() enviar = new EventEmitter<string>();
-    @Output() reintentar = new EventEmitter<Mensaje>();
-    @Output() volver = new EventEmitter<void>();
-    @Output() simularCaida = new EventEmitter<void>();
+    @Output() readonly enviar = new EventEmitter<string>();
+    @Output() readonly reintentar = new EventEmitter<Mensaje>();
+    @Output() readonly volver = new EventEmitter<void>();
+    @Output() readonly simularCaida = new EventEmitter<void>();
 
     @ViewChild('scroller') scroller?: ElementRef<HTMLElement>;
     @ViewChild('caja') caja?: ElementRef<HTMLTextAreaElement>;

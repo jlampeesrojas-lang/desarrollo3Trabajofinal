@@ -11,10 +11,12 @@ export class Chatlistacomponent {
     @Input() chats: Chat[] = [];
     @Input() activoId: number | null = null;
     @Input() miId = 1;
-    @Output() seleccionar = new EventEmitter<number>();
+    @Output() readonly seleccionar = new EventEmitter<number>();
 
     titulochats = 'Chats';
     busqueda = '';
+    textoSinMensajes = 'Sin mensajes todavía';
+    formatoHora: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
     fotosRotas: number[] = [];
 
     get filtrados(): Chat[] {
@@ -46,13 +48,13 @@ export class Chatlistacomponent {
     }
 
     previa(chat: Chat): string {
-        return chat.ultimoMensaje ? chat.ultimoMensaje.contenido : 'Sin mensajes todavía';
+        return chat.ultimoMensaje ? chat.ultimoMensaje.contenido : this.textoSinMensajes;
     }
 
     hora(chat: Chat): string {
         if (!chat.ultimoMensaje) {
             return '';
         }
-        return new Date(chat.ultimoMensaje.fechaEnvio).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+        return new Date(chat.ultimoMensaje.fechaEnvio).toLocaleTimeString('es-CO', this.formatoHora);
     }
 }
