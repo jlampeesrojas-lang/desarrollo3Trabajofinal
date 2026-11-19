@@ -3,6 +3,7 @@ import { Chat, EstadoConexion, Mensaje } from '../../models/chat';
 
 const TAMANO_PAGINA = 20;
 
+/** Ventana de conversación: historial con scroll, caja de texto y estado de conexión. */
 @Component({
     selector: 'app-ventanachatcomponent',
     standalone: false,
@@ -33,6 +34,7 @@ export class Ventanachatcomponent implements OnChanges, OnDestroy {
 
     constructor(private cdr: ChangeDetectorRef) {}
 
+    /** Reinicia el historial al cambiar de chat y baja al fondo con mensajes nuevos. */
     ngOnChanges(cambios: SimpleChanges): void {
         if (cambios['chat'] && !cambios['chat'].firstChange) {
             this.cantidadVisible = TAMANO_PAGINA;
@@ -45,33 +47,40 @@ export class Ventanachatcomponent implements OnChanges, OnDestroy {
         }
     }
 
+    /** Cancela el temporizador pendiente al destruir el componente. */
     ngOnDestroy(): void {
         if (this.temporizador) {
             clearTimeout(this.temporizador);
         }
     }
 
+    /** Mensajes que se muestran ahora (los más recientes). */
     get visibles(): Mensaje[] {
         return this.mensajes.slice(-this.cantidadVisible);
     }
 
+    /** Indica si quedan mensajes anteriores por cargar. */
     get hayAnteriores(): boolean {
         return this.mensajes.length > this.cantidadVisible;
     }
 
+    /** Nombre del chat: los participantes distintos del usuario. */
     get nombre(): string {
         const otros = this.chat.participantes.filter(p => p.id !== this.miId).map(p => p.nombre);
         return otros.length ? otros.join(', ') : 'Chat sin participantes';
     }
 
+    /** URL de la foto del chat, o undefined si no tiene o no cargó. */
     get avatar(): string | undefined {
         return this.foto ? this.chat.participantes.find(p => p.id !== this.miId)?.avatarUrl : undefined;
     }
 
+    /** Iniciales del nombre, para mostrar cuando no hay foto. */
     get iniciales(): string {
         return this.nombre.split(' ').filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join('');
     }
 
+    /** Al llegar arriba del historial, carga los mensajes anteriores. */
     alScroll(): void {
         const el = this.scroller?.nativeElement;
         if (el && el.scrollTop <= 40 && this.hayAnteriores && !this.cargandoAnteriores) {
@@ -79,6 +88,7 @@ export class Ventanachatcomponent implements OnChanges, OnDestroy {
         }
     }
 
+    /** Carga otra página de mensajes anteriores conservando la posición del scroll. */
     cargarAnteriores(): void {
         const el = this.scroller?.nativeElement;
         if (!el || this.cargandoAnteriores || !this.hayAnteriores) {
@@ -95,6 +105,7 @@ export class Ventanachatcomponent implements OnChanges, OnDestroy {
         }, 400);
     }
 
+    /** Enter envía el mensaje; Shift+Enter agrega una línea. */
     enter(evento: Event): void {
         if ((evento as KeyboardEvent).shiftKey) {
             return;
@@ -103,6 +114,7 @@ export class Ventanachatcomponent implements OnChanges, OnDestroy {
         this.enviarTexto();
     }
 
+    /** Emite el texto escrito y limpia la caja. */
     enviarTexto(): void {
         const caja = this.caja?.nativeElement;
         const contenido = (caja?.value ?? '').trim();
@@ -115,6 +127,7 @@ export class Ventanachatcomponent implements OnChanges, OnDestroy {
         caja.focus();
     }
 
+    /** Lleva el scroll al último mensaje. */
     private irAbajo(): void {
         setTimeout(() => {
             const el = this.scroller?.nativeElement;
