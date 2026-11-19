@@ -39,6 +39,7 @@ export class Admincomponent implements OnInit {
     mensaje = "";
     busqueda = "";
     miUsuario: string | null = null;
+    usuarioInfo: UsuarioAdmin | null = null;
 
     modalAbierto = false;
     modo = "crear";
@@ -64,11 +65,11 @@ export class Admincomponent implements OnInit {
 
     ngOnInit() {
         if (!this.auth.estaLogueado()) {
-            this.router.navigate(["/login"]);
+            this.router.navigate(["/error", "401"]);
             return;
         }
         if (this.auth.obtenerRol() !== "ADMIN") {
-            this.router.navigate(["/principal"]);
+            this.router.navigate(["/error", "403"]);
             return;
         }
         this.miUsuario = this.auth.obtenerUsuario();
@@ -93,9 +94,12 @@ export class Admincomponent implements OnInit {
 
     mensajeDeError(fallo: HttpErrorResponse, mensajePorDefecto: string): string {
         if (fallo.status === 401) {
-            this.auth.cerrarSesion();
-            this.router.navigate(["/login"]);
+            this.router.navigate(["/error", "401"]);
             return "Tu sesión venció, inicia sesión de nuevo";
+        }
+        if (fallo.status === 403) {
+            this.router.navigate(["/error", "403"]);
+            return "No tienes permiso para hacer esto";
         }
         if (typeof fallo.error === "string" && fallo.error !== "") {
             return fallo.error;
@@ -105,9 +109,6 @@ export class Admincomponent implements OnInit {
         }
         if (fallo.status === 0) {
             return "No se pudo conectar con el servidor";
-        }
-        if (fallo.status === 403) {
-            return "No tienes permiso para hacer esto";
         }
         return mensajePorDefecto;
     }
@@ -162,6 +163,21 @@ export class Admincomponent implements OnInit {
     /** Dice si el usuario de la fila es el administrador que tiene la sesión abierta. */
     esElMismo(u: UsuarioAdmin): boolean {
         return u.username === this.miUsuario;
+    }
+
+    /** Abre la mini ventana con la información de un usuario de la lista. */
+    verUsuario(nombre: string) {
+        this.usuarioInfo = null;
+        for (const u of this.usuarios) {
+            if (u.username === nombre) {
+                this.usuarioInfo = u;
+            }
+        }
+    }
+
+    /** Cierra la mini ventana de información. */
+    cerrarInfo() {
+        this.usuarioInfo = null;
     }
 
     abrirCrear() {

@@ -11,6 +11,8 @@ import { Logincomponent } from "./components/logincomponent/logincomponent";
 import { Admincomponent } from "./components/admincomponent/admincomponent";
 import { Confirmaremailcomponent } from "./components/confirmaremailcomponent/confirmaremailcomponent";
 import { Adminchatscomponent } from "./components/adminchatscomponent/adminchatscomponent";
+import { Contactoscomponent } from "./components/contactoscomponent/contactoscomponent";
+import { Errorcomponent } from "./components/errorcomponent/errorcomponent";
 
 @NgModule({
   declarations: [
@@ -22,6 +24,8 @@ import { Adminchatscomponent } from "./components/adminchatscomponent/adminchats
     Admincomponent,
     Confirmaremailcomponent,
     Adminchatscomponent,
+    Contactoscomponent,
+    Errorcomponent,
   ],
   imports: [BrowserModule, FormsModule, AppRoutingModule],
   providers: [provideBrowserGlobalErrorListeners(), provideHttpClient()],

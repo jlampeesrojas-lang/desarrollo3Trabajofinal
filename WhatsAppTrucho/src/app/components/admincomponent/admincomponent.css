@@ -292,3 +292,24 @@ select:focus {
 }
 
 .barra select { min-width: 0; }
+
+.enlace {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.enlace:hover { color: #e8203a; }
+
+.dato {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #2a2d34;
+}
+
+.dato span { color: #8b8f98; }

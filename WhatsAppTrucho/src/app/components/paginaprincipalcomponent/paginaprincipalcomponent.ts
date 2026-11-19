@@ -1,7 +1,6 @@
-
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/authservice';
+import {Component, OnInit} from '@angular/core';
+import {Router} from '@angular/router';
+import {AuthService} from '../../services/authservice';
 
 @Component({
     selector: 'app-paginaprincipalcomponent',
@@ -30,12 +29,17 @@ export class Paginaprincipalcomponent implements OnInit {
     constructor(
         private auth: AuthService,
         private router: Router
-    ) {}
+    ) {
+    }
 
     /**
      * Obtiene el nombre del usuario al iniciar el componente.
      */
     ngOnInit(): void {
+        if (!this.auth.estaLogueado()) {
+            this.router.navigate(['/error', '401']);
+            return;
+        }
         this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
     }
 
