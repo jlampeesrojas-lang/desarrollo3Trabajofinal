@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {Observable, of} from 'rxjs';
+import {HttpClient, HttpErrorResponse} from '@angular/common/http';
+import {Observable, of, throwError} from 'rxjs';
+
 import {
     LoginRequest,
     LoginResponse,
@@ -13,6 +14,7 @@ import {
 
 export const API = 'http://localhost:8080';
 const USAR_MOCK = false;
+const USAR_MOCK_RECUPERAR = true;
 
 const TOKEN_USER = 'x.' + btoa('{"role":"USER","sub":"usuario"}') + '.x';
 const TOKEN_ADMIN = 'x.' + btoa('{"role":"ADMIN","sub":"admin"}') + '.x';
@@ -76,22 +78,28 @@ export class AuthService {
         return this.http.post<MessageResponse>(API + '/auth/resend-confirmation', {email: email});
     }
 
+    /** Pide al back que envíe un código de recuperación al correo. */
     pedirCodigoRecuperar(datos: RecuperarRequest): Observable<MessageResponse> {
-        if (USAR_MOCK) {
+        if (USAR_MOCK_RECUPERAR) {
             return of({message: 'ok'});
         }
         return this.http.post<MessageResponse>(API + '/auth/recuperar', datos);
     }
 
+    /** Verifica el código que llegó al correo. En mock el código correcto es 123456. */
     verificarCodigoRecuperar(datos: VerificarCodigoRequest): Observable<MessageResponse> {
-        if (USAR_MOCK) {
-            return of({message: 'ok'});
+        if (USAR_MOCK_RECUPERAR) {
+            if (datos.codigo === '123456') {
+                return of({message: 'ok'});
+            }
+            return throwError(() => new HttpErrorResponse({status: 400, error: 'Código incorrecto o vencido'}));
         }
         return this.http.post<MessageResponse>(API + '/auth/verificar-codigo', datos);
     }
 
+    /** Cambia la contraseña usando el correo y el código ya verificado. */
     cambiarClave(datos: CambiarClaveRequest): Observable<MessageResponse> {
-        if (USAR_MOCK) {
+        if (USAR_MOCK_RECUPERAR) {
             return of({message: 'ok'});
         }
         return this.http.post<MessageResponse>(API + '/auth/nueva-clave', datos);

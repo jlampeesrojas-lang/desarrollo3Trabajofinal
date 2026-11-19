@@ -50,7 +50,11 @@
                         }
                         @for (u of usuariosFiltrados(); track u.id) {
                             <tr>
-                                <td>{{ u.username }}</td>
+                                <td>
+                                    <button type="button" class="enlace"
+                                            (click)="verUsuario(u.username)">{{ u.username }}
+                                    </button>
+                                </td>
                                 <td>{{ u.email }}</td>
                                 <td>{{ u.role }}</td>
                                 <td>{{ textoEstado(u) }}</td>
@@ -115,7 +119,15 @@
                         @for (r of auditoriaPagina(); track r.id) {
                             <tr>
                                 <td>{{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-                                <td>{{ r.username || '—' }}</td>
+                                <td>
+                                    @if (r.username) {
+                                        <button type="button" class="enlace"
+                                                (click)="verUsuario(r.username)">{{ r.username }}
+                                        </button>
+                                    } @else {
+                                        —
+                                    }
+                                </td>
                                 <td>{{ nombreAccion(r.action) }}</td>
                                 <td>{{ r.detail || '—' }}</td>
                                 <td>{{ r.ip || '—' }}</td>
@@ -204,6 +216,21 @@
                 <button type="button" class="btn btn-primary" [disabled]="eliminando"
                         (click)="confirmarEliminar()">Eliminar
                 </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (usuarioInfo != null) {
+    <div class="modal-fondo">
+        <div class="ventana">
+            <h3>Información del usuario</h3>
+            <div class="dato"><span>Usuario</span><strong>{{ usuarioInfo.username }}</strong></div>
+            <div class="dato"><span>Correo</span><strong>{{ usuarioInfo.email }}</strong></div>
+            <div class="dato"><span>Rol</span><strong>{{ usuarioInfo.role }}</strong></div>
+            <div class="dato"><span>Estado</span><strong>{{ textoEstado(usuarioInfo) }}</strong></div>
+            <div class="acciones-modal">
+                <button type="button" class="btn btn-outline" (click)="cerrarInfo()">Cerrar</button>
             </div>
         </div>
     </div>
