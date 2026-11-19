@@ -4,7 +4,8 @@ import {Paginaprincipalcomponent} from './components/paginaprincipalcomponent/pa
 import {Logincomponent} from './components/logincomponent/logincomponent';
 import {Admincomponent} from './components/admincomponent/admincomponent';
 import {Confirmaremailcomponent} from './components/confirmaremailcomponent/confirmaremailcomponent';
-import {Paginachatcomponent} from './components/paginachatcomponent/paginachatcomponent';
+import {Contactoscomponent} from "./components/contactoscomponent/contactoscomponent";
+import {Errorcomponent} from "./components/errorcomponent/errorcomponent";
 
 const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -12,8 +13,9 @@ const routes: Routes = [
     { path: 'principal', component: Paginaprincipalcomponent},
     { path: 'admin', component: Admincomponent },
     { path: 'confirm-email', component: Confirmaremailcomponent },
-    { path: 'chats', component: Paginachatcomponent },
-    { path: '**', redirectTo: 'login' },
+    { path: 'contactos', component: Contactoscomponent },
+    { path: 'error/:codigo', component: Errorcomponent },
+    { path: '**', redirectTo: 'error/404' },
 ];
 
 @NgModule({

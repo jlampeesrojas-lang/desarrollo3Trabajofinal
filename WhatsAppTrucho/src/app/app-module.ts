@@ -10,30 +10,25 @@ import { Paginaprincipalcomponent } from "./components/paginaprincipalcomponent/
 import { Logincomponent } from "./components/logincomponent/logincomponent";
 import { Admincomponent } from "./components/admincomponent/admincomponent";
 import { Confirmaremailcomponent } from "./components/confirmaremailcomponent/confirmaremailcomponent";
-import { Burbujamensajecomponent } from "./components/burbujamensajecomponent/burbujamensajecomponent";
-import { Chatlistacomponent } from "./components/chatlistacomponent/chatlistacomponent";
-import { Ventanachatcomponent } from "./components/ventanachatcomponent/ventanachatcomponent";
-import { Paginachatcomponent } from "./components/paginachatcomponent/paginachatcomponent";
+import { Adminchatscomponent } from "./components/adminchatscomponent/adminchatscomponent";
+import { Contactoscomponent } from "./components/contactoscomponent/contactoscomponent";
+import { Errorcomponent } from "./components/errorcomponent/errorcomponent";
 
 @NgModule({
-    declarations: [
-        App,
-        Navbarcomponent,
-        Footercomponent,
-        Paginaprincipalcomponent,
-        Logincomponent,
-        Admincomponent,
-        Confirmaremailcomponent,
-        Burbujamensajecomponent,
-        Chatlistacomponent,
-        Ventanachatcomponent,
-        Paginachatcomponent,
-    ],
-    imports: [BrowserModule, FormsModule, AppRoutingModule],
-    providers: [
-        provideBrowserGlobalErrorListeners(),
-        provideHttpClient(),
-    ],
-    bootstrap: [App],
+  declarations: [
+    App,
+    Navbarcomponent,
+    Footercomponent,
+    Paginaprincipalcomponent,
+    Logincomponent,
+    Admincomponent,
+    Confirmaremailcomponent,
+    Adminchatscomponent,
+    Contactoscomponent,
+    Errorcomponent,
+  ],
+  imports: [BrowserModule, FormsModule, AppRoutingModule],
+  providers: [provideBrowserGlobalErrorListeners(), provideHttpClient()],
+  bootstrap: [App],
 })
 export class AppModule {}
