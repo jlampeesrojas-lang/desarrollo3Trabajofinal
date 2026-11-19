@@ -63,4 +63,11 @@ export class Paginaprincipalcomponent implements OnInit {
         this.auth.cerrarSesion();
         this.router.navigate(['/login']);
     }
+
+    /**
+     * Abre la pantalla de contactos.
+     */
+    irAContactos(): void {
+        this.router.navigate(['/contactos']);
+    }
 }
