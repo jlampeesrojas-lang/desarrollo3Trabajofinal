@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
  */
 public final class PasswordValidator {
 
-  private static final int MIN_LENGTH = 8;
+  private static final int MIN_LENGTH = 12;
   private static final int MAX_BYTES = 72;
 
   private PasswordValidator() {}

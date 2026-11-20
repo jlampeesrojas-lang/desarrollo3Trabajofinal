@@ -14,7 +14,7 @@ import {
 
 export const API = 'http://localhost:8080';
 const USAR_MOCK = false;
-const USAR_MOCK_RECUPERAR = true;
+const USAR_MOCK_RECUPERAR = false;
 
 const TOKEN_USER = 'x.' + btoa('{"role":"USER","sub":"usuario"}') + '.x';
 const TOKEN_ADMIN = 'x.' + btoa('{"role":"ADMIN","sub":"admin"}') + '.x';

@@ -4,9 +4,12 @@ import co.edu.unbosque.trabajofinalback.dto.AuthResponseDTO;
 import co.edu.unbosque.trabajofinalback.dto.ConfirmEmailDTO;
 import co.edu.unbosque.trabajofinalback.dto.LoginDTO;
 import co.edu.unbosque.trabajofinalback.dto.MessageDTO;
+import co.edu.unbosque.trabajofinalback.dto.NuevaClaveDTO;
+import co.edu.unbosque.trabajofinalback.dto.RecuperarDTO;
 import co.edu.unbosque.trabajofinalback.dto.RefreshTokenDTO;
 import co.edu.unbosque.trabajofinalback.dto.RegisterDTO;
 import co.edu.unbosque.trabajofinalback.dto.ResendConfirmationDTO;
+import co.edu.unbosque.trabajofinalback.dto.VerificarCodigoDTO;
 import co.edu.unbosque.trabajofinalback.exception.PasswordNotValidException;
 import co.edu.unbosque.trabajofinalback.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,7 +47,7 @@ public class AuthController {
       summary = "Registrar usuario",
       description =
           "Crea la cuenta con rol USER y envía un correo de confirmación. "
-              + "Contraseña: mínimo 8 caracteres con minúscula, mayúscula, número y símbolo.")
+              + "Contraseña: mínimo 12 caracteres con minúscula, mayúscula, número y símbolo.")
   @PostMapping("/register")
   public ResponseEntity<MessageDTO> register(
       @Valid @RequestBody RegisterDTO dto, HttpServletRequest request)
@@ -73,6 +76,42 @@ public class AuthController {
     authService.resendConfirmation(dto.getEmail(), clientIp(request));
     return ResponseEntity.ok(
         new MessageDTO("Si el correo existe y está pendiente de confirmar, recibirás un mensaje."));
+  }
+
+  @Operation(
+      summary = "Pedir código de recuperación",
+      description =
+          "Body: {\"correo\": \"...\"}. Envía un código de 6 dígitos (vence en 15 minutos). "
+              + "Responde igual exista o no el correo.")
+  @PostMapping("/recuperar")
+  public ResponseEntity<MessageDTO> recuperar(
+      @Valid @RequestBody RecuperarDTO dto, HttpServletRequest request) {
+    authService.requestPasswordReset(dto.getCorreo(), clientIp(request));
+    return ResponseEntity.ok(
+        new MessageDTO("Si el correo existe, recibirás un código para recuperar tu contraseña."));
+  }
+
+  @Operation(
+      summary = "Verificar código de recuperación",
+      description = "Body: {\"correo\": \"...\", \"codigo\": \"123456\"}. No gasta el código.")
+  @PostMapping("/verificar-codigo")
+  public ResponseEntity<MessageDTO> verificarCodigo(@Valid @RequestBody VerificarCodigoDTO dto) {
+    authService.verifyResetCode(dto.getCorreo(), dto.getCodigo());
+    return ResponseEntity.ok(new MessageDTO("Código correcto"));
+  }
+
+  @Operation(
+      summary = "Cambiar la contraseña",
+      description =
+          "Body: {\"correo\", \"codigo\", \"clave\"}. La clave sigue la misma política del registro. "
+              + "Cierra todas las sesiones de la cuenta.")
+  @PostMapping("/nueva-clave")
+  public ResponseEntity<MessageDTO> nuevaClave(
+      @Valid @RequestBody NuevaClaveDTO dto, HttpServletRequest request)
+      throws PasswordNotValidException {
+    authService.resetPassword(
+        dto.getCorreo(), dto.getCodigo(), dto.getClave(), clientIp(request));
+    return ResponseEntity.ok(new MessageDTO("Contraseña actualizada. Ya puedes iniciar sesión."));
   }
 
   @Operation(
