@@ -1,0 +1,38 @@
+<div class="cabecera">
+    <h2>{{ titulochats }}</h2>
+    <input #caja class="buscar" type="search" placeholder="Buscar por nombre o código" aria-label="Buscar chat"
+           (input)="busqueda = caja.value">
+</div>
+
+<div class="lista">
+    @if (chats.length === 0) {
+        <p class="estado">Aún no tienes chats.</p>
+    }
+    @if (chats.length > 0 && filtrados.length === 0) {
+        <p class="estado">Ningún chat coincide con la búsqueda.</p>
+    }
+
+    @for (c of filtrados; track c.id) {
+        <button type="button" class="item" [class.activo]="c.id === activoId" (click)="seleccionar.emit(c.id)">
+            <span class="avatar">
+                @if (foto(c); as url) {
+                    <img [src]="url" [alt]="nombre(c)" (error)="fotoRota(c)">
+                } @else {
+                    {{ iniciales(c) }}
+                }
+            </span>
+            <span class="cuerpo">
+                <span class="fila">
+                    <strong class="nombre">{{ nombre(c) }}</strong>
+                    <span class="hora">{{ hora(c) }}</span>
+                </span>
+                <span class="fila">
+                    <span class="previa">{{ previa(c) }}</span>
+                    @if (c.noLeidos > 0) {
+                        <span class="badge">{{ c.noLeidos }}</span>
+                    }
+                </span>
+            </span>
+        </button>
+    }
+</div>
