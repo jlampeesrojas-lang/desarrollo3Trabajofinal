@@ -30,6 +30,7 @@ public class EmailService {
   @Value("${app.frontend-url}")
   private String frontendUrl;
 
+  /** Crea el servicio de correo. */
   public EmailService(JavaMailSender mailSender) {
     this.mailSender = mailSender;
   }
@@ -55,6 +56,26 @@ public class EmailService {
     send(user.getEmail(), "Confirma tu correo", html);
   }
 
+  /**
+   * Envía el código de 6 dígitos para recuperar la contraseña.
+   *
+   * @param user Usuario que pidió la recuperación
+   * @param code Código en texto plano (solo viaja por este correo)
+   * @throws org.springframework.mail.MailException si el servidor SMTP falla
+   */
+  public void sendResetCodeEmail(User user, String code) {
+    String name = HtmlUtils.htmlEscape(user.getUsername());
+    String html =
+        "<div style=\"font-family:Arial,sans-serif;max-width:480px\">"
+            + "<h2>Recupera tu contraseña</h2>"
+            + "<p>Hola " + name + ", usa este código para cambiar tu contraseña:</p>"
+            + "<p style=\"font-size:32px;font-weight:bold;letter-spacing:8px\">" + code + "</p>"
+            + "<p>El código vence en 15 minutos y solo puede usarse una vez.</p>"
+            + "<p>Si no lo pediste, ignora este mensaje: tu contraseña no cambia.</p></div>";
+    send(user.getEmail(), "Código para recuperar tu contraseña", html);
+  }
+
+  /** Arma y envía un correo HTML. */
   private void send(String to, String subject, String html) {
     MimeMessage message = mailSender.createMimeMessage();
     try {

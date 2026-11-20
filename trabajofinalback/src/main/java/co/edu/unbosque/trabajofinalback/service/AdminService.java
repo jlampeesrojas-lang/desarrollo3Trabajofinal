@@ -1,151 +1,221 @@
 package co.edu.unbosque.trabajofinalback.service;
 
-import co.edu.unbosque.trabajofinalback.dto.AuditLogDTO;
+import co.edu.unbosque.trabajofinalback.dto.AuditAdminDTO;
+import co.edu.unbosque.trabajofinalback.dto.ChatAdminDTO;
+import co.edu.unbosque.trabajofinalback.dto.MensajeAdminDTO;
+import co.edu.unbosque.trabajofinalback.exception.InvalidTokenException;
 import co.edu.unbosque.trabajofinalback.model.AuditAction;
 import co.edu.unbosque.trabajofinalback.model.AuditLog;
+import co.edu.unbosque.trabajofinalback.model.Chat;
+import co.edu.unbosque.trabajofinalback.model.ChatParticipant;
+import co.edu.unbosque.trabajofinalback.model.Message;
 import co.edu.unbosque.trabajofinalback.model.User;
 import co.edu.unbosque.trabajofinalback.repository.AuditLogRepository;
-import co.edu.unbosque.trabajofinalback.repository.RefreshTokenRepository;
+import co.edu.unbosque.trabajofinalback.repository.ChatParticipantRepository;
+import co.edu.unbosque.trabajofinalback.repository.ChatRepository;
+import co.edu.unbosque.trabajofinalback.repository.MessageRepository;
 import co.edu.unbosque.trabajofinalback.repository.UserRepository;
-import java.time.LocalDateTime;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
-/** Operaciones del administrador: activar/desactivar usuarios y consultar la auditoría. */
+/** Consultas del panel de administración: auditoría y lectura de chats. */
 @Service
 public class AdminService {
 
-  private static final int MAX_LIMIT = 500;
+	/** Máximo de eventos de auditoría que se devuelven en una consulta. */
+	private static final int LIMITE_MAXIMO_AUDITORIA = 500;
 
-  @Autowired private UserRepository userRepo;
+	/** Máximo de mensajes que se devuelven al leer un chat. */
+	private static final int LIMITE_MENSAJES = 200;
 
-  @Autowired private RefreshTokenRepository refreshTokenRepo;
+	/** Texto que se muestra cuando un mensaje no se puede descifrar. */
+	private static final String MENSAJE_ILEGIBLE = "[No se pudo descifrar el mensaje]";
 
-  @Autowired private AuditLogRepository auditRepo;
+	private final AuditLogRepository auditRepo;
+	private final UserRepository userRepo;
+	private final ChatRepository chatRepo;
+	private final ChatParticipantRepository participantRepo;
+	private final MessageRepository messageRepo;
+	private final ChatCryptoService crypto;
+	private final AuditService auditService;
 
-  @Autowired private AuditService auditService;
+	/**
+	 * Crea el servicio con los repositorios y servicios que necesita.
+	 *
+	 * @param auditRepo       repositorio de eventos de auditoría
+	 * @param userRepo        repositorio de usuarios
+	 * @param chatRepo        repositorio de chats
+	 * @param participantRepo repositorio de participantes de chat
+	 * @param messageRepo     repositorio de mensajes
+	 * @param crypto          servicio de cifrado de chats
+	 * @param auditService    servicio para registrar auditoría
+	 */
+	public AdminService(AuditLogRepository auditRepo, UserRepository userRepo, ChatRepository chatRepo,
+			ChatParticipantRepository participantRepo, MessageRepository messageRepo, ChatCryptoService crypto,
+			AuditService auditService) {
+		this.auditRepo = auditRepo;
+		this.userRepo = userRepo;
+		this.chatRepo = chatRepo;
+		this.participantRepo = participantRepo;
+		this.messageRepo = messageRepo;
+		this.crypto = crypto;
+		this.auditService = auditService;
+	}
 
-  public AdminService() {}
+	/**
+	 * Devuelve los últimos eventos de auditoría con el nombre de usuario.
+	 *
+	 * @param limit cantidad de eventos a devolver (se ajusta entre 1 y 500)
+	 * @return eventos de auditoría, del más reciente al más antiguo
+	 */
+	@Transactional(readOnly = true)
+	public List<AuditAdminDTO> audit(int limit) {
+		int tamano = Math.max(1, Math.min(limit, LIMITE_MAXIMO_AUDITORIA));
 
-  /**
-   * Desactiva un usuario: ya no puede iniciar sesión y se cierran todas sus sesiones.
-   *
-   * @return 0 = desactivado, 1 = no existe, 2 = no puedes desactivarte a ti mismo, 3 = ya estaba
-   *     desactivado
-   */
-  public int disableUser(Long adminId, Long userId, String ip) {
-    Optional<User> found = userRepo.findById(userId);
-    if (!found.isPresent()) {
-      return 1;
-    }
-    if (userId.equals(adminId)) {
-      return 2;
-    }
-    User user = found.get();
-    if (!user.isEnabled()) {
-      return 3;
-    }
+		PageRequest pagina = PageRequest.of(0, tamano, Sort.by(Sort.Direction.DESC, "id"));
+		List<AuditLog> eventos = auditRepo.findAll(pagina).getContent();
 
-    user.setEnabled(false);
-    userRepo.save(user);
-    // Cierra todas sus sesiones: sus refresh tokens dejan de servir
-    refreshTokenRepo.revokeAllByUser(user);
+		Set<Long> ids = new HashSet<>();
+		for (AuditLog evento : eventos) {
+			if (evento.getUserId() != null) {
+				ids.add(evento.getUserId());
+			}
+		}
 
-    auditService.log(
-        AuditAction.ADMIN_USER_UPDATED, adminId, ip, "desactivó al usuario id=" + userId);
-    return 0;
-  }
+		Map<Long, String> nombres = new HashMap<>();
+		for (User usuario : userRepo.findAllById(ids)) {
+			nombres.put(usuario.getId(), usuario.getUsername());
+		}
 
-  /**
-   * Vuelve a activar un usuario (y le quita un bloqueo por intentos fallidos si lo tenía).
-   *
-   * @return 0 = activado, 1 = no existe, 2 = ya estaba activo
-   */
-  public int enableUser(Long adminId, Long userId, String ip) {
-    Optional<User> found = userRepo.findById(userId);
-    if (!found.isPresent()) {
-      return 1;
-    }
-    User user = found.get();
-    if (user.isEnabled() && user.getLockedUntil() == null) {
-      return 2;
-    }
+		List<AuditAdminDTO> resultado = new ArrayList<>(eventos.size());
+		for (AuditLog evento : eventos) {
+			String accion = evento.getAction() == null ? null : evento.getAction().name();
+			AuditAdminDTO fila = new AuditAdminDTO(evento.getId(), nombres.get(evento.getUserId()), accion,
+					evento.getIp(), evento.getLocation(), evento.getDetail(), evento.getCreatedAt());
+			resultado.add(fila);
+		}
 
-    user.setEnabled(true);
-    user.setFailedAttempts(0);
-    user.setLockedUntil(null);
-    userRepo.save(user);
+		return resultado;
+	}
 
-    auditService.log(
-        AuditAction.ADMIN_USER_UPDATED, adminId, ip, "activó al usuario id=" + userId);
-    return 0;
-  }
+	/**
+	 * Devuelve todos los chats con participantes y cantidad de mensajes.
+	 *
+	 * @return chats ordenados por fecha del último mensaje, del más reciente al más antiguo
+	 */
+	@Transactional(readOnly = true)
+	public List<ChatAdminDTO> chats() {
+		List<ChatAdminDTO> resultado = new ArrayList<>();
 
-  /**
-   * Consulta la auditoría con filtros opcionales (null = sin filtro). Lo más reciente primero.
-   *
-   * @param username si se envía, se busca su id y se filtra por él
-   * @param limit cuántos registros devolver (1 a 500; por defecto 50)
-   */
-  public List<AuditLogDTO> searchAudit(
-      Long userId,
-      String username,
-      AuditAction action,
-      LocalDateTime desde,
-      LocalDateTime hasta,
-      int limit) {
-    if (limit < 1 || limit > MAX_LIMIT) {
-      limit = 50;
-    }
-    if (username != null && !username.isBlank()) {
-      Optional<User> u = userRepo.findByUsername(username.trim());
-      if (!u.isPresent()) {
-        return new ArrayList<>();
-      }
-      userId = u.get().getId();
-    }
+		for (Chat chat : chatRepo.findAllByOrderByLastMessageAtDesc()) {
+			Long chatId = chat.getId();
+			List<String> nombres = new ArrayList<>();
 
-    List<AuditLog> registros =
-        auditRepo.search(userId, action, desde, hasta, PageRequest.of(0, limit));
+			for (ChatParticipant participante : participantRepo.findByChatIdOrderByIdAsc(chatId)) {
+				if (participante.getUser() != null) {
+					nombres.add(participante.getUser().getUsername());
+				}
+			}
 
-    // Nombres de usuario en una sola consulta (en vez de una por cada registro)
-    Set<Long> ids = new HashSet<>();
-    registros.forEach(
-        (a) -> {
-          if (a.getUserId() != null) {
-            ids.add(a.getUserId());
-          }
-        });
-    Map<Long, String> nombres = new HashMap<>();
-    userRepo
-        .findAllById(ids)
-        .forEach(
-            (u) -> {
-              nombres.put(u.getId(), u.getUsername());
-            });
+			ChatAdminDTO fila = new ChatAdminDTO(chatId, chat.getCode(), nombres, chat.getLastMessageAt(),
+					messageRepo.countByChatId(chatId));
+			resultado.add(fila);
+		}
 
-    List<AuditLogDTO> dtoList = new ArrayList<>();
-    registros.forEach(
-        (a) -> {
-          AuditLogDTO dto = new AuditLogDTO();
-          dto.setId(a.getId());
-          dto.setUserId(a.getUserId());
-          dto.setUsername(a.getUserId() != null ? nombres.get(a.getUserId()) : null);
-          dto.setAction(a.getAction().name());
-          dto.setIp(a.getIp());
-          dto.setLocation(a.getLocation());
-          dto.setDetail(a.getDetail());
-          dto.setCreatedAt(a.getCreatedAt().toString());
-          dtoList.add(dto);
-        });
-    return dtoList;
-  }
+		return resultado;
+	}
+
+	/**
+	 * Devuelve los mensajes de un chat descifrados si la clave es correcta.
+	 *
+	 * @param chatId  identificador del chat
+	 * @param key     clave del chat escrita por el administrador
+	 * @param adminId identificador del administrador que consulta
+	 * @param ip      dirección IP desde la que se consulta
+	 * @return los últimos mensajes del chat, del más reciente al más antiguo
+	 * @throws InvalidTokenException si la clave es incorrecta
+	 */
+	@Transactional
+	public List<MensajeAdminDTO> messages(Long chatId, String key, Long adminId, String ip) {
+		Chat chat = buscarChat(chatId);
+		String claveReal = crypto.recuperarLlave(chat.getKeyEnc());
+
+		if (!clavesIguales(claveReal, key)) {
+			auditService.log(AuditAction.ADMIN_READ_CHAT, adminId, ip,
+					"Intento fallido (clave incorrecta), chat=" + chat.getCode());
+			throw new InvalidTokenException("Clave incorrecta", HttpStatus.BAD_REQUEST);
+		}
+
+		auditService.log(AuditAction.ADMIN_READ_CHAT, adminId, ip, "chat=" + chat.getCode());
+
+		PageRequest pagina = PageRequest.of(0, LIMITE_MENSAJES);
+		List<Message> mensajes = messageRepo.findByChatIdOrderByIdDesc(chatId, pagina).getContent();
+		List<MensajeAdminDTO> resultado = new ArrayList<>(mensajes.size());
+
+		for (Message mensaje : mensajes) {
+			String remitente = mensaje.getSender() == null ? null : mensaje.getSender().getUsername();
+			String tipo = mensaje.getType() == null ? null : mensaje.getType().name();
+
+			MensajeAdminDTO fila = new MensajeAdminDTO(mensaje.getId(), remitente, tipo,
+					descifrarSeguro(claveReal, mensaje.getContentEnc()), mensaje.getMediaId(),
+					mensaje.getCreatedAt());
+			resultado.add(fila);
+		}
+
+		return resultado;
+	}
+
+	/**
+	 * Devuelve la clave de un chat ya descifrada.
+	 *
+	 * @param chatId  identificador del chat
+	 * @param adminId identificador del administrador que consulta
+	 * @param ip      dirección IP desde la que se consulta
+	 * @return la clave del chat en texto plano
+	 */
+	@Transactional
+	public String chatKey(Long chatId, Long adminId, String ip) {
+		Chat chat = buscarChat(chatId);
+		auditService.log(AuditAction.ADMIN_READ_CHAT, adminId, ip, "clave del chat=" + chat.getCode());
+		return crypto.recuperarLlave(chat.getKeyEnc());
+	}
+
+	/** Busca un chat por id o responde 404 si no existe. */
+	private Chat buscarChat(Long chatId) {
+		return chatRepo.findById(chatId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chat no encontrado"));
+	}
+
+	/** Compara dos claves en tiempo constante; devuelve false si alguna es null. */
+	private static boolean clavesIguales(String esperada, String recibida) {
+		if (esperada == null || recibida == null) {
+			return false;
+		}
+		return MessageDigest.isEqual(esperada.getBytes(StandardCharsets.UTF_8),
+				recibida.getBytes(StandardCharsets.UTF_8));
+	}
+
+	/** Descifra un mensaje; si falla, devuelve un texto de aviso en vez de romper toda la lista. */
+	private String descifrarSeguro(String clave, String contenidoCifrado) {
+		if (contenidoCifrado == null) {
+			return null;
+		}
+		try {
+			return crypto.descifrar(clave, contenidoCifrado);
+		} catch (RuntimeException e) {
+			return MENSAJE_ILEGIBLE;
+		}
+	}
 }

@@ -2,6 +2,10 @@ package co.edu.unbosque.trabajofinalback.controller;
 
 import co.edu.unbosque.trabajofinalback.dto.AuditLogDTO;
 import co.edu.unbosque.trabajofinalback.model.AuditAction;
+import co.edu.unbosque.trabajofinalback.dto.AuditAdminDTO;
+import co.edu.unbosque.trabajofinalback.dto.ChatAdminDTO;
+import co.edu.unbosque.trabajofinalback.dto.ClaveChatDTO;
+import co.edu.unbosque.trabajofinalback.dto.MensajeAdminDTO;
 import co.edu.unbosque.trabajofinalback.security.AuthContext;
 import co.edu.unbosque.trabajofinalback.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,97 +23,72 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import jakarta.validation.Valid;
+import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Endpoints del administrador. Solo rol ADMIN (regla /admin/** en SecurityConfig). */
+/**
+ * Endpoints del panel de administración. SecurityConfig ya exige rol ADMIN para todo /admin/**, así
+ * que un USER recibe 403 y sin token recibe 401.
+ */
 @RestController
 @RequestMapping("/admin")
-@Transactional
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Administración", description = "Gestión de usuarios y consulta de auditoría")
+@Tag(name = "Administración", description = "Auditoría y lectura de chats (solo ADMIN)")
 public class AdminController {
 
-  @Autowired private AdminService adminServ;
+  private final AdminService adminService;
+  private final AuthContext authContext;
 
-  @Autowired private AuthContext authContext;
-
-  public AdminController() {}
-
-  @Operation(
-      summary = "Desactivar usuario",
-      description = "No podrá iniciar sesión y se cierran todas sus sesiones")
-  @PutMapping("/disableuser/{id}")
-  public ResponseEntity<String> disableUser(@PathVariable Long id, HttpServletRequest request) {
-    int status = adminServ.disableUser(authContext.getUserId(), id, request.getRemoteAddr());
-
-    if (status == 0) {
-      return new ResponseEntity<>("Usuario desactivado exitosamente", HttpStatus.OK);
-    } else if (status == 1) {
-      return new ResponseEntity<>("El usuario no existe", HttpStatus.NOT_FOUND);
-    } else if (status == 2) {
-      return new ResponseEntity<>("No puedes desactivarte a ti mismo", HttpStatus.BAD_REQUEST);
-    } else {
-      return new ResponseEntity<>("El usuario ya estaba desactivado", HttpStatus.NOT_ACCEPTABLE);
-    }
+  /** Crea el controlador con el servicio de administración y el contexto de autenticación. */
+  public AdminController(AdminService adminService, AuthContext authContext) {
+    this.adminService = adminService;
+    this.authContext = authContext;
   }
 
+  /** Devuelve los últimos eventos de auditoría, del más nuevo al más viejo. */
   @Operation(
-      summary = "Activar usuario",
-      description = "Lo vuelve a habilitar y le quita el bloqueo por intentos fallidos")
-  @PutMapping("/enableuser/{id}")
-  public ResponseEntity<String> enableUser(@PathVariable Long id, HttpServletRequest request) {
-    int status = adminServ.enableUser(authContext.getUserId(), id, request.getRemoteAddr());
-
-    if (status == 0) {
-      return new ResponseEntity<>("Usuario activado exitosamente", HttpStatus.OK);
-    } else if (status == 1) {
-      return new ResponseEntity<>("El usuario no existe", HttpStatus.NOT_FOUND);
-    } else {
-      return new ResponseEntity<>("El usuario ya estaba activo", HttpStatus.NOT_ACCEPTABLE);
-    }
-  }
-
-  @Operation(
-      summary = "Consultar auditoría con filtros",
-      description =
-          "Todos los filtros son opcionales: limit (por defecto 50, máx. 500), userId, username,"
-              + " action (ej. LOGIN_OK, LOGIN_FAIL, MESSAGE_SENT), desde y hasta (yyyy-MM-dd)")
+      summary = "Auditoría",
+      description = "Últimos eventos, del más nuevo al más viejo. Parámetro limit (1 a 500).")
   @GetMapping("/audit")
-  public ResponseEntity<List<AuditLogDTO>> getAudit(
-      @RequestParam(defaultValue = "50") int limit,
-      @RequestParam(required = false) Long userId,
-      @RequestParam(required = false) String username,
-      @RequestParam(required = false) String action,
-      @RequestParam(required = false) String desde,
-      @RequestParam(required = false) String hasta) {
+  public ResponseEntity<List<AuditAdminDTO>> audit(
+      @RequestParam(name = "limit", defaultValue = "100") int limit) {
+    return ResponseEntity.ok(adminService.audit(limit));
+  }
 
-    AuditAction accion = null;
-    if (action != null && !action.isBlank()) {
-      try {
-        accion = AuditAction.valueOf(action.trim().toUpperCase());
-      } catch (IllegalArgumentException e) {
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-      }
-    }
+  /** Devuelve la lista de chats con sus participantes y cantidad de mensajes. */
+  @Operation(summary = "Lista de chats", description = "Código, participantes y cantidad de mensajes.")
+  @GetMapping("/chats")
+  public ResponseEntity<List<ChatAdminDTO>> chats() {
+    return ResponseEntity.ok(adminService.chats());
+  }
 
-    LocalDateTime inicio = null;
-    LocalDateTime fin = null;
-    try {
-      if (desde != null && !desde.isBlank()) {
-        inicio = LocalDate.parse(desde.trim()).atStartOfDay();
-      }
-      if (hasta != null && !hasta.isBlank()) {
-        // "hasta" incluye todo ese día: se busca hasta el inicio del día siguiente
-        fin = LocalDate.parse(hasta.trim()).plusDays(1).atStartOfDay();
-      }
-    } catch (DateTimeParseException e) {
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-    }
+  /** Devuelve los mensajes descifrados de un chat si la clave enviada es la correcta. */
+  @Operation(
+      summary = "Mensajes de un chat",
+      description =
+          "Body: {\"key\": \"clave del chat\"}. Si la clave es correcta devuelve los mensajes "
+              + "descifrados; si no, 400.")
+  @PostMapping("/chats/{id}/messages")
+  public ResponseEntity<List<MensajeAdminDTO>> messages(
+      @PathVariable Long id, @Valid @RequestBody ClaveChatDTO dto, HttpServletRequest request) {
+    return ResponseEntity.ok(
+        adminService.messages(id, dto.getKey(), authContext.getUserId(), request.getRemoteAddr()));
+  }
 
-    List<AuditLogDTO> registros =
-        adminServ.searchAudit(userId, username, accion, inicio, fin, limit);
-    return new ResponseEntity<>(registros, HttpStatus.OK);
+  /** Devuelve la clave de un chat y deja el acceso registrado en la auditoría. */
+  @Operation(summary = "Clave de un chat", description = "Devuelve {\"key\": \"...\"} y queda auditado.")
+  @GetMapping("/chats/{id}/key")
+  public ResponseEntity<ClaveChatDTO> key(@PathVariable Long id, HttpServletRequest request) {
+    return ResponseEntity.ok(
+        new ClaveChatDTO(
+            adminService.chatKey(id, authContext.getUserId(), request.getRemoteAddr())));
   }
 }
