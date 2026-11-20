@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+/** Consultas del panel de administración: auditoría y lectura de chats. */
 @Service
 public class AdminService {
 
@@ -37,6 +38,7 @@ public class AdminService {
 	private final ChatCryptoService crypto;
 	private final AuditService auditService;
 
+	/** Crea el servicio con los repositorios y servicios que necesita. */
 	public AdminService(AuditLogRepository auditRepo, UserRepository userRepo, ChatRepository chatRepo,
 			ChatParticipantRepository participantRepo, MessageRepository messageRepo, ChatCryptoService crypto,
 			AuditService auditService) {
@@ -49,6 +51,7 @@ public class AdminService {
 		this.auditService = auditService;
 	}
 
+	/** Devuelve los últimos eventos de auditoría con el nombre de usuario. */
 	@Transactional(readOnly = true)
 	public List<AuditAdminDTO> audit(int limit) {
 		if (limit < 1) {
@@ -90,6 +93,7 @@ public class AdminService {
 		return resultado;
 	}
 
+	/** Devuelve todos los chats con participantes y cantidad de mensajes. */
 	@Transactional(readOnly = true)
 	public List<ChatAdminDTO> chats() {
 		List<ChatAdminDTO> resultado = new ArrayList<>();
@@ -110,6 +114,7 @@ public class AdminService {
 		return resultado;
 	}
 
+	/** Devuelve los mensajes de un chat descifrados si la clave es correcta. */
 	@Transactional
 	public List<MensajeAdminDTO> messages(Long chatId, String key, Long adminId, String ip) {
 		Chat chat = buscarChat(chatId);
@@ -141,6 +146,7 @@ public class AdminService {
 		return resultado;
 	}
 
+	/** Devuelve la clave de un chat ya descifrada. */
 	@Transactional
 	public String chatKey(Long chatId, Long adminId, String ip) {
 		Chat chat = buscarChat(chatId);
@@ -148,6 +154,7 @@ public class AdminService {
 		return crypto.recuperarLlave(chat.getKeyEnc());
 	}
 
+	/** Buscar chat. */
 	private Chat buscarChat(Long chatId) {
 		Chat chat = chatRepo.findById(chatId).orElse(null);
 		if (chat == null) {

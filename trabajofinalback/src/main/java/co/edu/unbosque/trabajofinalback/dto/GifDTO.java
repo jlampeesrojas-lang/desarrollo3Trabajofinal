@@ -40,54 +40,67 @@ public class GifDTO {
 		this.height = height;
 	}
 
+	/** Devuelve id. */
 	public String getId() {
 		return id;
 	}
 
+	/** Define id. */
 	public void setId(String id) {
 		this.id = id;
 	}
 
+	/** Devuelve title. */
 	public String getTitle() {
 		return title;
 	}
 
+	/** Define title. */
 	public void setTitle(String title) {
 		this.title = title;
 	}
 
+	/** Devuelve preview url. */
 	public String getPreviewUrl() {
 		return previewUrl;
 	}
 
+	/** Define preview url. */
 	public void setPreviewUrl(String previewUrl) {
 		this.previewUrl = previewUrl;
 	}
 
+	/** Devuelve original url. */
 	public String getOriginalUrl() {
 		return originalUrl;
 	}
 
+	/** Define original url. */
 	public void setOriginalUrl(String originalUrl) {
 		this.originalUrl = originalUrl;
 	}
 
+	/** Devuelve width. */
 	public String getWidth() {
 		return width;
 	}
 
+	/** Define width. */
 	public void setWidth(String width) {
 		this.width = width;
 	}
 
+	/** Devuelve height. */
 	public String getHeight() {
 		return height;
 	}
 
+	/** Define height. */
 	public void setHeight(String height) {
 		this.height = height;
 	}
 
+	/** Devuelve el objeto como texto. */
 	@Override
 	public String toString() {
 		return "GifDTO [id=" + id + ", title=" + title + ", previewUrl=" + previewUrl + ", originalUrl=" + originalUrl

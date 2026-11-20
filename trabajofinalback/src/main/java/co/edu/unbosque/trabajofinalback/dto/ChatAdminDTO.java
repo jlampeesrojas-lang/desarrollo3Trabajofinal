@@ -12,10 +12,12 @@ public class ChatAdminDTO {
 	private LocalDateTime lastMessageAt;
 	private long messageCount;
 
+	/** Constructor vacío. */
 	public ChatAdminDTO() {
 		// TODO Auto-generated constructor stub
 	}
 
+	/** Crea un ChatAdminDTO con sus datos. */
 	public ChatAdminDTO(Long id, String code, List<String> participants, LocalDateTime lastMessageAt,
 			long messageCount) {
 		this.id = id;
@@ -25,46 +27,57 @@ public class ChatAdminDTO {
 		this.messageCount = messageCount;
 	}
 
+	/** Devuelve id. */
 	public Long getId() {
 		return id;
 	}
 
+	/** Define id. */
 	public void setId(Long id) {
 		this.id = id;
 	}
 
+	/** Devuelve code. */
 	public String getCode() {
 		return code;
 	}
 
+	/** Define code. */
 	public void setCode(String code) {
 		this.code = code;
 	}
 
+	/** Devuelve participants. */
 	public List<String> getParticipants() {
 		return participants;
 	}
 
+	/** Define participants. */
 	public void setParticipants(List<String> participants) {
 		this.participants = participants;
 	}
 
+	/** Devuelve last message at. */
 	public LocalDateTime getLastMessageAt() {
 		return lastMessageAt;
 	}
 
+	/** Define last message at. */
 	public void setLastMessageAt(LocalDateTime lastMessageAt) {
 		this.lastMessageAt = lastMessageAt;
 	}
 
+	/** Devuelve message count. */
 	public long getMessageCount() {
 		return messageCount;
 	}
 
+	/** Define message count. */
 	public void setMessageCount(long messageCount) {
 		this.messageCount = messageCount;
 	}
 
+	/** Devuelve el objeto como texto. */
 	@Override
 	public String toString() {
 		return "ChatAdminDTO [id=" + id + ", code=" + code + ", participants=" + participants + ", lastMessageAt="

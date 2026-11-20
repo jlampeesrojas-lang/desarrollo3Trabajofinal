@@ -33,6 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** AuthService. */
 @Service
 public class AuthService {
 
@@ -54,6 +55,7 @@ public class AuthService {
     @Value("${jwt.refresh-expiration-days:7}")
     private long refreshDays;
 
+    /** Crea el servicio con sus repositorios y utilidades. */
     public AuthService(UserRepository userRepo,
                        EmailTokenRepository emailTokenRepo,
                        RefreshTokenRepository refreshTokenRepo,
@@ -72,6 +74,7 @@ public class AuthService {
         this.auditService = auditService;
     }
 
+    /** Registra un usuario con rol USER y envía el correo de confirmación. */
     @Transactional
     public void register(RegisterDTO dto, String ip) throws PasswordNotValidException {
         PasswordValidator.validate(dto.getPassword());
@@ -95,6 +98,7 @@ public class AuthService {
         sendConfirmation(user);
     }
 
+    /** Crea un token de confirmación y lo envía por correo. */
     private void sendConfirmation(User user) {
         String tokenOriginal = TokenUtil.generateToken();
         String hash = TokenUtil.sha256(tokenOriginal);
@@ -110,6 +114,7 @@ public class AuthService {
         }
     }
 
+    /** Confirma el correo con el token recibido en el enlace. */
     @Transactional
     public void confirmEmail(String rawToken, String ip) {
         String hash = TokenUtil.sha256(rawToken);
@@ -136,6 +141,7 @@ public class AuthService {
         auditService.log(AuditAction.EMAIL_CONFIRMED, user.getId(), ip, null);
     }
 
+    /** Reenvía el correo de confirmación sin revelar si el correo existe. */
     @Transactional
     public void resendConfirmation(String email, String ip) {
         String correo = email.trim().toLowerCase();
@@ -151,11 +157,13 @@ public class AuthService {
     }
 
     // Se usa al guardar el código y al comprobar el que escribe el usuario.
+    /** Calcula el hash del código de recuperación usando también el correo. */
     private String resetHash(String email, String code) {
         String correo = email.trim().toLowerCase();
         return TokenUtil.sha256(correo + ":" + code.trim());
     }
 
+    /** Genera un código de 6 dígitos y lo envía al correo de la cuenta. */
     @Transactional
     public void requestPasswordReset(String email, String ip) {
         String correo = email.trim().toLowerCase();
@@ -184,6 +192,7 @@ public class AuthService {
         auditService.log(AuditAction.PASSWORD_RESET_REQUESTED, user.getId(), ip, null);
     }
 
+    /** Busca el código de recuperación y revisa que no esté usado ni vencido. */
     private EmailToken validResetToken(String email, String code) {
         String hash = resetHash(email, code);
         EmailToken token = emailTokenRepo.findByTokenHash(hash).orElse(null);
@@ -196,11 +205,13 @@ public class AuthService {
         return token;
     }
 
+    /** Comprueba el código de recuperación sin gastarlo. */
     @Transactional(readOnly = true)
     public void verifyResetCode(String email, String code) {
         validResetToken(email, code);
     }
 
+    /** Cambia la contraseña con el código y cierra todas las sesiones. */
     @Transactional
     public void resetPassword(String email, String code, String newPassword, String ip)
             throws PasswordNotValidException {
@@ -219,6 +230,7 @@ public class AuthService {
         auditService.log(AuditAction.PASSWORD_RESET_DONE, userId, ip, null);
     }
 
+    /** Autentica con correo o usuario y entrega los tokens de sesión. */
     @Transactional
     public AuthResponseDTO login(LoginDTO dto, String ip) {
         String identifier = dto.getIdentifier().trim();
@@ -256,6 +268,7 @@ public class AuthService {
         return buildSession(user);
     }
 
+    /** Genera el access token y un refresh token nuevo. */
     private AuthResponseDTO buildSession(User user) {
         String accessToken = jwtUtil.generateToken(user);
         String refreshOriginal = TokenUtil.generateToken();
@@ -274,6 +287,7 @@ public class AuthService {
         );
     }
 
+    /** Renueva la sesión con rotación del refresh token. */
     @Transactional(noRollbackFor = InvalidTokenException.class)
     public AuthResponseDTO refresh(String rawRefreshToken, String ip) {
         String hash = TokenUtil.sha256(rawRefreshToken);
@@ -308,6 +322,7 @@ public class AuthService {
         return buildSession(user);
     }
 
+    /** Cierra la sesión revocando el refresh token. */
     @Transactional
     public void logout(String rawRefreshToken, String ip) {
         String hash = TokenUtil.sha256(rawRefreshToken);

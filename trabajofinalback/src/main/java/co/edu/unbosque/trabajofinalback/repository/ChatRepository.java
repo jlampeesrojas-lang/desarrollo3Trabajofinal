@@ -2,7 +2,6 @@ package co.edu.unbosque.trabajofinalback.repository;
 
 import co.edu.unbosque.trabajofinalback.model.Chat;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,12 +9,13 @@ import org.springframework.data.repository.query.Param;
 /** Repositorio de chats. */
 public interface ChatRepository extends JpaRepository<Chat, Long> {
 
+	/** Exists by code. */
 	boolean existsByCode(String code);
 
 	/** Todos los chats, los de actividad más reciente primero (panel admin). */
 	List<Chat> findAllByOrderByLastMessageAtDesc();
 
-	Optional<Chat> findByCode(String code);
+	/** Find by code. */
 
 	/** Chats 1 a 1 que comparten los dos usuarios. */
 	@Query("select p1.chat from ChatParticipant p1, ChatParticipant p2 "

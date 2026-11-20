@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "GIFs", description = "Búsqueda de GIFs (GIPHY) para el chat")
 
+/** Endpoints para buscar GIFs en Giphy. */
 public class GifController {
 
   @Autowired private GifService gifServ;

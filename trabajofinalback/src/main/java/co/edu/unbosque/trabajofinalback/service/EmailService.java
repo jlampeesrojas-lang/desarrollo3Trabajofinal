@@ -30,6 +30,7 @@ public class EmailService {
   @Value("${app.frontend-url}")
   private String frontendUrl;
 
+  /** Crea el servicio de correo. */
   public EmailService(JavaMailSender mailSender) {
     this.mailSender = mailSender;
   }
@@ -74,6 +75,7 @@ public class EmailService {
     send(user.getEmail(), "Código para recuperar tu contraseña", html);
   }
 
+  /** Arma y envía un correo HTML. */
   private void send(String to, String subject, String html) {
     MimeMessage message = mailSender.createMimeMessage();
     try {

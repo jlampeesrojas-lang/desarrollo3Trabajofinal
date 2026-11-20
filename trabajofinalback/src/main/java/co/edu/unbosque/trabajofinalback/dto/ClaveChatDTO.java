@@ -12,17 +12,21 @@ public class ClaveChatDTO {
 	@NotBlank(message = "La clave es obligatoria")
 	private String key;
 
+	/** Constructor vacío. */
 	public ClaveChatDTO() {
 	}
 
+	/** Crea un ClaveChatDTO con sus datos. */
 	public ClaveChatDTO(String key) {
 		this.key = key;
 	}
 
+	/** Devuelve key. */
 	public String getKey() {
 		return key;
 	}
 
+	/** Define key. */
 	public void setKey(String key) {
 		this.key = key;
 	}

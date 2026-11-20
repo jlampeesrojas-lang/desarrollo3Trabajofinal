@@ -33,12 +33,14 @@ public class AuditServiceImpl implements AuditService {
     this.ipLocationService = ipLocationService;
   }
 
+  /** Log. */
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void log(AuditAction action, Long userId, String ip, String detail) {
     log(action, userId, ip, ipLocationService.textoUbicacion(ip), detail);
   }
 
+  /** Log. */
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void log(AuditAction action, Long userId, String ip, String location, String detail) {

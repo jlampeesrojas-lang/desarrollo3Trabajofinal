@@ -28,22 +28,27 @@ public class GiphyImagesDTO {
 		this.original = original;
 	}
 
+	/** Devuelve fixed height. */
 	public GiphyImageVariantDTO getFixedHeight() {
 		return fixedHeight;
 	}
 
+	/** Define fixed height. */
 	public void setFixedHeight(GiphyImageVariantDTO fixedHeight) {
 		this.fixedHeight = fixedHeight;
 	}
 
+	/** Devuelve original. */
 	public GiphyImageVariantDTO getOriginal() {
 		return original;
 	}
 
+	/** Define original. */
 	public void setOriginal(GiphyImageVariantDTO original) {
 		this.original = original;
 	}
 
+	/** Devuelve el objeto como texto. */
 	@Override
 	public String toString() {
 		return "GiphyImagesDTO [fixedHeight=" + fixedHeight + ", original=" + original + "]";

@@ -19,70 +19,87 @@ public class IpApiResponseDTO {
 	public IpApiResponseDTO() {
 	}
 
+	/** Devuelve status. */
 	public String getStatus() {
 		return status;
 	}
 
+	/** Define status. */
 	public void setStatus(String status) {
 		this.status = status;
 	}
 
+	/** Devuelve message. */
 	public String getMessage() {
 		return message;
 	}
 
+	/** Define message. */
 	public void setMessage(String message) {
 		this.message = message;
 	}
 
+	/** Devuelve country. */
 	public String getCountry() {
 		return country;
 	}
 
+	/** Define country. */
 	public void setCountry(String country) {
 		this.country = country;
 	}
 
+	/** Devuelve region name. */
 	public String getRegionName() {
 		return regionName;
 	}
 
+	/** Define region name. */
 	public void setRegionName(String regionName) {
 		this.regionName = regionName;
 	}
 
+	/** Devuelve city. */
 	public String getCity() {
 		return city;
 	}
 
+	/** Define city. */
 	public void setCity(String city) {
 		this.city = city;
 	}
 
+	/** Devuelve lat. */
 	public Double getLat() {
 		return lat;
 	}
 
+	/** Define lat. */
 	public void setLat(Double lat) {
 		this.lat = lat;
 	}
 
+	/** Devuelve lon. */
 	public Double getLon() {
 		return lon;
 	}
 
+	/** Define lon. */
 	public void setLon(Double lon) {
 		this.lon = lon;
 	}
 
+	/** Devuelve query. */
 	public String getQuery() {
 		return query;
 	}
 
+	/** Define query. */
 	public void setQuery(String query) {
 		this.query = query;
 	}
 
+	/** Devuelve el objeto como texto. */
 	@Override
 	public String toString() {
 		return "IpApiResponseDTO [status=" + status + ", country=" + country + ", regionName=" + regionName + ", city="

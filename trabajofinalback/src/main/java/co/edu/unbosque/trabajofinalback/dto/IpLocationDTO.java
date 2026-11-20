@@ -44,62 +44,77 @@ public class IpLocationDTO {
 		this.text = text;
 	}
 
+	/** Devuelve ip. */
 	public String getIp() {
 		return ip;
 	}
 
+	/** Define ip. */
 	public void setIp(String ip) {
 		this.ip = ip;
 	}
 
+	/** Devuelve country. */
 	public String getCountry() {
 		return country;
 	}
 
+	/** Define country. */
 	public void setCountry(String country) {
 		this.country = country;
 	}
 
+	/** Devuelve region. */
 	public String getRegion() {
 		return region;
 	}
 
+	/** Define region. */
 	public void setRegion(String region) {
 		this.region = region;
 	}
 
+	/** Devuelve city. */
 	public String getCity() {
 		return city;
 	}
 
+	/** Define city. */
 	public void setCity(String city) {
 		this.city = city;
 	}
 
+	/** Devuelve latitude. */
 	public Double getLatitude() {
 		return latitude;
 	}
 
+	/** Define latitude. */
 	public void setLatitude(Double latitude) {
 		this.latitude = latitude;
 	}
 
+	/** Devuelve longitude. */
 	public Double getLongitude() {
 		return longitude;
 	}
 
+	/** Define longitude. */
 	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
 	}
 
+	/** Devuelve text. */
 	public String getText() {
 		return text;
 	}
 
+	/** Define text. */
 	public void setText(String text) {
 		this.text = text;
 	}
 
+	/** Devuelve el objeto como texto. */
 	@Override
 	public String toString() {
 		return "IpLocationDTO [ip=" + ip + ", text=" + text + "]";

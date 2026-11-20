@@ -34,11 +34,13 @@ public class AdminController {
   private final AdminService adminService;
   private final AuthContext authContext;
 
+  /** Crea el controlador con el servicio de administración y el contexto de autenticación. */
   public AdminController(AdminService adminService, AuthContext authContext) {
     this.adminService = adminService;
     this.authContext = authContext;
   }
 
+  /** Devuelve los últimos eventos de auditoría, del más nuevo al más viejo. */
   @Operation(
       summary = "Auditoría",
       description = "Últimos eventos, del más nuevo al más viejo. Parámetro limit (1 a 500).")
@@ -48,12 +50,14 @@ public class AdminController {
     return ResponseEntity.ok(adminService.audit(limit));
   }
 
+  /** Devuelve la lista de chats con sus participantes y cantidad de mensajes. */
   @Operation(summary = "Lista de chats", description = "Código, participantes y cantidad de mensajes.")
   @GetMapping("/chats")
   public ResponseEntity<List<ChatAdminDTO>> chats() {
     return ResponseEntity.ok(adminService.chats());
   }
 
+  /** Devuelve los mensajes descifrados de un chat si la clave enviada es la correcta. */
   @Operation(
       summary = "Mensajes de un chat",
       description =
@@ -66,6 +70,7 @@ public class AdminController {
         adminService.messages(id, dto.getKey(), authContext.getUserId(), request.getRemoteAddr()));
   }
 
+  /** Devuelve la clave de un chat y deja el acceso registrado en la auditoría. */
   @Operation(summary = "Clave de un chat", description = "Devuelve {\"key\": \"...\"} y queda auditado.")
   @GetMapping("/chats/{id}/key")
   public ResponseEntity<ClaveChatDTO> key(@PathVariable Long id, HttpServletRequest request) {

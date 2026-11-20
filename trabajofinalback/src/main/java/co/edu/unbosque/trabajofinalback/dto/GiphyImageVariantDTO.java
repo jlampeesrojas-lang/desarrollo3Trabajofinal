@@ -28,30 +28,37 @@ public class GiphyImageVariantDTO {
 		this.height = height;
 	}
 
+	/** Devuelve url. */
 	public String getUrl() {
 		return url;
 	}
 
+	/** Define url. */
 	public void setUrl(String url) {
 		this.url = url;
 	}
 
+	/** Devuelve width. */
 	public String getWidth() {
 		return width;
 	}
 
+	/** Define width. */
 	public void setWidth(String width) {
 		this.width = width;
 	}
 
+	/** Devuelve height. */
 	public String getHeight() {
 		return height;
 	}
 
+	/** Define height. */
 	public void setHeight(String height) {
 		this.height = height;
 	}
 
+	/** Devuelve el objeto como texto. */
 	@Override
 	public String toString() {
 		return "GiphyImageVariantDTO [url=" + url + ", width=" + width + ", height=" + height + "]";

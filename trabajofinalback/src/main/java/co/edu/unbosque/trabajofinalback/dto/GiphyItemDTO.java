@@ -25,30 +25,37 @@ public class GiphyItemDTO {
 		this.images = images;
 	}
 
+	/** Devuelve id. */
 	public String getId() {
 		return id;
 	}
 
+	/** Define id. */
 	public void setId(String id) {
 		this.id = id;
 	}
 
+	/** Devuelve title. */
 	public String getTitle() {
 		return title;
 	}
 
+	/** Define title. */
 	public void setTitle(String title) {
 		this.title = title;
 	}
 
+	/** Devuelve images. */
 	public GiphyImagesDTO getImages() {
 		return images;
 	}
 
+	/** Define images. */
 	public void setImages(GiphyImagesDTO images) {
 		this.images = images;
 	}
 
+	/** Devuelve el objeto como texto. */
 	@Override
 	public String toString() {
 		return "GiphyItemDTO [id=" + id + ", title=" + title + ", images=" + images + "]";

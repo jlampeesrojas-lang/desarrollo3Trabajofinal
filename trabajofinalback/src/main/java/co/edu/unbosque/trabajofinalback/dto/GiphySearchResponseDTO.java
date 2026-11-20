@@ -27,10 +27,12 @@ public class GiphySearchResponseDTO {
 	    }
 	}
 
+	/** Devuelve data. */
 	public List<GiphyItemDTO> getData() {
 		return data;
 	}
 
+	/** Define data. */
 	public void setData(List<GiphyItemDTO> data) {
 	    if (data == null) {
 	        this.data = null;
@@ -39,6 +41,7 @@ public class GiphySearchResponseDTO {
 	    }
 	}
 
+	/** Devuelve el objeto como texto. */
 	@Override
 	public String toString() {
 		return "GiphySearchResponseDTO [data=" + data + "]";

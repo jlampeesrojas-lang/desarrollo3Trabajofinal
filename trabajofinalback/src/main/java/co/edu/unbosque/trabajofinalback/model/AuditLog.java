@@ -23,6 +23,7 @@ import org.hibernate.type.SqlTypes;
 @Table(
     name = "audit_log",
     indexes = {
+/** AuditLog. */
       @Index(name = "idx_audit_user", columnList = "user_id"),
       @Index(name = "idx_audit_created", columnList = "created_at")
     })
@@ -56,8 +57,10 @@ public class AuditLog {
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
+  /** Constructor vacío. */
   public AuditLog() {}
 
+  /** Crea un AuditLog con sus datos. */
   public AuditLog(AuditAction action, Long userId, String ip, String location, String detail) {
     this.action = action;
     this.userId = userId;
@@ -66,6 +69,7 @@ public class AuditLog {
     this.detail = detail;
   }
 
+  /** On create. */
   @PrePersist
   void onCreate() {
     if (createdAt == null) {
@@ -73,50 +77,62 @@ public class AuditLog {
     }
   }
 
+  /** Devuelve id. */
   public Long getId() {
     return id;
   }
 
+  /** Devuelve user id. */
   public Long getUserId() {
     return userId;
   }
 
+  /** Define user id. */
   public void setUserId(Long userId) {
     this.userId = userId;
   }
 
+  /** Devuelve action. */
   public AuditAction getAction() {
     return action;
   }
 
+  /** Define action. */
   public void setAction(AuditAction action) {
     this.action = action;
   }
 
+  /** Devuelve ip. */
   public String getIp() {
     return ip;
   }
 
+  /** Define ip. */
   public void setIp(String ip) {
     this.ip = ip;
   }
 
+  /** Devuelve location. */
   public String getLocation() {
     return location;
   }
 
+  /** Define location. */
   public void setLocation(String location) {
     this.location = location;
   }
 
+  /** Devuelve detail. */
   public String getDetail() {
     return detail;
   }
 
+  /** Define detail. */
   public void setDetail(String detail) {
     this.detail = detail;
   }
 
+  /** Devuelve created at. */
   public LocalDateTime getCreatedAt() {
     return createdAt;
   }
