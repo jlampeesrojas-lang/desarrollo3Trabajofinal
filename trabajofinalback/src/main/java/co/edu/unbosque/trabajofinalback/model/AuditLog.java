@@ -11,6 +11,8 @@ import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Registro de auditoría: ingresos, fecha, IP, ubicación y metadatos de la actividad del usuario.
@@ -35,7 +37,8 @@ public class AuditLog {
   private Long userId;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 40)
+  @Column(name="action",nullable = false, length = 40)
+  @JdbcTypeCode(SqlTypes.VARCHAR)
   private AuditAction action;
 
   /** Dirección IP de origen. */

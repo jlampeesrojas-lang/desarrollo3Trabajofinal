@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, signal} from '@angular/core';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {Observable, of, throwError} from 'rxjs';
 
@@ -39,7 +39,11 @@ const RESPUESTA_ADMIN: LoginResponse = {
 
 @Injectable({providedIn: 'root'})
 export class AuthService {
+    sesionExpirada = signal(false);
+    private reloj?: ReturnType<typeof setTimeout>;
+
     constructor(private http: HttpClient) {
+        this.programarVencimiento();
     }
 
     login(datos: LoginRequest): Observable<LoginResponse> {
@@ -108,6 +112,30 @@ export class AuthService {
     guardarSesion(respuesta: LoginResponse) {
         localStorage.setItem('token', respuesta.accessToken);
         localStorage.setItem('refreshToken', respuesta.refreshToken);
+        this.sesionExpirada.set(false);
+        this.programarVencimiento();
+    }
+
+    private programarVencimiento() {
+        clearTimeout(this.reloj);
+        const datos = this.leerDatosDelToken();
+        const token = this.obtenerToken();
+        if (!token || !datos?.exp) return;
+
+        const restante = datos.exp * 1000 - Date.now();
+        if (restante <= 0) {
+            this.avisarVencimiento();
+            return;
+        }
+        this.reloj = setTimeout(() => {
+            this.programarVencimiento();
+        }, restante);
+    }
+
+    avisarVencimiento() {
+        if (this.obtenerToken()) {
+            this.sesionExpirada.set(true);
+        }
     }
 
     obtenerToken(): string | null {
@@ -118,14 +146,16 @@ export class AuthService {
         if (this.obtenerToken() == null) {
             return false;
         }
-        if (this.tokenVencido()) {
-            this.cerrarSesion();
+        if (this.tokenVencido() || this.sesionExpirada()) {
+            this.avisarVencimiento();
             return false;
         }
         return true;
     }
 
     cerrarSesion() {
+        clearTimeout(this.reloj);
+        this.sesionExpirada.set(false);
         const refresh = localStorage.getItem('refreshToken');
         if (refresh != null && !USAR_MOCK) {
             this.http.post(API + '/auth/logout', {refreshToken: refresh}).subscribe({

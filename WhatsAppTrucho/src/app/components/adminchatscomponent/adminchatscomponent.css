@@ -10,11 +10,17 @@
     display: block;
 }
 
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
-h1, h3, p { margin: 0; }
+h1, h3, p {
+    margin: 0;
+}
 
-.bloque { margin-bottom: 56px; }
+.bloque {
+    margin-bottom: 56px;
+}
 
 .bloque h1 {
     font-size: 1.8rem;
@@ -59,9 +65,13 @@ input {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.barra input { flex: 1; }
+.barra input {
+    flex: 1;
+}
 
-input::placeholder { color: var(--suave); }
+input::placeholder {
+    color: var(--suave);
+}
 
 input:focus {
     outline: none;
@@ -81,7 +91,9 @@ input:focus {
     box-shadow 0.2s ease;
 }
 
-.btn:hover { transform: translateY(-1px); }
+.btn:hover {
+    transform: translateY(-1px);
+}
 
 .btn:focus-visible {
     outline: none;
@@ -141,7 +153,9 @@ input:focus {
     backdrop-filter: blur(6px);
 }
 
-.lista input { margin-bottom: 6px; }
+.lista input {
+    margin-bottom: 6px;
+}
 
 .chat {
     position: relative;
@@ -179,7 +193,9 @@ input:focus {
     background: rgba(232, 32, 58, 0.1);
 }
 
-.chat:hover::before { opacity: 1; }
+.chat:hover::before {
+    opacity: 1;
+}
 
 .modal-fondo {
     position: fixed;
@@ -209,7 +225,9 @@ input:focus {
     animation: aparecer-ventana 0.25s ease;
 }
 
-.chica { max-width: 400px; }
+.chica {
+    max-width: 400px;
+}
 
 .ventana h3 {
     margin: 0 0 6px;
@@ -234,7 +252,9 @@ input:focus {
     transition: color 0.15s ease;
 }
 
-.enlace:hover { color: #ff5c72; }
+.enlace:hover {
+    color: #ff5c72;
+}
 
 .participantes .enlace {
     margin-left: 8px;
@@ -244,7 +264,9 @@ input:focus {
     background: var(--panel-claro);
 }
 
-.participantes .enlace:hover { border-color: var(--rojo); }
+.participantes .enlace:hover {
+    border-color: var(--rojo);
+}
 
 .mensajes {
     max-height: 300px;
@@ -290,7 +312,9 @@ input:focus {
     border-bottom: 1px solid var(--borde);
 }
 
-.dato span { color: var(--suave); }
+.dato span {
+    color: var(--suave);
+}
 
 .acciones-modal {
     display: flex;
@@ -299,7 +323,9 @@ input:focus {
 }
 
 .mensajes::-webkit-scrollbar,
-.ventana::-webkit-scrollbar { width: 8px; }
+.ventana::-webkit-scrollbar {
+    width: 8px;
+}
 
 .mensajes::-webkit-scrollbar-thumb,
 .ventana::-webkit-scrollbar-thumb {
@@ -308,8 +334,12 @@ input:focus {
 }
 
 @keyframes aparecer {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes aparecer-ventana {
@@ -320,5 +350,34 @@ input:focus {
     to {
         opacity: 1;
         transform: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .ventana {
+        width: calc(100vw - 24px);
+        max-width: none;
+        padding: 20px 16px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .chica {
+        max-width: none;
+    }
+
+    .barra {
+        flex-wrap: wrap;
+    }
+
+    .barra input,
+    .barra select {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
     }
 }

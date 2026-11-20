@@ -1,3 +1,5 @@
+import {ContactService} from "../../services/contactservice";
+import {Contacto} from "../../models/contacto";
 import {GifService} from "../../services/gifservice";
 import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {Router} from '@angular/router';
@@ -12,6 +14,9 @@ import {Gif} from "../../models/gif";
 })
 export class Paginaprincipalcomponent implements OnInit {
     seccion: 'chats' | 'ia' | 'contactos' = 'chats';
+    contactos: Contacto[] = [];
+    seleccionado: Contacto | null = null;
+    avisoContactos = '';
     miUsuario = 'Usuario';
     busquedaChat = '';
     mensajeNuevo = '';
@@ -28,6 +33,7 @@ export class Paginaprincipalcomponent implements OnInit {
      * Inicializa los servicios de autenticación y navegación.
      */
     constructor(
+        private contactosApi: ContactService,
         private auth: AuthService,
         private gifsApi: GifService,
         private cdr: ChangeDetectorRef,
@@ -44,9 +50,21 @@ export class Paginaprincipalcomponent implements OnInit {
             return;
         }
         this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
+        this.contactosApi.listarContactos().subscribe({
+            next: lista => {
+                this.contactos = lista;
+                this.cdr.markForCheck();
+            },
+            error: fallo => {
+                if (fallo.status === 401) this.auth.avisarVencimiento();
+                else this.avisoContactos = 'No se pudieron cargar los contactos.';
+                this.cdr.markForCheck();
+            }
+        });
     }
 
     buscarGifs(texto: string): void {
+        if (!this.auth.estaLogueado()) return;
         const query = texto.trim();
         if (!query || this.buscandoGif) return;
         this.buscandoGif = true;
@@ -60,7 +78,8 @@ export class Paginaprincipalcomponent implements OnInit {
                 this.cdr.markForCheck();
             },
             error: fallo => {
-                this.avisoGif = typeof fallo.error === 'string' ? fallo.error : 'No se pudieron cargar los GIFs.';
+                if (fallo.status === 401) this.auth.avisarVencimiento();
+                else this.avisoGif = typeof fallo.error === 'string' ? fallo.error : 'No se pudieron cargar los GIFs.';
                 this.buscandoGif = false;
                 this.cdr.markForCheck();
             }

@@ -1,4 +1,6 @@
 import { Component, signal } from '@angular/core';
+import {AuthService} from "./services/authservice";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-root',
@@ -7,5 +9,13 @@ import { Component, signal } from '@angular/core';
   templateUrl: './app.html',
 })
 export class App {
-  protected readonly title = signal('untitled2');
+    constructor(public auth: AuthService, private router: Router) {}
+
+    irAlLogin() {
+        this.auth.cerrarSesion();
+        this.router.navigate(['/login']);
+    }
+
+    protected readonly title = signal('untitled2');
 }
+

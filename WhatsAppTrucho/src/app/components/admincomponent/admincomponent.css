@@ -15,9 +15,13 @@
     font-family: "Segoe UI", Arial, sans-serif;
 }
 
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
-h1, h2, h3, p { margin: 0; }
+h1, h2, h3, p {
+    margin: 0;
+}
 
 .admin {
     display: grid;
@@ -94,14 +98,15 @@ h1, h2, h3, p { margin: 0; }
     box-shadow: 0 0 10px var(--rojo);
 }
 
-.menu .btn { margin-top: auto; }
+.menu .btn {
+    margin-top: auto;
+}
 
 .contenido {
     overflow-y: auto;
     padding: 40px 44px;
-    background:
-            radial-gradient(circle at 85% 0%, rgba(232, 32, 58, 0.12), transparent 45%),
-            var(--fondo);
+    background: radial-gradient(circle at 85% 0%, rgba(232, 32, 58, 0.12), transparent 45%),
+    var(--fondo);
 }
 
 .contenido h1,
@@ -109,9 +114,13 @@ h1, h2, h3, p { margin: 0; }
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
 }
 
-.contenido .texto { color: #a9adb6; }
+.contenido .texto {
+    color: #a9adb6;
+}
 
-.bloque { margin-bottom: 56px; }
+.bloque {
+    margin-bottom: 56px;
+}
 
 .bloque h1 {
     font-size: 1.8rem;
@@ -137,6 +146,7 @@ h1, h2, h3, p { margin: 0; }
 
 .barra {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     margin-bottom: 18px;
 }
@@ -155,11 +165,17 @@ select {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.barra input { flex: 1; }
+.barra input {
+    flex: 1;
+}
 
-.barra select { min-width: 0; }
+.barra select {
+    min-width: 0;
+}
 
-input::placeholder { color: var(--suave); }
+input::placeholder {
+    color: var(--suave);
+}
 
 input:focus,
 select:focus {
@@ -180,9 +196,13 @@ select:focus {
     box-shadow 0.2s ease;
 }
 
-.btn:hover { transform: translateY(-1px); }
+.btn:hover {
+    transform: translateY(-1px);
+}
 
-.btn:active { transform: translateY(0); }
+.btn:active {
+    transform: translateY(0);
+}
 
 .btn:focus-visible {
     outline: none;
@@ -223,7 +243,9 @@ td .btn {
     font-size: 0.8rem;
 }
 
-td .btn + .btn { margin-left: 8px; }
+td .btn + .btn {
+    margin-left: 8px;
+}
 
 table {
     width: 100%;
@@ -251,24 +273,42 @@ thead th {
     text-transform: uppercase;
 }
 
-thead th:first-child { border-top-left-radius: 16px; }
-thead th:last-child { border-top-right-radius: 16px; }
+thead th:first-child {
+    border-top-left-radius: 16px;
+}
 
-tbody tr { transition: background 0.15s ease; }
+thead th:last-child {
+    border-top-right-radius: 16px;
+}
 
-tbody tr:hover { background: rgba(232, 32, 58, 0.06); }
+tbody tr {
+    transition: background 0.15s ease;
+}
 
-tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover {
+    background: rgba(232, 32, 58, 0.06);
+}
 
-tbody tr:last-child td:first-child { border-bottom-left-radius: 16px; }
-tbody tr:last-child td:last-child { border-bottom-right-radius: 16px; }
+tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 16px;
+}
+
+tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 16px;
+}
 
 td.fallido {
     color: #ff5c72;
     font-weight: 600;
 }
 
-code { color: var(--rojo); }
+code {
+    color: var(--rojo);
+}
 
 .ok,
 .error,
@@ -284,9 +324,13 @@ code { color: var(--rojo); }
     animation: aparecer 0.25s ease;
 }
 
-.ok { color: #22c55e; }
+.ok {
+    color: #22c55e;
+}
 
-.error { color: #ff5c72; }
+.error {
+    color: #ff5c72;
+}
 
 .nota {
     color: #f59e0b;
@@ -303,7 +347,9 @@ code { color: var(--rojo); }
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
 }
 
-.paginacion .btn { height: 38px; }
+.paginacion .btn {
+    height: 38px;
+}
 
 .enlace {
     padding: 0;
@@ -316,7 +362,9 @@ code { color: var(--rojo); }
     transition: color 0.15s ease;
 }
 
-.enlace:hover { color: #ff5c72; }
+.enlace:hover {
+    color: #ff5c72;
+}
 
 .modal-fondo {
     position: fixed;
@@ -376,7 +424,9 @@ code { color: var(--rojo); }
     border-bottom: 1px solid var(--borde);
 }
 
-.dato span { color: var(--suave); }
+.dato span {
+    color: var(--suave);
+}
 
 .acciones-modal {
     display: flex;
@@ -410,7 +460,9 @@ option {
         transition: rotate 0.2s ease;
     }
 
-    select:open::picker-icon { rotate: 180deg; }
+    select:open::picker-icon {
+        rotate: 180deg;
+    }
 
     select::picker(select) {
         margin-top: 8px;
@@ -447,23 +499,35 @@ option {
         font-weight: 600;
     }
 
-    select option::checkmark { color: var(--rojo); }
+    select option::checkmark {
+        color: var(--rojo);
+    }
 }
 
-.contenido::-webkit-scrollbar { width: 10px; }
+.contenido::-webkit-scrollbar {
+    width: 10px;
+}
 
-.contenido::-webkit-scrollbar-track { background: transparent; }
+.contenido::-webkit-scrollbar-track {
+    background: transparent;
+}
 
 .contenido::-webkit-scrollbar-thumb {
     border-radius: 10px;
     background: #2a2d34;
 }
 
-.contenido::-webkit-scrollbar-thumb:hover { background: #3a3e48; }
+.contenido::-webkit-scrollbar-thumb:hover {
+    background: #3a3e48;
+}
 
 @keyframes aparecer {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes aparecer-ventana {
@@ -478,11 +542,45 @@ option {
 }
 
 @media (max-width: 860px) {
-    .admin { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-    .menu { flex-direction: row; align-items: center; flex-wrap: wrap; }
-    .rol { display: none; }
-    .menu nav { flex-direction: row; }
-    .menu .btn { margin: 0 0 0 auto; }
-    .contenido { padding: 24px 16px; }
-    table { display: block; overflow-x: auto; }
+    .admin {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    .menu {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .rol {
+        display: none;
+    }
+
+    .menu nav {
+        flex-direction: row;
+    }
+
+    .menu .btn {
+        margin: 0 0 0 auto;
+    }
+
+    .contenido {
+        padding: 24px 16px;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .barra input,
+    .barra select {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .barra .btn {
+        flex: 1 1 auto;
+    }
 }

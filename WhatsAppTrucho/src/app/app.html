@@ -1,1 +1,14 @@
-<router-outlet></router-outlet>
+<div [attr.inert]="auth.sesionExpirada() ? '' : null">
+    <router-outlet></router-outlet>
+</div>
+
+@if (auth.sesionExpirada()) {
+    <div class="fondo-sesion">
+        <section class="aviso-sesion" role="alertdialog"
+                 aria-modal="true" aria-labelledby="titulo-sesion">
+            <h2 id="titulo-sesion">Tu sesión venció</h2>
+            <p>Vuelve a iniciar sesión para continuar.</p>
+            <button type="button" autofocus (click)="irAlLogin()">Ir al login</button>
+        </section>
+    </div>
+}
