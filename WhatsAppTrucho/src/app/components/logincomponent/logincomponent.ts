@@ -107,13 +107,13 @@ export class Logincomponent {
             this.error = 'Las contraseñas no coinciden';
             return;
         }
-        const errorClave = this.validarClave(r.clave);
+        const errorClave = Logincomponent.validarClave(r.clave);
         if (errorClave !== '') {
             this.error = errorClave;
             return;
         }
 
-        const edad = this.calcularEdad(r.fechaNacimiento);
+        const edad = Logincomponent.calcularEdad(r.fechaNacimiento);
         if (edad < 0 || edad > 120) {
             this.error = 'La fecha de nacimiento no es válida';
             return;
@@ -222,7 +222,7 @@ export class Logincomponent {
             return;
         }
 
-        const errorClave = this.validarClave(this.nueva.clave);
+        const errorClave = Logincomponent.validarClave(this.nueva.clave);
         if (errorClave !== '') {
             this.error = errorClave;
             return;
@@ -251,7 +251,7 @@ export class Logincomponent {
     }
 
     /** Revisa que la contraseña cumpla la política y devuelve el error, o vacío si es válida. */
-    validarClave(clave: string): string {
+    private static validarClave(clave: string): string {
         if (clave.length < 12) {
             return 'La contraseña debe tener mínimo 12 caracteres';
         }
@@ -268,7 +268,7 @@ export class Logincomponent {
     }
 
     /** Calcula la edad en años a partir de una fecha de nacimiento. */
-    calcularEdad(fecha: string): number {
+    private static calcularEdad(fecha: string): number {
         const partes = fecha.split('-');
         const anio = Number(partes[0]);
         const mes = Number(partes[1]);
