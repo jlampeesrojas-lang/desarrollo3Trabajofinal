@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { Notadevozcomponent } from "./notadevozcomponent";
+import { Notavozcomponent } from "./notavozcomponent";
 
-describe("Notadevozcomponent", () => {
-  let component: Notadevozcomponent;
-  let fixture: ComponentFixture<Notadevozcomponent>;
+describe("Notavozcomponent", () => {
+  let component: Notavozcomponent;
+  let fixture: ComponentFixture<Notavozcomponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [Notadevozcomponent],
+      declarations: [Notavozcomponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Notadevozcomponent);
+    fixture = TestBed.createComponent(Notavozcomponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

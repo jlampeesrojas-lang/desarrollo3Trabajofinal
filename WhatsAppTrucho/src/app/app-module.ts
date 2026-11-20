@@ -12,7 +12,7 @@ import { Admincomponent } from "./components/admincomponent/admincomponent";
 import { Confirmaremailcomponent } from "./components/confirmaremailcomponent/confirmaremailcomponent";
 import { Adminchatscomponent } from "./components/adminchatscomponent/adminchatscomponent";
 import { Chatscomponent } from "./components/chatscomponent/chatscomponent";
-import { Notadevozcomponent } from "./components/notadevozcomponent/notadevozcomponent";
+
 
 @NgModule({
   declarations: [
@@ -25,7 +25,7 @@ import { Notadevozcomponent } from "./components/notadevozcomponent/notadevozcom
     Admincomponent,
     Confirmaremailcomponent,
     Adminchatscomponent,
-    Notadevozcomponent,
+
   ],
   imports: [BrowserModule, FormsModule, AppRoutingModule],
   providers: [provideBrowserGlobalErrorListeners(), provideHttpClient()],
