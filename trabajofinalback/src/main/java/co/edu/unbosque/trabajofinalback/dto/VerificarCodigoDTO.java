@@ -18,27 +18,33 @@ public class VerificarCodigoDTO {
 	@Pattern(regexp = "^\\d{6}$", message = "El código debe tener 6 dígitos")
 	private String codigo;
 
+	/** Constructor vacío. */
 	public VerificarCodigoDTO() {
 		// TODO Auto-generated constructor stub
 	}
 
+	/** Crea un VerificarCodigoDTO con sus datos. */
 	public VerificarCodigoDTO(String correo, String codigo) {
 		this.correo = correo;
 		this.codigo = codigo;
 	}
 
+	/** Devuelve correo. */
 	public String getCorreo() {
 		return correo;
 	}
 
+	/** Define correo. */
 	public void setCorreo(String correo) {
 		this.correo = correo;
 	}
 
+	/** Devuelve codigo. */
 	public String getCodigo() {
 		return codigo;
 	}
 
+	/** Define codigo. */
 	public void setCodigo(String codigo) {
 		this.codigo = codigo;
 	}

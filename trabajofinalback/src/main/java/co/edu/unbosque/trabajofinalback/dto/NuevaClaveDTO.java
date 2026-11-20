@@ -23,35 +23,43 @@ public class NuevaClaveDTO {
 	@Size(min = 8, max = 72, message = "La contraseña debe tener entre 8 y 72 caracteres")
 	private String clave;
 
+	/** Constructor vacío. */
 	public NuevaClaveDTO() {
 	}
 
+	/** Crea un NuevaClaveDTO con sus datos. */
 	public NuevaClaveDTO(String correo, String codigo, String clave) {
 		this.correo = correo;
 		this.codigo = codigo;
 		this.clave = clave;
 	}
 
+	/** Devuelve correo. */
 	public String getCorreo() {
 		return correo;
 	}
 
+	/** Define correo. */
 	public void setCorreo(String correo) {
 		this.correo = correo;
 	}
 
+	/** Devuelve codigo. */
 	public String getCodigo() {
 		return codigo;
 	}
 
+	/** Define codigo. */
 	public void setCodigo(String codigo) {
 		this.codigo = codigo;
 	}
 
+	/** Devuelve clave. */
 	public String getClave() {
 		return clave;
 	}
 
+	/** Define clave. */
 	public void setClave(String clave) {
 		this.clave = clave;
 	}

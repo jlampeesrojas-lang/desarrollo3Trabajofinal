@@ -1,6 +1,7 @@
 package co.edu.unbosque.trabajofinalback.dto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Un chat en la lista del panel admin. */
@@ -8,7 +9,7 @@ public class ChatAdminDTO {
 
 	private Long id;
 	private String code;
-	private List<String> participants;
+	private List<String> participants = new ArrayList<>();
 	private LocalDateTime lastMessageAt;
 	private long messageCount;
 
@@ -22,7 +23,7 @@ public class ChatAdminDTO {
 			long messageCount) {
 		this.id = id;
 		this.code = code;
-		this.participants = participants;
+		this.participants = participants == null ? new ArrayList<>() : new ArrayList<>(participants);
 		this.lastMessageAt = lastMessageAt;
 		this.messageCount = messageCount;
 	}
@@ -49,12 +50,12 @@ public class ChatAdminDTO {
 
 	/** Devuelve participants. */
 	public List<String> getParticipants() {
-		return participants;
+		return new ArrayList<>(participants);
 	}
 
 	/** Define participants. */
 	public void setParticipants(List<String> participants) {
-		this.participants = participants;
+		this.participants = participants == null ? new ArrayList<>() : new ArrayList<>(participants);
 	}
 
 	/** Devuelve last message at. */

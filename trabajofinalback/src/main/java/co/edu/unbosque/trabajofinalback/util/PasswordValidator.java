@@ -13,6 +13,7 @@ public final class PasswordValidator {
   private static final int MIN_LENGTH = 12;
   private static final int MAX_BYTES = 72;
 
+  /** Constructor vacío. */
   private PasswordValidator() {}
 
   /**

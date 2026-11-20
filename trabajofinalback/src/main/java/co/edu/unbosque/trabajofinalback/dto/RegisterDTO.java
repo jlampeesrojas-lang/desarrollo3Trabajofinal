@@ -24,34 +24,42 @@ public class RegisterDTO {
   @Size(min = 12, max = 72, message = "La contraseña debe tener entre 8 y 72 caracteres")
   private String password;
 
+  /** Constructor vacío. */
   public RegisterDTO() {}
 
+  /** Crea un RegisterDTO con sus datos. */
   public RegisterDTO(String username, String email, String password) {
     this.username = username;
     this.email = email;
     this.password = password;
   }
 
+  /** Devuelve username. */
   public String getUsername() {
     return username;
   }
 
+  /** Define username. */
   public void setUsername(String username) {
     this.username = username;
   }
 
+  /** Devuelve email. */
   public String getEmail() {
     return email;
   }
 
+  /** Define email. */
   public void setEmail(String email) {
     this.email = email;
   }
 
+  /** Devuelve password. */
   public String getPassword() {
     return password;
   }
 
+  /** Define password. */
   public void setPassword(String password) {
     this.password = password;
   }
