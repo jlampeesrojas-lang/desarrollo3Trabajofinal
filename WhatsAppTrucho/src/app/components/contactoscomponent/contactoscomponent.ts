@@ -5,6 +5,7 @@ import {AuthService} from "../../services/authservice";
 import {ContactService} from "../../services/contactservice";
 import {Contacto} from "../../models/contacto";
 
+/** Pantalla donde el usuario ve, agrega y elimina sus contactos. */
 @Component({
     selector: "app-contactoscomponent",
     standalone: false,

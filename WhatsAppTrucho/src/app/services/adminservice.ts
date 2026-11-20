@@ -8,6 +8,7 @@ import {
 
 const USAR_MOCK = false;
 
+/** Servicio que llama a los endpoints de administración: usuarios, auditoría y chats. */
 @Injectable({providedIn: "root"})
 export class AdminService {
 
@@ -89,6 +90,7 @@ export class AdminService {
     constructor(private http: HttpClient, private auth: AuthService) {
     }
 
+    /** Arma el encabezado Authorization con el token de la sesión. */
     private headers(): HttpHeaders {
         const token = this.auth.obtenerToken();
         if (token != null) {
@@ -97,6 +99,7 @@ export class AdminService {
         return new HttpHeaders();
     }
 
+    /** Pide al back la lista de usuarios. */
     listarUsuarios(): Observable<UsuarioAdmin[]> {
         if (USAR_MOCK) {
             return of(this.usuariosMock);
@@ -106,6 +109,7 @@ export class AdminService {
         });
     }
 
+    /** Envía al back los datos de un usuario nuevo. */
     crearUsuario(datos: NuevoUsuario): Observable<HttpResponse<string>> {
         if (USAR_MOCK) {
             const nuevo: UsuarioAdmin = {
@@ -125,6 +129,7 @@ export class AdminService {
         });
     }
 
+    /** Envía al back los cambios de un usuario. */
     actualizarUsuario(id: number, datos: EditarUsuario): Observable<HttpResponse<string>> {
         if (USAR_MOCK) {
             for (const u of this.usuariosMock) {
@@ -144,6 +149,7 @@ export class AdminService {
         });
     }
 
+    /** Pide al back eliminar un usuario por su id. */
     eliminarUsuario(id: number): Observable<HttpResponse<string>> {
         if (USAR_MOCK) {
             const quedan: UsuarioAdmin[] = [];
@@ -170,6 +176,7 @@ export class AdminService {
         });
     }
 
+    /** Pide al back los últimos registros de auditoría. */
     listarAuditoria(limite: number): Observable<RegistroAuditoria[]> {
         if (USAR_MOCK) {
             return of(this.auditoriaMock);

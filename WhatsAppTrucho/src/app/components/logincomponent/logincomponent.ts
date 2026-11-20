@@ -1,8 +1,10 @@
 import {ChangeDetectorRef, Component} from '@angular/core';
+import {HttpErrorResponse} from '@angular/common/http';
 import {Router} from '@angular/router';
 import {AuthService} from '../../services/authservice';
 import {RegistroRequest, LoginResponse} from '../../models/authentication';
 
+/** Pantalla de acceso: iniciar sesión, crear cuenta y recuperar la contraseña. */
 @Component({
     selector: 'app-login',
     standalone: false,
@@ -35,13 +37,15 @@ export class Logincomponent {
     constructor(private router: Router, private auth: AuthService, private cdr: ChangeDetectorRef) {
     }
 
+    /** Cambia la vista del login (iniciar sesión, crear cuenta o recuperar). */
     irA(vista: string) {
         this.vista = vista;
         this.error = '';
         this.exito = '';
     }
 
-    mensajeDeError(e: any, mensajePorDefecto: string): string {
+    /** Convierte un error HTTP en un mensaje legible; si no hay uno, usa el mensaje por defecto. */
+    mensajeDeError(e: HttpErrorResponse, mensajePorDefecto: string): string {
         if (typeof e.error === 'string' && e.error !== '') {
             return e.error;
         }
@@ -60,6 +64,7 @@ export class Logincomponent {
         return mensajePorDefecto;
     }
 
+    /** Valida los campos e inicia sesión en el back. */
     iniciarSesion() {
         if (this.usuario === '' || this.password === '') {
             this.error = 'Completa todos los campos';
@@ -80,7 +85,7 @@ export class Logincomponent {
                     this.router.navigate(['/principal']);
                 }
             },
-            error: (e: any) => {
+            error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
                 this.error = this.mensajeDeError(e, 'Usuario o contraseña incorrectos');
@@ -88,6 +93,7 @@ export class Logincomponent {
         });
     }
 
+    /** Valida el formulario y registra la cuenta en el back. */
     crearCuenta() {
         const r = this.registro;
 
@@ -126,7 +132,7 @@ export class Logincomponent {
                 this.cdr.markForCheck();
                 this.irA('verificacion');
             },
-            error: (e: any) => {
+            error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
                 this.error = this.mensajeDeError(e, 'No se pudo crear la cuenta');
@@ -134,6 +140,7 @@ export class Logincomponent {
         });
     }
 
+    /** Pide al back que reenvíe el correo de confirmación. */
     reenviarCorreo() {
         this.error = '';
         this.exito = '';
@@ -145,7 +152,7 @@ export class Logincomponent {
                 this.cdr.markForCheck();
                 this.exito = 'Si el correo está pendiente de confirmar, recibirás un mensaje';
             },
-            error: (e: any) => {
+            error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
                 this.error = this.mensajeDeError(e, 'No se pudo reenviar el correo');
@@ -153,6 +160,7 @@ export class Logincomponent {
         });
     }
 
+    /** Pide al back que envíe el código de recuperación al correo. */
     enviarCodigoRecuperar() {
         if (this.correoRecuperar === '') {
             this.error = 'Escribe tu correo';
@@ -168,7 +176,7 @@ export class Logincomponent {
                 this.cdr.markForCheck();
                 this.irA('codigoRecuperar');
             },
-            error: (e: any) => {
+            error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
                 this.error = this.mensajeDeError(e, 'No se pudo enviar el código');
@@ -176,6 +184,7 @@ export class Logincomponent {
         });
     }
 
+    /** Verifica el código de recuperación recibido en el correo. */
     verificarCodigoRecuperar() {
         if (this.codigoRecuperar === '') {
             this.error = 'Escribe el código';
@@ -194,7 +203,7 @@ export class Logincomponent {
                 this.cdr.markForCheck();
                 this.irA('nuevaClave');
             },
-            error: (e: any) => {
+            error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
                 this.error = this.mensajeDeError(e, 'Código incorrecto o vencido');
@@ -202,6 +211,7 @@ export class Logincomponent {
         });
     }
 
+    /** Cambia la contraseña usando el correo y el código verificado. */
     cambiarClave() {
         if (this.nueva.clave === '' || this.nueva.confirmar === '') {
             this.error = 'Completa todos los campos';
@@ -232,7 +242,7 @@ export class Logincomponent {
                 this.irA('login');
                 this.exito = 'Contraseña cambiada, ya puedes iniciar sesión';
             },
-            error: (e: any) => {
+            error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
                 this.error = this.mensajeDeError(e, 'No se pudo cambiar la contraseña');
@@ -240,6 +250,7 @@ export class Logincomponent {
         });
     }
 
+    /** Revisa que la contraseña cumpla la política y devuelve el error, o vacío si es válida. */
     validarClave(clave: string): string {
         if (clave.length < 12) {
             return 'La contraseña debe tener mínimo 12 caracteres';
@@ -256,6 +267,7 @@ export class Logincomponent {
         return '';
     }
 
+    /** Calcula la edad en años a partir de una fecha de nacimiento. */
     calcularEdad(fecha: string): number {
         const partes = fecha.split('-');
         const anio = Number(partes[0]);

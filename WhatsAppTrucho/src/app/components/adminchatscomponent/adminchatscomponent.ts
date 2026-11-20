@@ -4,6 +4,7 @@ import {HttpErrorResponse} from "@angular/common/http";
 import {AdminService} from "../../services/adminservice";
 import {ChatAdmin, ClaveChat, MensajeAdmin, UsuarioAdmin} from "../../models/admin";
 
+/** Sección de chats del panel admin: lista los chats y muestra sus mensajes al ingresar la clave. */
 @Component({
     selector: "app-adminchatscomponent",
     standalone: false,
@@ -230,14 +231,17 @@ export class Adminchatscomponent implements OnInit {
         return mensaje.content;
     }
 
+    /** Indica si se debe mostrar el aviso de que el chat está cifrado. */
     get mostrarAvisoCifrado(): boolean {
         return !this.desbloqueado && !this.cargandoMensajes;
     }
 
+    /** Indica si el chat abierto no tiene mensajes para mostrar. */
     get mostrarChatVacio(): boolean {
         return this.desbloqueado && this.mensajes.length === 0;
     }
 
+    /** Tipo del campo de la clave: texto si se muestra, contraseña si se oculta. */
     get tipoCampoClave(): string {
         if (this.claveVisible) {
             return "text";

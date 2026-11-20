@@ -12,6 +12,13 @@ import {
     CambiarClaveRequest,
 } from '../models/authentication';
 
+/** Campos del token JWT que usa el front. */
+interface DatosToken {
+    exp?: number;
+    sub?: string;
+    role?: string;
+}
+
 export const API = 'http://localhost:8080';
 const USAR_MOCK = false;
 const USAR_MOCK_RECUPERAR = false;
@@ -37,6 +44,7 @@ const RESPUESTA_ADMIN: LoginResponse = {
     role: 'ADMIN',
 };
 
+/** Servicio de autenticación: login, registro, confirmación de correo, recuperación y manejo de la sesión. */
 @Injectable({providedIn: 'root'})
 export class AuthService {
     sesionExpirada = signal(false);
@@ -46,6 +54,7 @@ export class AuthService {
         this.programarVencimiento();
     }
 
+    /** Envía las credenciales al back y devuelve los tokens de sesión. */
     login(datos: LoginRequest): Observable<LoginResponse> {
         if (USAR_MOCK) {
             if (datos.identifier === 'admin') {
@@ -56,6 +65,7 @@ export class AuthService {
         return this.http.post<LoginResponse>(API + '/auth/login', datos);
     }
 
+    /** Envía al back los datos para crear una cuenta. */
     registro(datos: RegistroRequest): Observable<MessageResponse> {
         if (USAR_MOCK) {
             return of({message: 'ok'});
@@ -68,6 +78,7 @@ export class AuthService {
         return this.http.post<MessageResponse>(API + '/auth/register', cuerpo);
     }
 
+    /** Confirma el correo con el token recibido en el enlace. */
     confirmarCorreo(token: string): Observable<MessageResponse> {
         if (USAR_MOCK) {
             return of({message: 'ok'});
@@ -75,6 +86,7 @@ export class AuthService {
         return this.http.post<MessageResponse>(API + '/auth/confirm-email', {token: token});
     }
 
+    /** Pide al back reenviar el correo de confirmación. */
     reenviarConfirmacion(email: string): Observable<MessageResponse> {
         if (USAR_MOCK) {
             return of({message: 'ok'});
@@ -109,6 +121,7 @@ export class AuthService {
         return this.http.post<MessageResponse>(API + '/auth/nueva-clave', datos);
     }
 
+    /** Guarda los tokens de la sesión y programa su vencimiento. */
     guardarSesion(respuesta: LoginResponse) {
         localStorage.setItem('token', respuesta.accessToken);
         localStorage.setItem('refreshToken', respuesta.refreshToken);
@@ -116,6 +129,7 @@ export class AuthService {
         this.programarVencimiento();
     }
 
+    /** Programa el aviso para cuando venza el token de acceso. */
     private programarVencimiento() {
         clearTimeout(this.reloj);
         const datos = this.leerDatosDelToken();
@@ -132,16 +146,19 @@ export class AuthService {
         }, restante);
     }
 
+    /** Cierra la sesión y avisa que el token venció. */
     avisarVencimiento() {
         if (this.obtenerToken()) {
             this.sesionExpirada.set(true);
         }
     }
 
+    /** Devuelve el token de acceso guardado, o null si no hay sesión. */
     obtenerToken(): string | null {
         return localStorage.getItem('token');
     }
 
+    /** Indica si hay una sesión activa con token vigente. */
     estaLogueado(): boolean {
         if (this.obtenerToken() == null) {
             return false;
@@ -153,6 +170,7 @@ export class AuthService {
         return true;
     }
 
+    /** Revoca el refresh token en el back y borra la sesión local. */
     cerrarSesion() {
         clearTimeout(this.reloj);
         this.sesionExpirada.set(false);
@@ -167,7 +185,8 @@ export class AuthService {
         localStorage.removeItem('refreshToken');
     }
 
-    leerDatosDelToken(): any {
+    /** Lee el contenido (payload) del token de acceso. */
+    leerDatosDelToken(): DatosToken | null {
         const token = this.obtenerToken();
         if (token == null) {
             return null;
@@ -176,11 +195,12 @@ export class AuthService {
             const partes = token.split('.');
             const texto = partes[1].replace(/-/g, '+').replace(/_/g, '/');
             return JSON.parse(atob(texto));
-        } catch (e) {
+        } catch {
             return null;
         }
     }
 
+    /** Devuelve el rol del usuario de la sesión, o null. */
     obtenerRol(): string | null {
         const datos = this.leerDatosDelToken();
         if (datos == null || !datos.role) {
@@ -189,6 +209,7 @@ export class AuthService {
         return datos.role;
     }
 
+    /** Devuelve el nombre del usuario de la sesión, o null. */
     obtenerUsuario(): string | null {
         const datos = this.leerDatosDelToken();
         if (datos == null || !datos.sub) {
@@ -197,6 +218,7 @@ export class AuthService {
         return datos.sub;
     }
 
+    /** Indica si el token de acceso ya venció. */
     tokenVencido(): boolean {
         const datos = this.leerDatosDelToken();
         if (datos == null || datos.exp == null) {

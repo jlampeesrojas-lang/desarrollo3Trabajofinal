@@ -15,22 +15,23 @@ import { Contactoscomponent } from "./components/contactoscomponent/contactoscom
 import { Errorcomponent } from "./components/errorcomponent/errorcomponent";
 import { Audiocomponent } from "./components/audiocomponent/audiocomponent";
 
+/** Módulo raíz de la aplicación: declara los componentes y registra los módulos que se usan. */
 @NgModule({
-  declarations: [
-    App,
-    Navbarcomponent,
-    Footercomponent,
-    Paginaprincipalcomponent,
-    Logincomponent,
-    Admincomponent,
-    Confirmaremailcomponent,
-    Adminchatscomponent,
-    Contactoscomponent,
-    Errorcomponent,
-    Audiocomponent,
-  ],
-  imports: [BrowserModule, FormsModule, AppRoutingModule],
-  providers: [provideBrowserGlobalErrorListeners(), provideHttpClient()],
-  bootstrap: [App],
+    declarations: [
+        App,
+        Navbarcomponent,
+        Footercomponent,
+        Paginaprincipalcomponent,
+        Logincomponent,
+        Admincomponent,
+        Confirmaremailcomponent,
+        Adminchatscomponent,
+        Contactoscomponent,
+        Errorcomponent,
+        Audiocomponent,
+    ],
+    imports: [BrowserModule, FormsModule, AppRoutingModule],
+    providers: [provideBrowserGlobalErrorListeners(), provideHttpClient()],
+    bootstrap: [App],
 })
 export class AppModule {}

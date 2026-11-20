@@ -6,6 +6,7 @@ import {Contacto, NuevoContacto} from "../models/contacto";
 
 const USAR_MOCK = true;
 
+/** Servicio que llama a los endpoints de contactos. */
 @Injectable({providedIn: "root"})
 export class ContactService {
     usuariosMock = [

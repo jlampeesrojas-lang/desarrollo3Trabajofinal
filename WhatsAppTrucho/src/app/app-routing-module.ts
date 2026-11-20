@@ -19,6 +19,7 @@ const routes: Routes = [
     { path: '**', redirectTo: 'error/404' },
 ];
 
+/** Rutas de la aplicación: login, principal, admin, contactos, confirmar correo y páginas de error. */
 @NgModule({
     imports: [RouterModule.forRoot(routes)],
     exports: [RouterModule]

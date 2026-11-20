@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 
+/** Botón para grabar un audio con el micrófono y escucharlo antes de enviarlo. */
 @Component({
     selector: 'app-audiocomponent',
     standalone: false,
@@ -18,6 +19,7 @@ export class Audiocomponent implements OnDestroy {
 
     constructor(private cambios: ChangeDetectorRef) {}
 
+    /** Empieza o termina la grabación según el estado actual del micrófono. */
     pulsarMicrofono() {
         if (this.ocupado) return;
 
@@ -39,6 +41,7 @@ export class Audiocomponent implements OnDestroy {
             .catch(this.errorGrabacion.bind(this));
     }
 
+    /** Arranca la grabadora con el micrófono ya autorizado. */
     private iniciarGrabacion(microfono: MediaStream) {
         this.microfono = microfono;
         if (this.destruido) {
@@ -61,6 +64,7 @@ export class Audiocomponent implements OnDestroy {
         this.cambios.markForCheck();
     }
 
+    /** Une las partes grabadas en un audio y lo deja listo para escuchar. */
     private terminar(partes: Blob[], grabadora: MediaRecorder) {
         if (this.destruido || this.grabadora !== grabadora) return;
         this.liberarMicrofono();
@@ -73,12 +77,14 @@ export class Audiocomponent implements OnDestroy {
         this.cambios.markForCheck();
     }
 
+    /** Avisa que no se pudo grabar y libera el micrófono. */
     private errorGrabacion() {
         this.liberarMicrofono();
         this.aviso = 'No se pudo grabar. Revisa el permiso del micrófono.';
         if (!this.destruido) this.cambios.markForCheck();
     }
 
+    /** Detiene el micrófono para que el navegador deje de usarlo. */
     private liberarMicrofono() {
         if (this.microfono) {
             for (const pista of this.microfono.getTracks()) pista.stop();
@@ -89,11 +95,13 @@ export class Audiocomponent implements OnDestroy {
         this.ocupado = false;
     }
 
+    /** Descarta la grabación actual. */
     borrar() {
         if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
         this.audioUrl = '';
     }
 
+    /** Se ejecuta al destruir el componente y libera el micrófono. */
     ngOnDestroy() {
         this.destruido = true;
         this.liberarMicrofono();

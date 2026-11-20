@@ -1,3 +1,4 @@
+/** GIF devuelto por el back (Giphy). */
 export interface Gif {
     id: string;
     title: string;

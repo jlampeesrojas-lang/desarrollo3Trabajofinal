@@ -6,6 +6,7 @@ import {Router} from '@angular/router';
 import {AuthService} from '../../services/authservice';
 import {Gif} from "../../models/gif";
 
+/** Página principal: lista de chats, conversación, adjuntos, GIFs y audio. */
 @Component({
     selector: 'app-paginaprincipalcomponent',
     standalone: false,
