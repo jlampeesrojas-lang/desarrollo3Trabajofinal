@@ -170,8 +170,8 @@ export class App implements OnInit {
     });
 
     chat.mensajes.push({
-      texto: texto,
-      hora: hora,
+      texto,
+      hora,
       enviado: true
     });
 
