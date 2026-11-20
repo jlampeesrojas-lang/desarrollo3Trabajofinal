@@ -4,8 +4,6 @@ import { FormsModule } from "@angular/forms";
 import { provideHttpClient } from "@angular/common/http";
 import { AppRoutingModule } from "./app-routing-module";
 import { App } from "./app";
-import { Navbarcomponent } from "./components/navbarcomponent/navbarcomponent";
-import { Footercomponent } from "./components/footercomponent/footercomponent";
 import { Paginaprincipalcomponent } from "./components/paginaprincipalcomponent/paginaprincipalcomponent";
 import { Logincomponent } from "./components/logincomponent/logincomponent";
 import { Admincomponent } from "./components/admincomponent/admincomponent";
@@ -13,16 +11,12 @@ import { Confirmaremailcomponent } from "./components/confirmaremailcomponent/co
 import { Adminchatscomponent } from "./components/adminchatscomponent/adminchatscomponent";
 import { Contactoscomponent } from "./components/contactoscomponent/contactoscomponent";
 import { Errorcomponent } from "./components/errorcomponent/errorcomponent";
-import { Burbujamensajecomponent } from "./components/burbujamensajecomponent/burbujamensajecomponent";
-import { Chatlistacomponent } from "./components/chatlistacomponent/chatlistacomponent";
-import { Ventanachatcomponent } from "./components/ventanachatcomponent/ventanachatcomponent";
-import { Paginachatcomponent } from "./components/paginachatcomponent/paginachatcomponent";
+import { Audiocomponent } from "./components/audiocomponent/audiocomponent";
 
+/** Módulo raíz de la aplicación: declara los componentes y registra los módulos que se usan. */
 @NgModule({
     declarations: [
         App,
-        Navbarcomponent,
-        Footercomponent,
         Paginaprincipalcomponent,
         Logincomponent,
         Admincomponent,
@@ -30,10 +24,7 @@ import { Paginachatcomponent } from "./components/paginachatcomponent/paginachat
         Adminchatscomponent,
         Contactoscomponent,
         Errorcomponent,
-        Burbujamensajecomponent,
-        Chatlistacomponent,
-        Ventanachatcomponent,
-        Paginachatcomponent,
+        Audiocomponent,
     ],
     imports: [BrowserModule, FormsModule, AppRoutingModule],
     providers: [provideBrowserGlobalErrorListeners(), provideHttpClient()],

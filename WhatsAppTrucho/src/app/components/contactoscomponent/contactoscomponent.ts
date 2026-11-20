@@ -5,6 +5,7 @@ import {AuthService} from "../../services/authservice";
 import {ContactService} from "../../services/contactservice";
 import {Contacto} from "../../models/contacto";
 
+/** Pantalla donde el usuario ve, agrega y elimina sus contactos. */
 @Component({
     selector: "app-contactoscomponent",
     standalone: false,
@@ -107,10 +108,10 @@ export class Contactoscomponent implements OnInit {
             return this.contactos;
         }
         const resultado: Contacto[] = [];
-        for (const c of this.contactos) {
-            const todo = `${c.nombre} ${c.usuario}`.toLowerCase();
+        for (const contacto of this.contactos) {
+            const todo = `${contacto.nombre} ${contacto.usuario}`.toLowerCase();
             if (todo.indexOf(texto) !== -1) {
-                resultado.push(c);
+                resultado.push(contacto);
             }
         }
         return resultado;
@@ -131,20 +132,20 @@ export class Contactoscomponent implements OnInit {
 
     /** Valida el formulario y agrega el contacto. */
     guardarContacto() {
-        const f = this.formulario;
+        const datos = this.formulario;
         this.errorModal = "";
 
-        if (f.usuario.trim() === "") {
+        if (datos.usuario.trim() === "") {
             this.errorModal = "Escribe el nombre de usuario o el correo";
             return;
         }
-        if (f.usuario.indexOf("<") !== -1 || f.usuario.indexOf(">") !== -1) {
+        if (datos.usuario.indexOf("<") !== -1 || datos.usuario.indexOf(">") !== -1) {
             this.errorModal = "El usuario tiene caracteres no permitidos";
             return;
         }
 
         this.guardando = true;
-        this.servicio.agregarContacto({usuario: f.usuario.trim(), alias: f.alias.trim()}).subscribe({
+        this.servicio.agregarContacto({usuario: datos.usuario.trim(), alias: datos.alias.trim()}).subscribe({
             next: () => {
                 this.guardando = false;
                 this.modalAbierto = false;
@@ -161,9 +162,9 @@ export class Contactoscomponent implements OnInit {
     }
 
     /** Abre la confirmación para eliminar un contacto. */
-    pedirEliminar(c: Contacto) {
+    pedirEliminar(contacto: Contacto) {
         this.mensaje = "";
-        this.contactoAEliminar = c;
+        this.contactoAEliminar = contacto;
     }
 
     /** Cierra la confirmación de eliminar. */
@@ -173,12 +174,12 @@ export class Contactoscomponent implements OnInit {
 
     /** Elimina el contacto seleccionado. */
     confirmarEliminar() {
-        const c = this.contactoAEliminar;
-        if (c == null) {
+        const contacto = this.contactoAEliminar;
+        if (contacto == null) {
             return;
         }
         this.eliminando = true;
-        this.servicio.eliminarContacto(c.id).subscribe({
+        this.servicio.eliminarContacto(contacto.id).subscribe({
             next: () => {
                 this.eliminando = false;
                 this.contactoAEliminar = null;

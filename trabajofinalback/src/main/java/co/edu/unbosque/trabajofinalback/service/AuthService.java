@@ -18,8 +18,8 @@ import co.edu.unbosque.trabajofinalback.repository.UserRepository;
 import co.edu.unbosque.trabajofinalback.security.JwtUtil;
 import co.edu.unbosque.trabajofinalback.util.PasswordValidator;
 import co.edu.unbosque.trabajofinalback.util.TokenUtil;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,250 +33,307 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Lógica de autenticación: registro con validación, confirmación de correo, login con JWT, refresh
- * con rotación y logout. Cada paso importante queda registrado en la auditoría.
- */
+/** AuthService. */
 @Service
 public class AuthService {
 
-  private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+    private static final SecureRandom random = new SecureRandom();
 
-  private final UserRepository userRepo;
-  private final EmailTokenRepository emailTokenRepo;
-  private final RefreshTokenRepository refreshTokenRepo;
-  private final PasswordEncoder passwordEncoder;
-  private final AuthenticationManager authenticationManager;
-  private final JwtUtil jwtUtil;
-  private final EmailService emailService;
-  private final AuditService auditService;
+    private final UserRepository userRepo;
+    private final EmailTokenRepository emailTokenRepo;
+    private final RefreshTokenRepository refreshTokenRepo;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final EmailService emailService;
+    private final AuditService auditService;
 
-  /** Horas de vida del enlace de confirmación. */
-  @Value("${app.email-token-expiration-hours:24}")
-  private long emailTokenHours;
+    @Value("${app.email-token-expiration-hours:24}")
+    private long emailTokenHours;
 
-  /** Días de vida del refresh token. */
-  @Value("${jwt.refresh-expiration-days:7}")
-  private long refreshDays;
+    @Value("${jwt.refresh-expiration-days:7}")
+    private long refreshDays;
 
-  public AuthService(
-      UserRepository userRepo,
-      EmailTokenRepository emailTokenRepo,
-      RefreshTokenRepository refreshTokenRepo,
-      PasswordEncoder passwordEncoder,
-      AuthenticationManager authenticationManager,
-      JwtUtil jwtUtil,
-      EmailService emailService,
-      AuditService auditService) {
-    this.userRepo = userRepo;
-    this.emailTokenRepo = emailTokenRepo;
-    this.refreshTokenRepo = refreshTokenRepo;
-    this.passwordEncoder = passwordEncoder;
-    this.authenticationManager = authenticationManager;
-    this.jwtUtil = jwtUtil;
-    this.emailService = emailService;
-    this.auditService = auditService;
-  }
-
-  
-  /**
-   * Registra un usuario nuevo con rol USER, contraseña en hash BCrypt y correo sin confirmar, y le
-   * envía el correo de confirmación.
-   *
-   * @param dto Datos ya validados por Bean Validation (@Valid)
-   * @param ip IP de origen
-   * @throws PasswordNotValidException si la contraseña no cumple la política
-   * @throws UserAlreadyExistsException si el usuario o el correo ya existen
-   */
-  @Transactional
-  public void register(RegisterDTO dto, String ip) throws PasswordNotValidException {
-    PasswordValidator.validate(dto.getPassword());
-
-    String username = dto.getUsername().trim();
-    String email = dto.getEmail().trim().toLowerCase();
-
-    if (userRepo.existsByUsername(username)) {
-      throw new UserAlreadyExistsException("El nombre de usuario ya existe");
-    }
-    if (userRepo.existsByEmail(email)) {
-      throw new UserAlreadyExistsException("El correo ya está registrado");
+    /** Crea el servicio con sus repositorios y utilidades. */
+    public AuthService(UserRepository userRepo,
+                       EmailTokenRepository emailTokenRepo,
+                       RefreshTokenRepository refreshTokenRepo,
+                       PasswordEncoder passwordEncoder,
+                       AuthenticationManager authenticationManager,
+                       JwtUtil jwtUtil,
+                       EmailService emailService,
+                       AuditService auditService) {
+        this.userRepo = userRepo;
+        this.emailTokenRepo = emailTokenRepo;
+        this.refreshTokenRepo = refreshTokenRepo;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
+        this.emailService = emailService;
+        this.auditService = auditService;
     }
 
-    User user = new User(username, email, passwordEncoder.encode(dto.getPassword()), User.Role.USER);
-    userRepo.save(user);
-    auditService.log(AuditAction.REGISTER, user.getId(), ip, "email=" + email);
+    /** Registra un usuario con rol USER y envía el correo de confirmación. */
+    @Transactional
+    public void register(RegisterDTO dto, String ip) throws PasswordNotValidException {
+        PasswordValidator.validate(dto.getPassword());
 
-    sendConfirmation(user);
-  }
+        String username = dto.getUsername().trim();
+        String email = dto.getEmail().trim().toLowerCase();
 
-  /** Crea un token de confirmación y lo envía. Si el SMTP falla, el usuario puede pedir reenvío. */
-  private void sendConfirmation(User user) {
-    String rawToken = TokenUtil.generateToken();
-    emailTokenRepo.save(
-        new EmailToken(
-            user,
-            TokenUtil.sha256(rawToken),
-            TokenType.CONFIRM_EMAIL,
-            LocalDateTime.now().plusHours(emailTokenHours)));
-    try {
-      emailService.sendConfirmationEmail(user, rawToken);
-    } catch (MailException e) {
-      log.error("No se pudo enviar el correo de confirmación a {}: {}", user.getEmail(), e.getMessage());
-    }
-  }
+        if (userRepo.existsByUsername(username)) {
+            throw new UserAlreadyExistsException("El nombre de usuario ya existe");
+        }
 
-  // ------------------------------------------------------- CONFIRMACIÓN DE CORREO
+        if (userRepo.existsByEmail(email)) {
+            throw new UserAlreadyExistsException("El correo ya está registrado");
+        }
 
-  /**
-   * Confirma el correo con el token recibido en el enlace. El token es de un solo uso.
-   *
-   * @param rawToken Token en texto plano
-   * @param ip IP de origen
-   * @throws InvalidTokenException (400) si no existe, venció o ya se usó
-   */
-  @Transactional
-  public void confirmEmail(String rawToken, String ip) {
-    EmailToken token =
-        emailTokenRepo
-            .findByTokenHash(TokenUtil.sha256(rawToken))
-            .filter(t -> t.getType() == TokenType.CONFIRM_EMAIL)
-            .orElseThrow(
-                () -> new InvalidTokenException("El enlace de confirmación no es válido", HttpStatus.BAD_REQUEST));
+        String passwordHash = passwordEncoder.encode(dto.getPassword());
+        User user = new User(username, email, passwordHash, User.Role.USER);
 
-    if (token.isUsed() || token.isExpired()) {
-      throw new InvalidTokenException("El enlace ya fue usado o venció", HttpStatus.BAD_REQUEST);
+        userRepo.save(user);
+        auditService.log(AuditAction.REGISTER, user.getId(), ip, "email=" + email);
+        sendConfirmation(user);
     }
 
-    User user = token.getUser();
-    user.setEmailVerified(true);
-    token.setUsedAt(LocalDateTime.now());
-    userRepo.save(user);
-    emailTokenRepo.save(token);
-    auditService.log(AuditAction.EMAIL_CONFIRMED, user.getId(), ip, null);
-  }
+    /** Crea un token de confirmación y lo envía por correo. */
+    private void sendConfirmation(User user) {
+        String tokenOriginal = TokenUtil.generateToken();
+        String hash = TokenUtil.sha256(tokenOriginal);
+        LocalDateTime vencimiento = LocalDateTime.now().plusHours(emailTokenHours);
 
-  /**
-   * Reenvía el correo de confirmación. Responde igual exista o no el correo, para no revelar qué
-   * correos están registrados.
-   */
-  @Transactional
-  public void resendConfirmation(String email, String ip) {
-    Optional<User> found = userRepo.findByEmail(email.trim().toLowerCase());
-    if (found.isPresent() && !found.get().isEmailVerified()) {
-      User user = found.get();
-      emailTokenRepo.invalidatePending(user, TokenType.CONFIRM_EMAIL, LocalDateTime.now());
-      sendConfirmation(user);
-      auditService.log(AuditAction.CONFIRMATION_RESENT, user.getId(), ip, null);
-    }
-  }
+        EmailToken token = new EmailToken(user, hash, TokenType.CONFIRM_EMAIL, vencimiento);
+        emailTokenRepo.save(token);
 
-  // ------------------------------------------------------------------- LOGIN
-
-  /**
-   * Autentica con correo o usuario más contraseña y entrega access token (JWT) y refresh token.
-   *
-   * @param dto Credenciales
-   * @param ip IP de origen
-   * @return Tokens y datos de sesión
-   * @throws AuthenticationException (401) credenciales incorrectas; (403) cuenta deshabilitada
-   * @throws EmailNotVerifiedException (403) si aún no confirmó el correo
-   */
-  @Transactional
-  public AuthResponseDTO login(LoginDTO dto, String ip) {
-    String identifier = dto.getIdentifier().trim();
-    Authentication authentication;
-    try {
-      authentication =
-          authenticationManager.authenticate(
-              new UsernamePasswordAuthenticationToken(identifier, dto.getPassword()));
-    } catch (AuthenticationException e) {
-      Long userId =
-          userRepo
-              .findByUsername(identifier)
-              .or(() -> userRepo.findByEmail(identifier.toLowerCase()))
-              .map(User::getId)
-              .orElse(null);
-      auditService.log(AuditAction.LOGIN_FAIL, userId, ip, "credenciales incorrectas");
-      throw e;
+        try {
+            emailService.sendConfirmationEmail(user, tokenOriginal);
+        } catch (MailException e) {
+            log.error("No se pudo enviar el correo de confirmación a {}", user.getEmail());
+        }
     }
 
-    User user = (User) authentication.getPrincipal();
-    if (!user.isEmailVerified()) {
-      auditService.log(AuditAction.LOGIN_FAIL, user.getId(), ip, "correo sin confirmar");
-      throw new EmailNotVerifiedException();
+    /** Confirma el correo con el token recibido en el enlace. */
+    @Transactional
+    public void confirmEmail(String rawToken, String ip) {
+        String hash = TokenUtil.sha256(rawToken);
+        EmailToken token = emailTokenRepo.findByTokenHash(hash).orElse(null);
+
+        if (token == null || token.getType() != TokenType.CONFIRM_EMAIL) {
+            throw new InvalidTokenException(
+                "El enlace de confirmación no es válido", HttpStatus.BAD_REQUEST
+            );
+        }
+
+        if (token.isUsed() || token.isExpired()) {
+            throw new InvalidTokenException(
+                "El enlace ya fue usado o venció", HttpStatus.BAD_REQUEST
+            );
+        }
+
+        User user = token.getUser();
+        user.setEmailVerified(true);
+        token.setUsedAt(LocalDateTime.now());
+
+        userRepo.save(user);
+        emailTokenRepo.save(token);
+        auditService.log(AuditAction.EMAIL_CONFIRMED, user.getId(), ip, null);
     }
 
-    auditService.log(AuditAction.LOGIN_OK, user.getId(), ip, null);
-    return buildSession(user);
-  }
+    /** Reenvía el correo de confirmación sin revelar si el correo existe. */
+    @Transactional
+    public void resendConfirmation(String email, String ip) {
+        String correo = email.trim().toLowerCase();
+        User user = userRepo.findByEmail(correo).orElse(null);
 
-  /** Genera access token + un refresh token nuevo (se guarda solo su hash). */
-  private AuthResponseDTO buildSession(User user) {
-    String accessToken = jwtUtil.generateToken(user);
-    String rawRefresh = TokenUtil.generateToken();
-    refreshTokenRepo.save(
-        new RefreshToken(
-            user, TokenUtil.sha256(rawRefresh), LocalDateTime.now().plusDays(refreshDays)));
-    return new AuthResponseDTO(
-        accessToken,
-        rawRefresh,
-        jwtUtil.getAccessExpirationSeconds(),
-        user.getUsername(),
-        user.getRole().name());
-  }
+        if (user == null || user.isEmailVerified()) {
+            return;
+        }
 
-  // ----------------------------------------------------------------- REFRESH
-
-  /**
-   * Renueva la sesión con rotación: el refresh token usado se revoca y se entrega uno nuevo. Si
-   * alguien presenta un refresh token ya revocado se asume robo y se cierran TODAS las sesiones del
-   * usuario.
-   *
-   * @throws InvalidTokenException (401) si el token es inválido, está vencido o revocado
-   */
-  @Transactional(noRollbackFor = InvalidTokenException.class)
-  public AuthResponseDTO refresh(String rawRefreshToken, String ip) {
-    RefreshToken stored =
-        refreshTokenRepo
-            .findByTokenHash(TokenUtil.sha256(rawRefreshToken))
-            .orElseThrow(
-                () -> new InvalidTokenException("Refresh token inválido", HttpStatus.UNAUTHORIZED));
-
-    User user = stored.getUser();
-
-    if (stored.isRevoked()) {
-      Long userId = user.getId(); // se lee antes de que revokeAllByUser limpie el contexto
-      refreshTokenRepo.revokeAllByUser(user);
-      auditService.log(AuditAction.TOKEN_REUSE_DETECTED, userId, ip, "refresh token reutilizado");
-      throw new InvalidTokenException(
-          "Sesión inválida, inicia sesión de nuevo", HttpStatus.UNAUTHORIZED);
-    }
-    if (stored.isExpired() || !user.isEnabled() || !user.isEmailVerified()) {
-      throw new InvalidTokenException("La sesión venció, inicia sesión de nuevo", HttpStatus.UNAUTHORIZED);
+        emailTokenRepo.invalidatePending(user, TokenType.CONFIRM_EMAIL, LocalDateTime.now());
+        sendConfirmation(user);
+        auditService.log(AuditAction.CONFIRMATION_RESENT, user.getId(), ip, null);
     }
 
-    stored.setRevoked(true);
-    refreshTokenRepo.save(stored);
-    auditService.log(AuditAction.TOKEN_REFRESH, user.getId(), ip, null);
-    return buildSession(user);
-  }
+    // Se usa al guardar el código y al comprobar el que escribe el usuario.
+    /** Calcula el hash del código de recuperación usando también el correo. */
+    private String resetHash(String email, String code) {
+        String correo = email.trim().toLowerCase();
+        return TokenUtil.sha256(correo + ":" + code.trim());
+    }
 
-  // ------------------------------------------------------------------ LOGOUT
+    /** Genera un código de 6 dígitos y lo envía al correo de la cuenta. */
+    @Transactional
+    public void requestPasswordReset(String email, String ip) {
+        String correo = email.trim().toLowerCase();
+        User user = userRepo.findByEmail(correo).orElse(null);
 
-  /**
-   * Cierra la sesión revocando el refresh token. Es idempotente: si el token no existe, no hace
-   * nada.
-   */
-  @Transactional
-  public void logout(String rawRefreshToken, String ip) {
-    refreshTokenRepo
-        .findByTokenHash(TokenUtil.sha256(rawRefreshToken))
-        .filter(t -> !t.isRevoked())
-        .ifPresent(
-            t -> {
-              t.setRevoked(true);
-              refreshTokenRepo.save(t);
-              auditService.log(AuditAction.LOGOUT, t.getUser().getId(), ip, null);
-            });
-  }
+        if (user == null || !user.isEmailVerified()) {
+            return;
+        }
+
+        emailTokenRepo.invalidatePending(user, TokenType.RESET_PASSWORD, LocalDateTime.now());
+
+        // %06d conserva los ceros iniciales de códigos como 002731.
+        String codigo = String.format("%06d", random.nextInt(1_000_000));
+        String hash = resetHash(correo, codigo);
+        LocalDateTime vencimiento = LocalDateTime.now().plusMinutes(15);
+
+        EmailToken token = new EmailToken(user, hash, TokenType.RESET_PASSWORD, vencimiento);
+        emailTokenRepo.save(token);
+
+        try {
+            emailService.sendResetCodeEmail(user, codigo);
+        } catch (MailException e) {
+            log.error("No se pudo enviar el código de recuperación a {}", correo);
+        }
+
+        auditService.log(AuditAction.PASSWORD_RESET_REQUESTED, user.getId(), ip, null);
+    }
+
+    /** Busca el código de recuperación y revisa que no esté usado ni vencido. */
+    private EmailToken validResetToken(String email, String code) {
+        String hash = resetHash(email, code);
+        EmailToken token = emailTokenRepo.findByTokenHash(hash).orElse(null);
+
+        if (token == null || token.getType() != TokenType.RESET_PASSWORD
+                || token.isUsed() || token.isExpired()) {
+            throw new InvalidTokenException("Código incorrecto o vencido", HttpStatus.BAD_REQUEST);
+        }
+
+        return token;
+    }
+
+    /** Comprueba el código de recuperación sin gastarlo. */
+    @Transactional(readOnly = true)
+    public void verifyResetCode(String email, String code) {
+        validResetToken(email, code);
+    }
+
+    /** Cambia la contraseña con el código y cierra todas las sesiones. */
+    @Transactional
+    public void resetPassword(String email, String code, String newPassword, String ip)
+            throws PasswordNotValidException {
+        EmailToken token = validResetToken(email, code);
+        PasswordValidator.validate(newPassword);
+
+        User user = token.getUser();
+        Long userId = user.getId();
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        token.setUsedAt(LocalDateTime.now());
+
+        userRepo.save(user);
+        emailTokenRepo.save(token);
+        refreshTokenRepo.revokeAllByUser(user);
+        auditService.log(AuditAction.PASSWORD_RESET_DONE, userId, ip, null);
+    }
+
+    /** Autentica con correo o usuario y entrega los tokens de sesión. */
+    @Transactional
+    public AuthResponseDTO login(LoginDTO dto, String ip) {
+        String identifier = dto.getIdentifier().trim();
+        Authentication authentication;
+
+        try {
+            UsernamePasswordAuthenticationToken credenciales =
+                new UsernamePasswordAuthenticationToken(identifier, dto.getPassword());
+
+            authentication = authenticationManager.authenticate(credenciales);
+        } catch (AuthenticationException e) {
+            User user = userRepo.findByUsername(identifier).orElse(null);
+
+            if (user == null) {
+                user = userRepo.findByEmail(identifier.toLowerCase()).orElse(null);
+            }
+
+            Long userId = null;
+            if (user != null) {
+                userId = user.getId();
+            }
+
+            auditService.log(AuditAction.LOGIN_FAIL, userId, ip, "credenciales incorrectas");
+            throw e;
+        }
+
+        User user = (User) authentication.getPrincipal();
+
+        if (!user.isEmailVerified()) {
+            auditService.log(AuditAction.LOGIN_FAIL, user.getId(), ip, "correo sin confirmar");
+            throw new EmailNotVerifiedException();
+        }
+
+        auditService.log(AuditAction.LOGIN_OK, user.getId(), ip, null);
+        return buildSession(user);
+    }
+
+    /** Genera el access token y un refresh token nuevo. */
+    private AuthResponseDTO buildSession(User user) {
+        String accessToken = jwtUtil.generateToken(user);
+        String refreshOriginal = TokenUtil.generateToken();
+        String hash = TokenUtil.sha256(refreshOriginal);
+        LocalDateTime vencimiento = LocalDateTime.now().plusDays(refreshDays);
+
+        RefreshToken refresh = new RefreshToken(user, hash, vencimiento);
+        refreshTokenRepo.save(refresh);
+
+        return new AuthResponseDTO(
+            accessToken,
+            refreshOriginal,
+            jwtUtil.getAccessExpirationSeconds(),
+            user.getUsername(),
+            user.getRole().name()
+        );
+    }
+
+    /** Renueva la sesión con rotación del refresh token. */
+    @Transactional(noRollbackFor = InvalidTokenException.class)
+    public AuthResponseDTO refresh(String rawRefreshToken, String ip) {
+        String hash = TokenUtil.sha256(rawRefreshToken);
+        RefreshToken token = refreshTokenRepo.findByTokenHash(hash).orElse(null);
+
+        if (token == null) {
+            throw new InvalidTokenException("Refresh token inválido", HttpStatus.UNAUTHORIZED);
+        }
+
+        User user = token.getUser();
+
+        if (token.isRevoked()) {
+            Long userId = user.getId();
+            refreshTokenRepo.revokeAllByUser(user);
+            auditService.log(AuditAction.TOKEN_REUSE_DETECTED, userId, ip, "refresh token reutilizado");
+
+            throw new InvalidTokenException(
+                "Sesión inválida, inicia sesión de nuevo", HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        if (token.isExpired() || !user.isEnabled() || !user.isEmailVerified()) {
+            throw new InvalidTokenException(
+                "La sesión venció, inicia sesión de nuevo", HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        token.setRevoked(true);
+        refreshTokenRepo.save(token);
+        auditService.log(AuditAction.TOKEN_REFRESH, user.getId(), ip, null);
+
+        return buildSession(user);
+    }
+
+    /** Cierra la sesión revocando el refresh token. */
+    @Transactional
+    public void logout(String rawRefreshToken, String ip) {
+        String hash = TokenUtil.sha256(rawRefreshToken);
+        RefreshToken token = refreshTokenRepo.findByTokenHash(hash).orElse(null);
+
+        if (token == null || token.isRevoked()) {
+            return;
+        }
+
+        token.setRevoked(true);
+        refreshTokenRepo.save(token);
+        auditService.log(AuditAction.LOGOUT, token.getUser().getId(), ip, null);
+    }
 }

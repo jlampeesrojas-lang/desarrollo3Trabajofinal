@@ -2,11 +2,13 @@
     <aside class="menu">
         <h2><img src="icono.png" alt="Imagen logo" height="40" weight="40">Sigma Chat</h2>
         <p class="rol">Panel de administración</p>
+
         <nav>
             <a [class.activo]="seccion === 'usuarios'" (click)="irASeccion('usuarios')">Usuarios</a>
             <a [class.activo]="seccion === 'auditoria'" (click)="irASeccion('auditoria')">Auditoría</a>
             <a [class.activo]="seccion === 'chats'" (click)="irASeccion('chats')">Chats</a>
         </nav>
+
         <button type="button" class="btn btn-outline" (click)="salir()">Cerrar sesión</button>
     </aside>
 
@@ -24,9 +26,13 @@
                 }
 
                 <div class="barra">
-                    <input type="text" placeholder="Buscar por usuario, correo o rol" [(ngModel)]="busqueda">
-                    <button type="button" class="btn btn-primary" (click)="abrirCrear()">Nuevo usuario</button>
+                    <input type="text" placeholder="Buscar por usuario, correo o rol"
+                           [(ngModel)]="busqueda">
+                    <button type="button" class="btn btn-primary" (click)="abrirCrear()">
+                        Nuevo usuario
+                    </button>
                 </div>
+
                 <table>
                     <thead>
                     <tr>
@@ -51,18 +57,20 @@
                         @for (u of usuariosFiltrados(); track u.id) {
                             <tr>
                                 <td>
-                                    <button type="button" class="enlace"
-                                            (click)="verUsuario(u.username)">{{ u.username }}
+                                    <button type="button" class="enlace" (click)="verUsuario(u.username)">
+                                        {{ u.username }}
                                     </button>
                                 </td>
                                 <td>{{ u.email }}</td>
                                 <td>{{ u.role }}</td>
                                 <td>{{ textoEstado(u) }}</td>
                                 <td>
-                                    <button type="button" class="btn btn-outline" (click)="abrirEditar(u)">Editar
+                                    <button type="button" class="btn btn-outline" (click)="abrirEditar(u)">
+                                        Editar
                                     </button>
-                                    <button type="button" class="btn btn-outline" [disabled]="esElMismo(u)"
-                                            (click)="pedirEliminar(u)">Eliminar
+                                    <button type="button" class="btn btn-outline"
+                                            [disabled]="esElMismo(u)" (click)="pedirEliminar(u)">
+                                        Eliminar
                                     </button>
                                 </td>
                             </tr>
@@ -83,16 +91,24 @@
 
                 <div class="barra">
                     <input type="text" placeholder="Buscar por usuario, acción, IP o lugar"
-                           [(ngModel)]="busquedaAuditoria" (ngModelChange)="paginaAuditoria = 0">
-                    <input type="date" [(ngModel)]="fechaAuditoria" (ngModelChange)="paginaAuditoria = 0">
+                           [(ngModel)]="busquedaAuditoria"
+                           (ngModelChange)="paginaAuditoria = 0">
+
+                    <input type="date" [(ngModel)]="fechaAuditoria"
+                           (ngModelChange)="paginaAuditoria = 0">
+
                     <select [(ngModel)]="accionAuditoria" (ngModelChange)="paginaAuditoria = 0">
                         <option value="">Todas las acciones</option>
                         @for (a of acciones; track a) {
                             <option [value]="a">{{ nombreAccion(a) }}</option>
                         }
                     </select>
-                    <button type="button" class="btn btn-outline" (click)="cargarAuditoria()">Actualizar</button>
+
+                    <button type="button" class="btn btn-outline" (click)="cargarAuditoria()">
+                        Actualizar
+                    </button>
                 </div>
+
                 <table>
                     <thead>
                     <tr>
@@ -122,7 +138,8 @@
                                 <td>
                                     @if (r.username) {
                                         <button type="button" class="enlace"
-                                                (click)="verUsuario(r.username)">{{ r.username }}
+                                                (click)="verUsuario(r.username)">
+                                            {{ r.username }}
                                         </button>
                                     } @else {
                                         —
@@ -130,22 +147,34 @@
                                 </td>
                                 <td>{{ nombreAccion(r.action) }}</td>
                                 <td>{{ r.detail || '—' }}</td>
-                                <td>{{ r.ip || '—' }}</td>
+                                <td>
+                                    @if (r.ip) {
+                                        <button type="button" class="enlace" (click)="abrirUbicacion(r)">
+                                            {{ r.ip }}
+                                        </button>
+                                    } @else {
+                                        —
+                                    }
+                                </td>
                                 <td>{{ r.location || '—' }}</td>
-                                <td [class.fallido]="resultadoAuditoria(r) === 'Fallido'">{{ resultadoAuditoria(r) }}</td>
+                                <td [class.fallido]="resultadoAuditoria(r) === 'Fallido'">
+                                    {{ resultadoAuditoria(r) }}
+                                </td>
                             </tr>
                         }
                     </tbody>
                 </table>
 
                 <div class="paginacion">
-                    <button type="button" class="btn btn-outline" [disabled]="paginaAuditoria === 0"
-                            (click)="paginaAnterior()">Anterior
+                    <button type="button" class="btn btn-outline"
+                            [disabled]="paginaAuditoria === 0" (click)="paginaAnterior()">
+                        Anterior
                     </button>
                     <span>Página {{ paginaAuditoria + 1 }} de {{ totalPaginasAuditoria() }}</span>
                     <button type="button" class="btn btn-outline"
                             [disabled]="paginaAuditoria >= totalPaginasAuditoria() - 1"
-                            (click)="paginaSiguiente()">Siguiente
+                            (click)="paginaSiguiente()">
+                        Siguiente
                     </button>
                 </div>
             </section>
@@ -211,6 +240,7 @@
                 ¿Seguro que quieres eliminar a {{ usuarioAEliminar.username }}?
                 Esta acción no se puede deshacer.
             </p>
+
             <div class="acciones-modal">
                 <button type="button" class="btn btn-outline" (click)="cancelarEliminar()">Cancelar</button>
                 <button type="button" class="btn btn-primary" [disabled]="eliminando"
@@ -229,8 +259,35 @@
             <div class="dato"><span>Correo</span><strong>{{ usuarioInfo.email }}</strong></div>
             <div class="dato"><span>Rol</span><strong>{{ usuarioInfo.role }}</strong></div>
             <div class="dato"><span>Estado</span><strong>{{ textoEstado(usuarioInfo) }}</strong></div>
+
             <div class="acciones-modal">
                 <button type="button" class="btn btn-outline" (click)="cerrarInfo()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (registroUbicacion) {
+    <div class="modal-fondo">
+        <div class="ventana" role="dialog" aria-modal="true" aria-labelledby="titulo-ubicacion">
+            <h3 id="titulo-ubicacion">Ubicación de la acción</h3>
+
+            <div class="dato">
+                <span>Acción</span>
+                <strong>{{ nombreAccion(registroUbicacion.action) }}</strong>
+            </div>
+
+            <div class="dato">
+                <span>IP</span>
+                <strong>{{ registroUbicacion.ip }}</strong>
+            </div>
+
+            <p role="status">{{ resultadoIp }}</p>
+
+            <div class="acciones-modal">
+                <button type="button" class="btn btn-outline" (click)="registroUbicacion = null">
+                    Cerrar
+                </button>
             </div>
         </div>
     </div>

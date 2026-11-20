@@ -1,0 +1,159 @@
+:host {
+    --rojo: #e8203a;
+    --rojo-oscuro: #c21a31;
+    --panel: #15171b;
+    --borde: #2a2d34;
+
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+button {
+    font: inherit;
+    color: #fff;
+    background: #1c1e23;
+    border: 1px solid #474b55;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(232, 32, 58, 0.4);
+}
+
+/* ===== Botón del micrófono ===== */
+
+.microfono {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    padding: 0;
+    border: 1px solid #474b55;
+    border-radius: 50%;
+    background: #1c1e23;
+    color: #fff;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.microfono:hover:not(:disabled) {
+    border-color: var(--rojo);
+    background: rgba(232, 32, 58, 0.18);
+    transform: translateY(-1px);
+}
+
+.microfono:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+/* Mientras graba: rojo con latido */
+.microfono.activo {
+    border-color: transparent;
+    background: linear-gradient(135deg, #f0334d, var(--rojo-oscuro));
+    box-shadow: 0 0 0 0 rgba(232, 32, 58, 0.6);
+    animation: latido 1.4s ease-out infinite;
+}
+
+/* ===== Burbuja con la grabación ===== */
+
+.vista {
+    position: absolute;
+    z-index: 3;
+    bottom: calc(100% + 10px);
+    left: 0;
+    width: max-content;
+    max-width: min(260px, 70vw);
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--borde);
+    border-top: 3px solid var(--rojo);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #1a1d22, var(--panel));
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6);
+    color: #f4f4f5;
+    color-scheme: dark;
+    font-size: 0.88rem;
+    animation: subir 0.18s ease;
+}
+
+.vista span[role="status"] {
+    display: block;
+    color: #a0a6b2;
+    line-height: 1.4;
+}
+
+/* Texto "Grabando…" con un puntito rojo */
+.vista span[role="status"]:first-child::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--rojo);
+    box-shadow: 0 0 8px var(--rojo);
+    animation: parpadeo 1s ease-in-out infinite;
+}
+
+audio {
+    width: min(232px, 60vw);
+    height: 40px;
+    border-radius: 20px;
+}
+
+/* Botón "Borrar" */
+.vista button {
+    padding: 8px 14px;
+    border: 1px solid #474b55;
+    border-radius: 16px;
+    background: rgba(13, 15, 18, 0.6);
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.vista button:hover {
+    border-color: var(--rojo);
+    background: rgba(232, 32, 58, 0.16);
+    color: #ff5c72;
+}
+
+/* ===== Animaciones ===== */
+
+@keyframes latido {
+    0% { box-shadow: 0 0 0 0 rgba(232, 32, 58, 0.6); }
+    70% { box-shadow: 0 0 0 12px rgba(232, 32, 58, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(232, 32, 58, 0); }
+}
+
+@keyframes parpadeo {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes subir {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .microfono.activo,
+    .vista span[role="status"]:first-child::before { animation: none; }
+}
