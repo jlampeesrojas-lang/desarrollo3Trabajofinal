@@ -38,6 +38,9 @@ public class GlobalExceptionHandler {
 		return build(HttpStatus.BAD_REQUEST, "Datos inválidos", detail);
 	}
 
+	/**
+	 * Handles unreadable request bodies by returning a bad request response.
+	 */
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	public ResponseEntity<Map<String, String>> handleUnreadable(HttpMessageNotReadableException ex) {
 		return build(HttpStatus.BAD_REQUEST, "Solicitud inválida", "El cuerpo de la solicitud no es un JSON válido");

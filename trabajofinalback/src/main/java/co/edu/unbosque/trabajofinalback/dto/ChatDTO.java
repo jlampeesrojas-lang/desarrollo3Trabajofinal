@@ -57,7 +57,7 @@ public class ChatDTO {
   }
 
   public void setParticipantes(List<ContactDTO> participantes) {
-    this.participantes = participantes;
+    this.participantes = participantes == null ? null : new java.util.ArrayList<>(participantes);
   }
 
   public ChatMessageDTO getUltimoMensaje() {
