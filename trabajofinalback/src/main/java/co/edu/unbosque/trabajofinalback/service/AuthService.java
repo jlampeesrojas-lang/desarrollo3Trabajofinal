@@ -20,12 +20,14 @@ import co.edu.unbosque.trabajofinalback.util.PasswordValidator;
 import co.edu.unbosque.trabajofinalback.util.TokenUtil;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -33,12 +35,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** AuthService. */
+/** Registro, confirmación de correo, recuperación de contraseña y manejo de sesiones. */
 @Service
 public class AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
-    private static final SecureRandom random = new SecureRandom();
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    /** Minutos de validez del código de recuperación de contraseña. */
+    private static final int MINUTOS_CODIGO_RECUPERACION = 15;
+
+    /** Límite superior (exclusivo) del código de 6 dígitos. */
+    private static final int LIMITE_CODIGO = 1_000_000;
 
     private final UserRepository userRepo;
     private final EmailTokenRepository emailTokenRepo;
@@ -55,7 +63,18 @@ public class AuthService {
     @Value("${jwt.refresh-expiration-days:7}")
     private long refreshDays;
 
-    /** Crea el servicio con sus repositorios y utilidades. */
+    /**
+     * Crea el servicio con sus repositorios y utilidades.
+     *
+     * @param userRepo              repositorio de usuarios
+     * @param emailTokenRepo        repositorio de tokens enviados por correo
+     * @param refreshTokenRepo      repositorio de refresh tokens
+     * @param passwordEncoder       codificador de contraseñas
+     * @param authenticationManager gestor de autenticación de Spring Security
+     * @param jwtUtil               utilidad para generar JWT
+     * @param emailService          servicio de envío de correos
+     * @param auditService          servicio para registrar auditoría
+     */
     public AuthService(UserRepository userRepo,
                        EmailTokenRepository emailTokenRepo,
                        RefreshTokenRepository refreshTokenRepo,
@@ -74,13 +93,19 @@ public class AuthService {
         this.auditService = auditService;
     }
 
-    /** Registra un usuario con rol USER y envía el correo de confirmación. */
+    /**
+     * Registra un usuario con rol USER y envía el correo de confirmación.
+     *
+     * @param dto datos de registro
+     * @param ip  dirección IP del cliente
+     * @throws PasswordNotValidException si la contraseña no cumple la política
+     */
     @Transactional
     public void register(RegisterDTO dto, String ip) throws PasswordNotValidException {
         PasswordValidator.validate(dto.getPassword());
 
         String username = dto.getUsername().trim();
-        String email = dto.getEmail().trim().toLowerCase();
+        String email = normalizarCorreo(dto.getEmail());
 
         if (userRepo.existsByUsername(username)) {
             throw new UserAlreadyExistsException("El nombre de usuario ya existe");
@@ -110,26 +135,32 @@ public class AuthService {
         try {
             emailService.sendConfirmationEmail(user, tokenOriginal);
         } catch (MailException e) {
-            log.error("No se pudo enviar el correo de confirmación a {}", user.getEmail());
+            log.error("No se pudo enviar el correo de confirmación a {}: {}", user.getEmail(), e.getMessage());
         }
     }
 
-    /** Confirma el correo con el token recibido en el enlace. */
+    /**
+     * Confirma el correo con el token recibido en el enlace.
+     *
+     * @param rawToken token recibido en el enlace
+     * @param ip       dirección IP del cliente
+     * @throws InvalidTokenException si el token no existe, está usado o venció
+     */
     @Transactional
     public void confirmEmail(String rawToken, String ip) {
+        if (estaVacio(rawToken)) {
+            throw new InvalidTokenException("El enlace de confirmación no es válido", HttpStatus.BAD_REQUEST);
+        }
+
         String hash = TokenUtil.sha256(rawToken);
         EmailToken token = emailTokenRepo.findByTokenHash(hash).orElse(null);
 
         if (token == null || token.getType() != TokenType.CONFIRM_EMAIL) {
-            throw new InvalidTokenException(
-                "El enlace de confirmación no es válido", HttpStatus.BAD_REQUEST
-            );
+            throw new InvalidTokenException("El enlace de confirmación no es válido", HttpStatus.BAD_REQUEST);
         }
 
         if (token.isUsed() || token.isExpired()) {
-            throw new InvalidTokenException(
-                "El enlace ya fue usado o venció", HttpStatus.BAD_REQUEST
-            );
+            throw new InvalidTokenException("El enlace ya fue usado o venció", HttpStatus.BAD_REQUEST);
         }
 
         User user = token.getUser();
@@ -141,11 +172,19 @@ public class AuthService {
         auditService.log(AuditAction.EMAIL_CONFIRMED, user.getId(), ip, null);
     }
 
-    /** Reenvía el correo de confirmación sin revelar si el correo existe. */
+    /**
+     * Reenvía el correo de confirmación sin revelar si el correo existe.
+     *
+     * @param email correo de la cuenta
+     * @param ip    dirección IP del cliente
+     */
     @Transactional
     public void resendConfirmation(String email, String ip) {
-        String correo = email.trim().toLowerCase();
-        User user = userRepo.findByEmail(correo).orElse(null);
+        if (estaVacio(email)) {
+            return;
+        }
+
+        User user = userRepo.findByEmail(normalizarCorreo(email)).orElse(null);
 
         if (user == null || user.isEmailVerified()) {
             return;
@@ -156,17 +195,28 @@ public class AuthService {
         auditService.log(AuditAction.CONFIRMATION_RESENT, user.getId(), ip, null);
     }
 
-    // Se usa al guardar el código y al comprobar el que escribe el usuario.
-    /** Calcula el hash del código de recuperación usando también el correo. */
+    /**
+     * Calcula el hash del código de recuperación usando también el correo.
+     * Se usa al guardar el código y al comprobar el que escribe el usuario.
+     */
     private String resetHash(String email, String code) {
-        String correo = email.trim().toLowerCase();
-        return TokenUtil.sha256(correo + ":" + code.trim());
+        return TokenUtil.sha256(normalizarCorreo(email) + ":" + code.trim());
     }
 
-    /** Genera un código de 6 dígitos y lo envía al correo de la cuenta. */
+    /**
+     * Genera un código de 6 dígitos y lo envía al correo de la cuenta.
+     * No revela si el correo existe.
+     *
+     * @param email correo de la cuenta
+     * @param ip    dirección IP del cliente
+     */
     @Transactional
     public void requestPasswordReset(String email, String ip) {
-        String correo = email.trim().toLowerCase();
+        if (estaVacio(email)) {
+            return;
+        }
+
+        String correo = normalizarCorreo(email);
         User user = userRepo.findByEmail(correo).orElse(null);
 
         if (user == null || !user.isEmailVerified()) {
@@ -176,9 +226,9 @@ public class AuthService {
         emailTokenRepo.invalidatePending(user, TokenType.RESET_PASSWORD, LocalDateTime.now());
 
         // %06d conserva los ceros iniciales de códigos como 002731.
-        String codigo = String.format("%06d", random.nextInt(1_000_000));
+        String codigo = String.format("%06d", RANDOM.nextInt(LIMITE_CODIGO));
         String hash = resetHash(correo, codigo);
-        LocalDateTime vencimiento = LocalDateTime.now().plusMinutes(15);
+        LocalDateTime vencimiento = LocalDateTime.now().plusMinutes(MINUTOS_CODIGO_RECUPERACION);
 
         EmailToken token = new EmailToken(user, hash, TokenType.RESET_PASSWORD, vencimiento);
         emailTokenRepo.save(token);
@@ -186,7 +236,7 @@ public class AuthService {
         try {
             emailService.sendResetCodeEmail(user, codigo);
         } catch (MailException e) {
-            log.error("No se pudo enviar el código de recuperación a {}", correo);
+            log.error("No se pudo enviar el código de recuperación a {}: {}", correo, e.getMessage());
         }
 
         auditService.log(AuditAction.PASSWORD_RESET_REQUESTED, user.getId(), ip, null);
@@ -194,6 +244,10 @@ public class AuthService {
 
     /** Busca el código de recuperación y revisa que no esté usado ni vencido. */
     private EmailToken validResetToken(String email, String code) {
+        if (estaVacio(email) || estaVacio(code)) {
+            throw new InvalidTokenException("Código incorrecto o vencido", HttpStatus.BAD_REQUEST);
+        }
+
         String hash = resetHash(email, code);
         EmailToken token = emailTokenRepo.findByTokenHash(hash).orElse(null);
 
@@ -205,13 +259,27 @@ public class AuthService {
         return token;
     }
 
-    /** Comprueba el código de recuperación sin gastarlo. */
+    /**
+     * Comprueba el código de recuperación sin gastarlo.
+     *
+     * @param email correo de la cuenta
+     * @param code  código de 6 dígitos
+     * @throws InvalidTokenException si el código es incorrecto o venció
+     */
     @Transactional(readOnly = true)
     public void verifyResetCode(String email, String code) {
         validResetToken(email, code);
     }
 
-    /** Cambia la contraseña con el código y cierra todas las sesiones. */
+    /**
+     * Cambia la contraseña con el código y cierra todas las sesiones.
+     *
+     * @param email       correo de la cuenta
+     * @param code        código de 6 dígitos
+     * @param newPassword nueva contraseña
+     * @param ip          dirección IP del cliente
+     * @throws PasswordNotValidException si la nueva contraseña no cumple la política
+     */
     @Transactional
     public void resetPassword(String email, String code, String newPassword, String ip)
             throws PasswordNotValidException {
@@ -230,7 +298,16 @@ public class AuthService {
         auditService.log(AuditAction.PASSWORD_RESET_DONE, userId, ip, null);
     }
 
-    /** Autentica con correo o usuario y entrega los tokens de sesión. */
+    /**
+     * Autentica con correo o usuario y entrega los tokens de sesión.
+     *
+     * @param dto credenciales de acceso
+     * @param ip  dirección IP del cliente
+     * @return tokens de sesión y datos básicos del usuario
+     * @throws LockedException            si la cuenta está bloqueada
+     * @throws AuthenticationException    si las credenciales son incorrectas
+     * @throws EmailNotVerifiedException  si el correo no está confirmado
+     */
     @Transactional
     public AuthResponseDTO login(LoginDTO dto, String ip) {
         String identifier = dto.getIdentifier().trim();
@@ -241,19 +318,11 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(identifier, dto.getPassword());
 
             authentication = authenticationManager.authenticate(credenciales);
+        } catch (LockedException e) {
+            auditService.log(AuditAction.LOGIN_FAIL, buscarIdUsuario(identifier), ip, "cuenta bloqueada");
+            throw e;
         } catch (AuthenticationException e) {
-            User user = userRepo.findByUsername(identifier).orElse(null);
-
-            if (user == null) {
-                user = userRepo.findByEmail(identifier.toLowerCase()).orElse(null);
-            }
-
-            Long userId = null;
-            if (user != null) {
-                userId = user.getId();
-            }
-
-            auditService.log(AuditAction.LOGIN_FAIL, userId, ip, "credenciales incorrectas");
+            auditService.log(AuditAction.LOGIN_FAIL, buscarIdUsuario(identifier), ip, "credenciales incorrectas");
             throw e;
         }
 
@@ -266,6 +335,14 @@ public class AuthService {
 
         auditService.log(AuditAction.LOGIN_OK, user.getId(), ip, null);
         return buildSession(user);
+    }
+
+    /** Busca el id de un usuario por nombre de usuario o correo; devuelve null si no existe. */
+    private Long buscarIdUsuario(String identifier) {
+        User user = userRepo.findByUsername(identifier)
+                .or(() -> userRepo.findByEmail(identifier.toLowerCase(Locale.ROOT)))
+                .orElse(null);
+        return user == null ? null : user.getId();
     }
 
     /** Genera el access token y un refresh token nuevo. */
@@ -287,9 +364,21 @@ public class AuthService {
         );
     }
 
-    /** Renueva la sesión con rotación del refresh token. */
+    /**
+     * Renueva la sesión con rotación del refresh token.
+     * Si detecta que se reutiliza un token ya revocado, cierra todas las sesiones del usuario.
+     *
+     * @param rawRefreshToken refresh token recibido
+     * @param ip              dirección IP del cliente
+     * @return nuevos tokens de sesión
+     * @throws InvalidTokenException si el token es inválido, fue reutilizado o venció
+     */
     @Transactional(noRollbackFor = InvalidTokenException.class)
     public AuthResponseDTO refresh(String rawRefreshToken, String ip) {
+        if (estaVacio(rawRefreshToken)) {
+            throw new InvalidTokenException("Refresh token inválido", HttpStatus.UNAUTHORIZED);
+        }
+
         String hash = TokenUtil.sha256(rawRefreshToken);
         RefreshToken token = refreshTokenRepo.findByTokenHash(hash).orElse(null);
 
@@ -300,19 +389,13 @@ public class AuthService {
         User user = token.getUser();
 
         if (token.isRevoked()) {
-            Long userId = user.getId();
             refreshTokenRepo.revokeAllByUser(user);
-            auditService.log(AuditAction.TOKEN_REUSE_DETECTED, userId, ip, "refresh token reutilizado");
-
-            throw new InvalidTokenException(
-                "Sesión inválida, inicia sesión de nuevo", HttpStatus.UNAUTHORIZED
-            );
+            auditService.log(AuditAction.TOKEN_REUSE_DETECTED, user.getId(), ip, "refresh token reutilizado");
+            throw new InvalidTokenException("Sesión inválida, inicia sesión de nuevo", HttpStatus.UNAUTHORIZED);
         }
 
-        if (token.isExpired() || !user.isEnabled() || !user.isEmailVerified()) {
-            throw new InvalidTokenException(
-                "La sesión venció, inicia sesión de nuevo", HttpStatus.UNAUTHORIZED
-            );
+        if (token.isExpired() || !user.isEnabled() || !user.isAccountNonLocked() || !user.isEmailVerified()) {
+            throw new InvalidTokenException("La sesión venció, inicia sesión de nuevo", HttpStatus.UNAUTHORIZED);
         }
 
         token.setRevoked(true);
@@ -322,9 +405,18 @@ public class AuthService {
         return buildSession(user);
     }
 
-    /** Cierra la sesión revocando el refresh token. */
+    /**
+     * Cierra la sesión revocando el refresh token.
+     *
+     * @param rawRefreshToken refresh token a revocar
+     * @param ip              dirección IP del cliente
+     */
     @Transactional
     public void logout(String rawRefreshToken, String ip) {
+        if (estaVacio(rawRefreshToken)) {
+            return;
+        }
+
         String hash = TokenUtil.sha256(rawRefreshToken);
         RefreshToken token = refreshTokenRepo.findByTokenHash(hash).orElse(null);
 
@@ -335,5 +427,15 @@ public class AuthService {
         token.setRevoked(true);
         refreshTokenRepo.save(token);
         auditService.log(AuditAction.LOGOUT, token.getUser().getId(), ip, null);
+    }
+
+    /** Pasa el correo a minúsculas y sin espacios, igual en todo el servicio. */
+    private static String normalizarCorreo(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /** Indica si un texto es null o solo tiene espacios. */
+    private static boolean estaVacio(String texto) {
+        return texto == null || texto.isBlank();
     }
 }
