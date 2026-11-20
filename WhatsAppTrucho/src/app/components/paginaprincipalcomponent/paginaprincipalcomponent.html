@@ -29,12 +29,12 @@
             <div class="perfil">
                 <div class="avatar">U</div>
                 <div>
-                    <strong>Mi usuario</strong>
+                    <strong>{{ miUsuario }}</strong>
                     <p>En línea</p>
                 </div>
             </div>
 
-            <button type="button" class="btn btn-outline" disabled>
+            <button type="button" class="btn btn-outline" (click)="salir()">
                 Cerrar sesión
             </button>
         </div>
@@ -43,89 +43,7 @@
     <section class="contenido">
 
         @if (seccion === 'chats') {
-            <section class="bloque">
-                <h1>Mis chats</h1>
-                <p class="texto">Conversa con tus amigos en Sigma Chat.</p>
-
-                <div class="chats">
-
-                    <div class="lista">
-                        <input type="text" placeholder="Buscar conversación...">
-
-                        <div class="chat activo">
-                            <div class="avatar">C</div>
-                            <div class="chat-datos">
-                                <strong>Camila</strong>
-                                <small>Hola, ¿cómo estás?</small>
-                            </div>
-                        </div>
-
-                        <div class="chat">
-                            <div class="avatar">
-                                <img src="https://i.pinimg.com/236x/96/53/f7/9653f749c03eb888c0dde626b925437b.jpg" height="45" width="45"
-
-                                     style="
-                                width: 100%;
-                                height: 100%;
-                                border-radius: 50%;
-                                object-fit: cover;
-                                object-position: center;
-                                display: block;
-                                "
-                                >
-
-                            </div>
-                            <div class="chat-datos">
-                                <strong>Sigma Boy</strong>
-                                <small>Thomi tiene sida</small>
-                            </div>
-                        </div>
-
-                        <div class="chat">
-                            <div class="avatar">S</div>
-                            <div class="chat-datos">
-                                <strong>Sofía</strong>
-                                <small>¡Gracias!</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="visor-chat">
-                        <div class="cabecera-chat">
-                            <div class="avatar">C</div>
-                            <div>
-                                <strong>Camila</strong>
-                                <p>Conversación de prueba</p>
-                            </div>
-                        </div>
-
-                        <div class="mensajes">
-                            <div class="mensaje recibido">
-                                <p>¡Hola! ¿Cómo estás?</p>
-                                <span>10:67</span>
-                            </div>
-
-                            <div class="mensaje enviado">
-                                <p>¡Muy bien! ¿Y tú?</p>
-                                <span>10:29</span>
-                            </div>
-
-                            <div class="mensaje recibido">
-                                <p>Todo bien, ¿qué haces?</p>
-                                <span>10:30</span>
-                            </div>
-                        </div>
-
-                        <div class="barra-enviar">
-                            <button class="btn-icono" type="button" disabled>📎</button>
-                            <input type="text" placeholder="Escribe un mensaje..." disabled>
-                            <button class="btn btn-primary" type="button" disabled>
-                                Enviar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <app-chatscomponent />
         }
 
         @if (seccion === 'ia') {
@@ -223,4 +141,3 @@
 
     </section>
 </main>
-

@@ -545,3 +545,4 @@ input:disabled {
         border-radius: 50%;
     }
 }
+@media (max-width: 860px) { .menu-inferior { display: flex; margin-top: 0; margin-left: auto; } .menu-inferior .perfil { display: none; } }
