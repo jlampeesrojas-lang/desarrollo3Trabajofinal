@@ -1,0 +1,148 @@
+<main class="chats">
+    <aside class="lista">
+        <header class="filtros">
+            <div class="titulo">
+                <h1>Chats</h1>
+
+                <button type="button" class="contactos" (click)="irAContactos()">
+                    + Añadir contactos
+                </button>
+            </div>
+
+            <input type="search"
+                   placeholder="Buscar por nombre o código"
+                   aria-label="Buscar chat"
+                   [(ngModel)]="busquedaChat">
+        </header>
+
+        @if ('ia ch-ia0001'.includes(busquedaChat.trim().toLowerCase())) {
+            <button type="button"
+                    class="fila-chat"
+                    [class.activa]="!seleccionado"
+                    (click)="seleccionado = null">
+                <img src="assets/ia.jpg" alt="">
+
+                <span>
+                    <strong>IA</strong>
+                    <small>Sin mensajes todavía</small>
+                </span>
+            </button>
+        }
+
+        @for (c of contactos; track c.id) {
+            @if ((c.nombre + ' ' + c.usuario).toLowerCase().includes(busquedaChat.trim().toLowerCase())) {
+                <button type="button"
+                        class="fila-chat"
+                        [class.activa]="seleccionado?.id === c.id"
+                        (click)="seleccionado = c">
+                    <span class="inicial">{{ c.nombre.charAt(0) }}</span>
+
+                    <span>
+                        <strong>{{ c.nombre }}</strong>
+                        <small>{{ c.usuario }}</small>
+                    </span>
+                </button>
+            }
+        }
+
+        @if (avisoContactos) {
+            <p role="status">{{ avisoContactos }}</p>
+        }
+    </aside>
+
+    <section class="conversacion" aria-label="Conversación seleccionada">
+        <header class="cabecera">
+            @if (seleccionado) {
+                <span class="inicial">{{ seleccionado.nombre.charAt(0) }}</span>
+
+                <div>
+                    <strong>{{ seleccionado.nombre }}</strong>
+                    <p>{{ seleccionado.usuario }}</p>
+                </div>
+            } @else {
+                <img src="assets/ia.jpg" alt="">
+
+                <div>
+                    <strong>IA</strong>
+                    <p>Código: CH-IA0001</p>
+                </div>
+            }
+        </header>
+
+        <div class="mensajes">
+            <p>Aún no hay mensajes.</p>
+        </div>
+
+        <div #panelGifs id="panel-gifs" hidden>
+            <form class="escribir buscar-gifs" (ngSubmit)="buscarGifs(termino.value)">
+                <input #termino
+                       type="search"
+                       placeholder="Buscar GIF"
+                       aria-label="Buscar GIF"
+                       [disabled]="buscandoGif">
+
+                <button type="submit" [disabled]="buscandoGif">
+                    {{ buscandoGif ? 'Buscando…' : 'Buscar GIF' }}
+                </button>
+            </form>
+
+            @if (avisoGif) {
+                <p class="aviso-gif" role="status">{{ avisoGif }}</p>
+            }
+
+            @if (gifs.length > 0) {
+                <div class="lista-gifs">
+                    @for (gif of gifs; track gif.id) {
+                        <a [href]="gif.originalUrl" target="_blank" rel="noopener">
+                            <img [src]="gif.previewUrl" [alt]="gif.title || 'Ver GIF'">
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="escribir">
+            <div class="adjuntos">
+                <button #botonMas
+                        type="button"
+                        class="boton-mas"
+                        aria-label="Opciones de adjuntos"
+                        aria-controls="menu-adjuntos"
+                        [attr.aria-expanded]="!menuAdjuntos.hidden"
+                        (click)="panelGifs.hidden = true; menuAdjuntos.hidden = !menuAdjuntos.hidden">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+
+                <div #menuAdjuntos id="menu-adjuntos" class="menu-adjuntos" hidden>
+                    <button type="button"
+                            (click)="menuAdjuntos.hidden = true; camara.click()">
+                        Cámara
+                    </button>
+
+                    <button type="button"
+                            (click)="menuAdjuntos.hidden = true; archivo.click()">
+                        Archivo
+                    </button>
+
+                    <button type="button"
+                            aria-controls="panel-gifs"
+                            (click)="menuAdjuntos.hidden = true; panelGifs.hidden = false; termino.focus()">
+                        GIF
+                    </button>
+                </div>
+
+                <input #camara type="file" accept="image/*" capture="environment" hidden>
+                <input #archivo type="file" hidden>
+            </div>
+
+            <app-audiocomponent></app-audiocomponent>
+
+            <input type="text"
+                   aria-label="Mensaje"
+                   placeholder="Escribe un mensaje..."
+                   [(ngModel)]="mensajeNuevo">
+
+            <button type="button" disabled>Enviar</button>
+        </div>
+    </section>
+</main>
