@@ -45,7 +45,7 @@ export class Logincomponent {
     }
 
     /** Convierte un error HTTP en un mensaje legible; si no hay uno, usa el mensaje por defecto. */
-    mensajeDeError(e: HttpErrorResponse, mensajePorDefecto: string): string {
+    private static mensajeDeError(e: HttpErrorResponse, mensajePorDefecto: string): string {
         if (typeof e.error === 'string' && e.error !== '') {
             return e.error;
         }
@@ -88,7 +88,7 @@ export class Logincomponent {
             error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
-                this.error = this.mensajeDeError(e, 'Usuario o contraseña incorrectos');
+                this.error = Logincomponent.mensajeDeError(e, 'Usuario o contraseña incorrectos');
             },
         });
     }
@@ -135,7 +135,7 @@ export class Logincomponent {
             error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
-                this.error = this.mensajeDeError(e, 'No se pudo crear la cuenta');
+                this.error = Logincomponent.mensajeDeError(e, 'No se pudo crear la cuenta');
             },
         });
     }
@@ -155,7 +155,7 @@ export class Logincomponent {
             error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
-                this.error = this.mensajeDeError(e, 'No se pudo reenviar el correo');
+                this.error = Logincomponent.mensajeDeError(e, 'No se pudo reenviar el correo');
             },
         });
     }
@@ -179,7 +179,7 @@ export class Logincomponent {
             error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
-                this.error = this.mensajeDeError(e, 'No se pudo enviar el código');
+                this.error = Logincomponent.mensajeDeError(e, 'No se pudo enviar el código');
             },
         });
     }
@@ -206,7 +206,7 @@ export class Logincomponent {
             error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
-                this.error = this.mensajeDeError(e, 'Código incorrecto o vencido');
+                this.error = Logincomponent.mensajeDeError(e, 'Código incorrecto o vencido');
             },
         });
     }
@@ -245,7 +245,7 @@ export class Logincomponent {
             error: (e: HttpErrorResponse) => {
                 this.cargando = false;
                 this.cdr.markForCheck();
-                this.error = this.mensajeDeError(e, 'No se pudo cambiar la contraseña');
+                this.error = Logincomponent.mensajeDeError(e, 'No se pudo cambiar la contraseña');
             },
         });
     }
