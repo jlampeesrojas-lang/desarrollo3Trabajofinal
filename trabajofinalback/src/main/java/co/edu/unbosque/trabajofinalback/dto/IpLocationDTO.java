@@ -17,10 +17,22 @@ public class IpLocationDTO {
 	private Double longitude;
 	private String text;
 
+	/** Crea un DTO vacío para los datos de ubicación de una dirección IP. */
 	public IpLocationDTO() {
 		// TODO Auto-generated constructor stub
 	}
 
+	/**
+	 * Crea un DTO con la ubicación aproximada de una dirección IP.
+	 *
+	 * @param ip dirección IP consultada
+	 * @param country país asociado a la IP
+	 * @param region región asociada a la IP
+	 * @param city ciudad asociada a la IP
+	 * @param latitude latitud aproximada en grados
+	 * @param longitude longitud aproximada en grados
+	 * @param text descripción de la ubicación que se muestra al usuario
+	 */
 	public IpLocationDTO(String ip, String country, String region, String city, Double latitude, Double longitude,
 			String text) {
 		this.ip = ip;

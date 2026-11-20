@@ -338,11 +338,12 @@ export class Admincomponent implements OnInit {
         });
     }
 
+    /** Muestra la ubicación guardada del registro o la consulta mediante su IP. */
     abrirUbicacion(registro: RegistroAuditoria) {
         this.registroUbicacion = registro;
 
         if (registro.location) {
-            this.resultadoIp = "La acción fue realizada desde " + registro.location + ".";
+            this.resultadoIp = `La acción fue realizada desde ${registro.location}.`;
             return;
         }
 
@@ -357,7 +358,7 @@ export class Admincomponent implements OnInit {
             next: ubicacion => {
                 if (this.registroUbicacion !== registro) return;
 
-                this.resultadoIp = "Ubicación aproximada de la IP: " + ubicacion.text + ".";
+                this.resultadoIp = `Ubicación aproximada de la IP: ${ubicacion.text}.`;
                 this.cdr.markForCheck();
             },
             error: fallo => {

@@ -21,6 +21,12 @@ public class AuditServiceImpl implements AuditService {
 
   private final IpLocationService ipLocationService;
 
+  /**
+   * Crea el servicio que registra los eventos de auditoría.
+   *
+   * @param auditLogRepository repositorio que guarda los eventos
+   * @param ipLocationService servicio que consulta la ubicación aproximada de una IP
+   */
   public AuditServiceImpl(
       AuditLogRepository auditLogRepository, IpLocationService ipLocationService) {
     this.auditLogRepository = auditLogRepository;

@@ -162,6 +162,7 @@ export class AdminService {
         });
     }
 
+    /** Consulta en el backend la ubicación aproximada de una dirección IP. */
     ubicarIp(ip: string): Observable<{text: string}> {
         return this.http.get<{text: string}>(`${API}/ip/ubicacion`, {
             headers: this.headers(),

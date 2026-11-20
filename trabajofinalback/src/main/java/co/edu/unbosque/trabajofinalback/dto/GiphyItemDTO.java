@@ -7,10 +7,18 @@ public class GiphyItemDTO {
 	private String title;
 	private GiphyImagesDTO images;
 
+	/** Crea un DTO vacío para un GIF devuelto por GIPHY. */
 	public GiphyItemDTO() {
 		// TODO Auto-generated constructor stub
 	}
 
+	/**
+	 * Crea un DTO con los datos de un GIF de GIPHY.
+	 *
+	 * @param id identificador del GIF
+	 * @param title título del GIF
+	 * @param images versiones del GIF en tamaño original y de altura fija
+	 */
 	public GiphyItemDTO(String id, String title, GiphyImagesDTO images) {
 		this.id = id;
 		this.title = title;

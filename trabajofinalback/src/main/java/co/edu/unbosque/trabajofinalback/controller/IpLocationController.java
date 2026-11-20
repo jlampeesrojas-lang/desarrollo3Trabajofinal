@@ -21,9 +21,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class IpLocationController {
 
   @Autowired private IpLocationService ipServ;
-
+  /** Crea el controlador que consulta la ubicación aproximada de una dirección IP. */
   public IpLocationController() {}
 
+  /**
+   * Consulta la ubicación aproximada de una dirección IP.
+   *
+   * @param ip dirección IPv4 o IPv6 que se desea ubicar
+   * @return la ubicación aproximada o un mensaje de error si la IP es inválida o falla la consulta
+   */
   @Operation(summary = "Ubicar una IP", description = "ip = dirección IPv4 o IPv6 a ubicar.")
   @GetMapping("/ubicacion")
   public ResponseEntity<?> ubicar(@RequestParam String ip) {

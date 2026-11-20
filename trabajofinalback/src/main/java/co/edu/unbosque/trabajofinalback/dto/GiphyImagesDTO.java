@@ -12,10 +12,17 @@ public class GiphyImagesDTO {
 	private GiphyImageVariantDTO fixedHeight;
 	private GiphyImageVariantDTO original;
 
+	/** Crea un DTO vacío para las versiones original y de altura fija de un GIF. */
 	public GiphyImagesDTO() {
 		// TODO Auto-generated constructor stub
 	}
 
+	/**
+	 * Crea un DTO con las dos versiones del GIF.
+	 *
+	 * @param fixedHeight versión del GIF con altura fija
+	 * @param original versión del GIF con sus dimensiones originales
+	 */
 	public GiphyImagesDTO(GiphyImageVariantDTO fixedHeight, GiphyImageVariantDTO original) {
 		this.fixedHeight = fixedHeight;
 		this.original = original;

@@ -63,6 +63,7 @@ export class Paginaprincipalcomponent implements OnInit {
         });
     }
 
+    /** Busca GIF con el texto ingresado y actualiza los resultados del chat. */
     buscarGifs(texto: string): void {
         if (!this.auth.estaLogueado()) return;
         const query = texto.trim();

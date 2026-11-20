@@ -18,6 +18,7 @@ public class GifService {
   @Value("${giphy.api.key}")
   private String apiKey;
 
+  /** Crea el servicio de búsqueda de GIFs en GIPHY. */
   public GifService() {}
 
   /**

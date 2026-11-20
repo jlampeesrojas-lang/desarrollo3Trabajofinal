@@ -42,11 +42,24 @@ public class SecurityConfig {
 	@Value("${app.cors.allowed-origins}")
 	private String allowedOrigins;
 
+	/**
+	 * Crea la configuración de seguridad de la aplicación.
+	 *
+	 * @param jwtAuthFilter filtro que valida el token JWT de las peticiones
+	 * @param userDetailsService servicio que carga los datos del usuario para la autenticación
+	 */
 	public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService userDetailsService) {
 		this.jwtAuthFilter = jwtAuthFilter;
 		this.userDetailsService = userDetailsService;
 	}
 
+	/**
+	 * Configura la autenticación con JWT y los permisos de acceso a las rutas de la API.
+	 *
+	 * @param http configuración de seguridad HTTP de Spring
+	 * @return cadena de filtros que aplica las reglas de acceso a las peticiones
+	 * @throws Exception si falla la configuración de la cadena de filtros
+	 */
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.csrf(csrf -> csrf.disable()) // API sin cookies de sesión: se usa JWT en el header
@@ -99,6 +112,11 @@ public class SecurityConfig {
 		return source;
 	}
 
+	/**
+	 * Configura el proveedor que carga al usuario y verifica su contraseña con BCrypt.
+	 *
+	 * @return proveedor de autenticación configurado
+	 */
 	@Bean
 	public AuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
@@ -106,6 +124,13 @@ public class SecurityConfig {
 		return authProvider;
 	}
 
+	/**
+	 * Obtiene el gestor de autenticación que se usa al iniciar sesión.
+	 *
+	 * @param config configuración de autenticación de Spring
+	 * @return gestor de autenticación configurado
+	 * @throws Exception si Spring no puede obtener el gestor
+	 */
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
 		return config.getAuthenticationManager();

@@ -15,8 +15,8 @@ public class IpApiResponseDTO {
 	private Double lon;
 	private String query;
 
+	/** Crea un DTO vacío para recibir la respuesta de la consulta de ubicación de una IP. */
 	public IpApiResponseDTO() {
-		// TODO Auto-generated constructor stub
 	}
 
 	public String getStatus() {

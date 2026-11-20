@@ -16,10 +16,21 @@ public class GifDTO {
 	private String width;
 	private String height;
 
+	/** Crea un DTO vacío para los datos de un GIF. */
 	public GifDTO() {
 		// TODO Auto-generated constructor stub
 	}
 
+	/**
+	 * Crea un DTO con los datos de un GIF.
+	 *
+	 * @param id identificador del GIF
+	 * @param title título del GIF
+	 * @param previewUrl URL de la vista previa
+	 * @param originalUrl URL del GIF original
+	 * @param width ancho del GIF en píxeles
+	 * @param height alto del GIF en píxeles
+	 */
 	public GifDTO(String id, String title, String previewUrl, String originalUrl, String width, String height) {
 		this.id = id;
 		this.title = title;

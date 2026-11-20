@@ -18,12 +18,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/gif")
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "GIFs", description = "Búsqueda de GIFs (GIPHY) para el chat")
+
 public class GifController {
 
   @Autowired private GifService gifServ;
 
+  /** Crea el controlador de búsqueda de GIFs. */
   public GifController() {}
 
+  /**
+   * Busca GIFs en GIPHY según el texto ingresado.
+   *
+   * @param query texto que se desea buscar
+   * @param cantidad número máximo de GIFs que se devolverán, entre 1 y 30
+   * @return los GIFs encontrados o un mensaje de error si falla la búsqueda
+   */
   @Operation(
       summary = "Buscar GIFs",
       description =

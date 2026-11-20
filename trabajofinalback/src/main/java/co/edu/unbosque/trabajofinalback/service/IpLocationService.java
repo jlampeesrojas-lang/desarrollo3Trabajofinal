@@ -13,6 +13,7 @@ public class IpLocationService {
   @Value("${ipapi.url}")
   private String baseUrl;
 
+  /** Crea el servicio que consulta la ubicación aproximada de una dirección IP. */
   public IpLocationService() {}
 
   /**

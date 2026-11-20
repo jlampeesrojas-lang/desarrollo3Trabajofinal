@@ -10,10 +10,18 @@ public class GiphyImageVariantDTO {
 	private String width;
 	private String height;
 
+	/** Crea un DTO vacío para la URL y las dimensiones de una variante del GIF. */
 	public GiphyImageVariantDTO() {
 		// TODO Auto-generated constructor stub
 	}
 
+	/**
+	 * Crea un DTO con la URL y las dimensiones de una variante del GIF.
+	 *
+	 * @param url dirección de la variante del GIF
+	 * @param width ancho de la variante en píxeles
+	 * @param height alto de la variante en píxeles
+	 */
 	public GiphyImageVariantDTO(String url, String width, String height) {
 		this.url = url;
 		this.width = width;
