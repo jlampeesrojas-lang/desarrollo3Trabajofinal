@@ -45,6 +45,7 @@ public class MediaService {
 
   @Autowired private AuditService auditService;
 
+  /** Constructor vacío. */
   public MediaService() {}
 
   /**
@@ -153,9 +154,11 @@ public class MediaService {
     }
     return null;
   }
+  /** Indica si los bytes corresponden a un contenedor RIFF. */
   private boolean esRiff(byte[] d) {
     return d[0] == 'R' && d[1] == 'I' && d[2] == 'F' && d[3] == 'F';
   }
+  /** Detecta el tipo de archivo dentro de un contenedor RIFF. */
   private String detectarTipoRiff(byte[] d) {
     if (d[8] == 'W' && d[9] == 'E' && d[10] == 'B' && d[11] == 'P') {
       return "image/webp";
@@ -165,6 +168,7 @@ public class MediaService {
     }
     return null;
   }
+  /** Detecta si el archivo es audio a partir de sus primeros bytes. */
   private String detectarAudio(byte[] d) {
     if (d[0] == 'O' && d[1] == 'g' && d[2] == 'g' && d[3] == 'S') {
       return "audio/ogg";

@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
+import {ChangeDetectorRef, Component, OnDestroy, EventEmitter, Output} from '@angular/core';
+
 
 /** Botón para grabar un audio con el micrófono y escucharlo antes de enviarlo. */
 @Component({
@@ -16,8 +17,10 @@ export class Audiocomponent implements OnDestroy {
     private grabadora?: MediaRecorder;
     private microfono?: MediaStream;
     private destruido = false;
+    @Output() readonly audioListo = new EventEmitter<File>();
 
-    constructor(private cambios: ChangeDetectorRef) {}
+    constructor(private cambios: ChangeDetectorRef) {
+    }
 
     /** Empieza o termina la grabación según el estado actual del micrófono. */
     pulsarMicrofono() {
@@ -36,7 +39,7 @@ export class Audiocomponent implements OnDestroy {
             return;
         }
 
-        navigator.mediaDevices.getUserMedia({ audio: true })
+        navigator.mediaDevices.getUserMedia({audio: true})
             .then(this.iniciarGrabacion.bind(this))
             .catch(this.errorGrabacion.bind(this));
     }
@@ -53,7 +56,7 @@ export class Audiocomponent implements OnDestroy {
         const partes: Blob[] = [];
         this.grabadora = grabadora;
 
-        grabadora.ondataavailable = function(evento) {
+        grabadora.ondataavailable = function (evento) {
             if (evento.data.size > 0) partes.push(evento.data);
         };
         grabadora.onstop = this.terminar.bind(this, partes, grabadora);
@@ -70,7 +73,13 @@ export class Audiocomponent implements OnDestroy {
         this.liberarMicrofono();
         if (partes.length > 0) {
             this.borrar();
-            this.audioUrl = URL.createObjectURL(new Blob(partes, { type: grabadora.mimeType }));
+            const tipo = grabadora.mimeType || partes[0].type || 'audio/webm';
+            const extension = tipo.includes('mp4') ? 'm4a'
+                : tipo.includes('ogg') ? 'ogg' : 'webm';
+
+            const archivo = new File(partes, `nota-de-voz.${extension}`, {type: tipo});
+            this.audioUrl = URL.createObjectURL(archivo);
+            this.audioListo.emit(archivo);
         } else {
             this.aviso = 'El micrófono no capturó audio. Intenta otra vez.';
         }

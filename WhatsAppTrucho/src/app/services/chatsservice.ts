@@ -1,88 +1,119 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import {Injectable} from '@angular/core';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {catchError, map, of, switchMap, throwError} from 'rxjs';
+
+import {API, AuthService} from './authservice';
+import type {Chat, MensajeHistorial} from '../models/chat';
 
 @Injectable({
     providedIn: 'root'
 })
 export class Chatsservice {
 
-    private url = 'http://localhost:8080/api/mensajes';
-
-    constructor(private http: HttpClient) {
+    constructor(
+        private http: HttpClient,
+        private auth: AuthService
+    ) {
     }
 
-    obtenerToken() {
-        return localStorage.getItem('token');
+    /** Crea las cabeceras HTTP con el token de acceso de la sesión actual. */
+    private headers(): HttpHeaders {
+        const token = this.auth.obtenerToken();
+
+        return token
+            ? new HttpHeaders({Authorization: `Bearer ${token}`})
+            : new HttpHeaders();
     }
 
-    obtenerOpciones() {
-        const token = this.obtenerToken();
-
-        let headers = new HttpHeaders();
-
-        if (token) {
-            headers = headers.set('Authorization', `Bearer ${token}`);
-        }
-
-        return {headers};
-    }
-
-    obtenerMensajes(idChat: string) {
-        return this.http.get<unknown[]>(
-            this.url + '/' + idChat,
-            this.obtenerOpciones()
+    /** Busca una conversación usando el id del usuario contacto. */
+    private buscarChat(contactoId: number) {
+        return this.http.get<Pick<Chat, 'id' | 'participantes'>[]>(
+            `${API}/chats/getall`,
+            {headers: this.headers()}
+        ).pipe(
+            map(chats => chats.find(chat =>
+                chat.participantes.some(persona => persona.id === contactoId)
+            ))
         );
     }
 
-    enviarMensaje(idChat: string, texto: string) {
-        return this.http.post<unknown>(
-            `${this.url}/${idChat}`,
-            {texto: texto},
-            this.obtenerOpciones()
+    /** Obtiene el id del chat existente o crea la conversación. */
+    abrirChat(contactoId: number) {
+        return this.buscarChat(contactoId).pipe(
+            switchMap(chat => {
+                if (chat) {
+                    return of(chat.id);
+                }
+
+                return this.http.post(
+                    `${API}/chats/createjson`,
+                    {contactoId},
+                    {headers: this.headers(), responseType: 'text'}
+                ).pipe(
+                    catchError(error => {
+                        if (error.status === 406) {
+                            return of('');
+                        }
+                        return throwError(() => error);
+                    }),
+                    switchMap(() => this.buscarChat(contactoId)),
+                    map(creado => {
+                        if (!creado) {
+                            throw new Error('No se encontró el chat creado.');
+                        }
+                        return creado.id;
+                    })
+                );
+            })
         );
     }
 
-    eliminarMensaje(idMensaje: string) {
-        return this.http.delete(
-            `${this.url}/eliminar/${idMensaje}`,
-            this.obtenerOpciones()
+    /** Lee la página más reciente del historial. */
+    obtenerMensajes(chatId: number) {
+        return this.http.get<MensajeHistorial[]>(
+            `${API}/chats/getmessages/${chatId}`,
+            {
+                headers: this.headers(),
+                params: {page: 0, size: 20}
+            }
         );
     }
 
+    /** El backend existente devuelve la confirmación como texto. */
+    enviarMensaje(chatId: number, contenido: string) {
+        return this.http.post<MensajeHistorial>(
+            `${API}/chats/sendmessage/${chatId}`,
+            {contenido},
+            {headers: this.headers()}
+        );
+    }
 
-    private flujoCamara: MediaStream | null = null;
+    /** Envía al chat uno de los GIF devueltos por el buscador. */
+    enviarGif(chatId: number, url: string) {
+        return this.http.post(
+            `${API}/chats/sendmessage/${chatId}`,
+            {tipo: 'GIF', contenido: url},
+            {headers: this.headers(), responseType: 'text'}
+        );
+    }
 
-    async abrirCamara(video: HTMLVideoElement) {
-        this.cerrarCamara(video);
+    /** Sube los bytes del archivo al chat seleccionado. */
+    enviarArchivo(chatId: number, archivo: File) {
+        const datos = new FormData();
+        datos.append('archivo', archivo, archivo.name);
 
-        this.flujoCamara = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false
+        return this.http.post(
+            `${API}/media/chat/${chatId}`,
+            datos,
+            {headers: this.headers(), responseType: 'text'}
+        );
+    }
+
+    /** Recupera un adjunto con el token del usuario. */
+    obtenerArchivo(ruta: string) {
+        return this.http.get(`${API}${ruta}`, {
+            headers: this.headers(),
+            responseType: 'blob'
         });
-
-        video.srcObject = this.flujoCamara;
-        await video.play();
     }
-
-    cerrarCamara(video?: HTMLVideoElement) {
-        if (this.flujoCamara) {
-            this.flujoCamara.getTracks().forEach(t => t.stop());
-            this.flujoCamara = null;
-        }
-
-        if (video) {
-            video.srcObject = null;
-        }
-    }
-
-    descargar(adjunto: { archivo: Blob; nombre: string }) {
-        const url = URL.createObjectURL(adjunto.archivo);
-        const enlace = document.createElement('a');
-        enlace.href = url;
-        enlace.download = adjunto.nombre;
-        enlace.click();
-        URL.revokeObjectURL(url);
-    }
-
-
 }

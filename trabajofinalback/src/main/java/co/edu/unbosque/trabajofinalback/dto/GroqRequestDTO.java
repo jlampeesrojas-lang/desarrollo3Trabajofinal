@@ -22,11 +22,13 @@ public class GroqRequestDTO {
   @SerializedName("reasoning_effort")
   private String reasoningEffort;
 
+  /** Constructor vacío. */
   public GroqRequestDTO() {}
 
+  /** Crea un GroqRequestDTO con sus datos. */
   public GroqRequestDTO(String model, List<GroqMessageDTO> messages) {
     this.model = model;
-    this.messages = messages == null ? null : new ArrayList<>(messages);
+    this.messages = messages == null ? new ArrayList<>() : new ArrayList<>(messages);
     this.temperature = 0.7;
     this.maxCompletionTokens = 1024;
   }
@@ -44,7 +46,7 @@ public class GroqRequestDTO {
   }
 
   public void setMessages(List<GroqMessageDTO> messages) {
-    this.messages = messages;
+    this.messages = messages == null ? new ArrayList<>() : new ArrayList<>(messages);
   }
 
   public Double getTemperature() {

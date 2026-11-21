@@ -5,98 +5,118 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /**
- * DTO de usuario para operaciones de administración. La contraseña es de SOLO ESCRITURA: se acepta
- * al recibir una petición, pero nunca se devuelve en una respuesta.
+ * DTO de usuario para operaciones de administración. La contraseña es de SOLO
+ * ESCRITURA: se acepta al recibir una petición, pero nunca se devuelve en una
+ * respuesta.
  */
 public class UserDTO {
 
-  /** Identificador único del usuario. */
-  private Long id;
+	/** Identificador único del usuario. */
+	private Long id;
 
-  /** Nombre de usuario. */
-  private String username;
+	/** Nombre de usuario. */
+	private String username;
 
-  /** Correo electrónico. */
-  private String email;
+	/** Correo electrónico. */
+	private String email;
 
-  /** Contraseña en texto plano recibida del cliente (solo escritura, nunca se devuelve). */
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-  private String password;
+	/** Correo electronico verificado. */
+	private boolean emailVerified;
 
-  /** Rol del usuario (USER, ADMIN). */
-  private Role role;
+	/**
+	 * Contraseña en texto plano recibida del cliente (solo escritura, nunca se
+	 * devuelve).
+	 */
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+	private String password;
 
-  public UserDTO() {}
+	/** Rol del usuario (USER, ADMIN). */
+	private Role role;
 
-  public UserDTO(String username, String password) {
-    this.username = username;
-    this.password = password;
-  }
+	/** Constructor vacío. */
+	public UserDTO() {
+	}
 
-  public UserDTO(String username, String password, Role role) {
-    this(username, password);
-    this.role = role;
-  }
+	/** Crea un UserDTO con sus datos. */
+	public UserDTO(String username, String password) {
+		this.username = username;
+		this.password = password;
+	}
 
-  public Long getId() {
-    return id;
-  }
+	/** Crea un UserDTO con sus datos. */
+	public UserDTO(String username, String password, Role role) {
+		this(username, password);
+		this.role = role;
+	}
 
-  public void setId(Long id) {
-    this.id = id;
-  }
+	public Long getId() {
+		return id;
+	}
 
-  public String getUsername() {
-    return username;
-  }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-  public void setUsername(String username) {
-    this.username = username;
-  }
+	public String getUsername() {
+		return username;
+	}
 
-  public String getEmail() {
-    return email;
-  }
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-  public void setEmail(String email) {
-    this.email = email;
-  }
+	public String getEmail() {
+		return email;
+	}
 
-  public String getPassword() {
-    return password;
-  }
+	public void setEmail(String email) {
+		this.email = email;
+	}
 
-  public void setPassword(String password) {
-    this.password = password;
-  }
+	public String getPassword() {
+		return password;
+	}
 
-  public Role getRole() {
-    return role;
-  }
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-  public void setRole(Role role) {
-    this.role = role;
-  }
+	public Role getRole() {
+		return role;
+	}
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(id, username, email, role);
-  }
+	public void setRole(Role role) {
+		this.role = role;
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null || getClass() != obj.getClass()) return false;
-    UserDTO other = (UserDTO) obj;
-    return Objects.equals(id, other.id)
-        && Objects.equals(username, other.username)
-        && Objects.equals(email, other.email)
-        && role == other.role;
-  }
+	/** Indica si el correo del usuario ya fue confirmado. */
+	public boolean isEmailVerified() {
+		return emailVerified;
+	}
 
-  /** No incluye la contraseña. */
-  @Override
-  public String toString() {
-    return "UserDTO [id=" + id + ", username=" + username + ", email=" + email + ", role=" + role + "]";
-  }
+	public void setEmailVerified(boolean emailVerified) {
+		this.emailVerified = emailVerified;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, username, email, role);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null || getClass() != obj.getClass())
+			return false;
+		UserDTO other = (UserDTO) obj;
+		return Objects.equals(id, other.id) && Objects.equals(username, other.username)
+				&& Objects.equals(email, other.email) && role == other.role;
+	}
+
+	/** No incluye la contraseña. */
+	@Override
+	public String toString() {
+		return "UserDTO [id=" + id + ", username=" + username + ", email=" + email + ", role=" + role + "]";
+	}
 }

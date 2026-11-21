@@ -1,94 +1,90 @@
 package co.edu.unbosque.trabajofinalback.dto;
 
 /**
- * Datos de un mensaje de chat. Para enviar solo se llena "contenido". Al leer, el servidor
- * devuelve todos los campos con el texto ya descifrado.
+ * Datos de un mensaje de chat. Para enviar solo se llena "contenido". Al leer,
+ * el servidor devuelve todos los campos con el texto ya descifrado.
  */
 public class ChatMessageDTO {
 
-  private Long id;
+	private Long id;
+	private Long chatId;
+	private Long remitenteId;
+	private String remitenteNombre;
+	private String contenido;
+	private String tipo;
+	private String mediaUrl;
+	private String fechaEnvio;
 
-  private Long chatId;
+	/** Constructor vacío. */
+	public ChatMessageDTO() {
+	}
 
-  private Long remitenteId;
+	/** Crea un ChatMessageDTO con sus datos. */
+	public ChatMessageDTO(String contenido) {
+		this.contenido = contenido;
+	}
 
-  private String remitenteNombre;
+	public Long getId() {
+		return id;
+	}
 
-  private String contenido;
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-  private String tipo;
+	public Long getChatId() {
+		return chatId;
+	}
 
-  private String mediaUrl;
+	public void setChatId(Long chatId) {
+		this.chatId = chatId;
+	}
 
-  private String fechaEnvio;
+	public Long getRemitenteId() {
+		return remitenteId;
+	}
 
-  public ChatMessageDTO() {}
+	public void setRemitenteId(Long remitenteId) {
+		this.remitenteId = remitenteId;
+	}
 
-  public ChatMessageDTO(String contenido) {
-    this.contenido = contenido;
-  }
+	public String getRemitenteNombre() {
+		return remitenteNombre;
+	}
 
-  public Long getId() {
-    return id;
-  }
+	public void setRemitenteNombre(String remitenteNombre) {
+		this.remitenteNombre = remitenteNombre;
+	}
 
-  public void setId(Long id) {
-    this.id = id;
-  }
+	public String getContenido() {
+		return contenido;
+	}
 
-  public Long getChatId() {
-    return chatId;
-  }
+	public void setContenido(String contenido) {
+		this.contenido = contenido;
+	}
 
-  public void setChatId(Long chatId) {
-    this.chatId = chatId;
-  }
+	public String getTipo() {
+		return tipo;
+	}
 
-  public Long getRemitenteId() {
-    return remitenteId;
-  }
+	public void setTipo(String tipo) {
+		this.tipo = tipo;
+	}
 
-  public void setRemitenteId(Long remitenteId) {
-    this.remitenteId = remitenteId;
-  }
+	public String getMediaUrl() {
+		return mediaUrl;
+	}
 
-  public String getRemitenteNombre() {
-    return remitenteNombre;
-  }
+	public void setMediaUrl(String mediaUrl) {
+		this.mediaUrl = mediaUrl;
+	}
 
-  public void setRemitenteNombre(String remitenteNombre) {
-    this.remitenteNombre = remitenteNombre;
-  }
+	public String getFechaEnvio() {
+		return fechaEnvio;
+	}
 
-  public String getContenido() {
-    return contenido;
-  }
-
-  public void setContenido(String contenido) {
-    this.contenido = contenido;
-  }
-
-  public String getTipo() {
-    return tipo;
-  }
-
-  public void setTipo(String tipo) {
-    this.tipo = tipo;
-  }
-
-  public String getMediaUrl() {
-    return mediaUrl;
-  }
-
-  public void setMediaUrl(String mediaUrl) {
-    this.mediaUrl = mediaUrl;
-  }
-
-  public String getFechaEnvio() {
-    return fechaEnvio;
-  }
-
-  public void setFechaEnvio(String fechaEnvio) {
-    this.fechaEnvio = fechaEnvio;
-  }
+	public void setFechaEnvio(String fechaEnvio) {
+		this.fechaEnvio = fechaEnvio;
+	}
 }
