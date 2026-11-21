@@ -14,23 +14,25 @@ import co.edu.unbosque.trabajofinalback.repository.AuditLogRepository;
 import co.edu.unbosque.trabajofinalback.repository.ChatParticipantRepository;
 import co.edu.unbosque.trabajofinalback.repository.ChatRepository;
 import co.edu.unbosque.trabajofinalback.repository.MessageRepository;
+import co.edu.unbosque.trabajofinalback.repository.RefreshTokenRepository;
 import co.edu.unbosque.trabajofinalback.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Consultas del panel de administración: auditoría y lectura de chats. */
+/** Operaciones del panel de administración: auditoría, usuarios y lectura de chats. */
 @Service
 public class AdminService {
 
@@ -48,31 +50,35 @@ public class AdminService {
 	private final ChatRepository chatRepo;
 	private final ChatParticipantRepository participantRepo;
 	private final MessageRepository messageRepo;
+	private final RefreshTokenRepository refreshTokenRepo;
 	private final ChatCryptoService crypto;
 	private final AuditService auditService;
 
 	/**
 	 * Crea el servicio con los repositorios y servicios que necesita.
 	 *
-	 * @param auditRepo       repositorio de eventos de auditoría
-	 * @param userRepo        repositorio de usuarios
-	 * @param chatRepo        repositorio de chats
-	 * @param participantRepo repositorio de participantes de chat
-	 * @param messageRepo     repositorio de mensajes
-	 * @param crypto          servicio de cifrado de chats
-	 * @param auditService    servicio para registrar auditoría
+	 * @param auditRepo        repositorio de eventos de auditoría
+	 * @param userRepo         repositorio de usuarios
+	 * @param chatRepo         repositorio de chats
+	 * @param participantRepo  repositorio de participantes de chat
+	 * @param messageRepo      repositorio de mensajes
+	 * @param refreshTokenRepo repositorio de sesiones (refresh tokens)
+	 * @param crypto           servicio de cifrado de chats
+	 * @param auditService     servicio para registrar auditoría
 	 */
 	public AdminService(AuditLogRepository auditRepo, UserRepository userRepo, ChatRepository chatRepo,
-			ChatParticipantRepository participantRepo, MessageRepository messageRepo, ChatCryptoService crypto,
-			AuditService auditService) {
+			ChatParticipantRepository participantRepo, MessageRepository messageRepo,
+			RefreshTokenRepository refreshTokenRepo, ChatCryptoService crypto, AuditService auditService) {
 		this.auditRepo = auditRepo;
 		this.userRepo = userRepo;
 		this.chatRepo = chatRepo;
 		this.participantRepo = participantRepo;
 		this.messageRepo = messageRepo;
+		this.refreshTokenRepo = refreshTokenRepo;
 		this.crypto = crypto;
 		this.auditService = auditService;
 	}
+
 
 	/**
 	 * Devuelve los últimos eventos de auditoría con el nombre de usuario.
@@ -82,10 +88,34 @@ public class AdminService {
 	 */
 	@Transactional(readOnly = true)
 	public List<AuditAdminDTO> audit(int limit) {
+		return audit(limit, null, null, null, null, null);
+	}
+
+	/**
+	 * Devuelve eventos de auditoría con filtros opcionales. Un filtro en null no se aplica.
+	 *
+	 * @param limit    cantidad de eventos a devolver (se ajusta entre 1 y 500)
+	 * @param userId   id del usuario
+	 * @param username nombre del usuario (si se envía, reemplaza a userId)
+	 * @param action   tipo de evento
+	 * @param desde    fecha y hora inicial (incluida)
+	 * @param hasta    fecha y hora final (excluida)
+	 * @return eventos de auditoría, del más reciente al más antiguo
+	 */
+	@Transactional(readOnly = true)
+	public List<AuditAdminDTO> audit(int limit, Long userId, String username, AuditAction action,
+			LocalDateTime desde, LocalDateTime hasta) {
 		int tamano = Math.max(1, Math.min(limit, LIMITE_MAXIMO_AUDITORIA));
 
-		PageRequest pagina = PageRequest.of(0, tamano, Sort.by(Sort.Direction.DESC, "id"));
-		List<AuditLog> eventos = auditRepo.findAll(pagina).getContent();
+		if (username != null && !username.isBlank()) {
+			Optional<User> usuario = userRepo.findByUsername(username.trim());
+			if (usuario.isEmpty()) {
+				return new ArrayList<>();
+			}
+			userId = usuario.get().getId();
+		}
+
+		List<AuditLog> eventos = auditRepo.search(userId, action, desde, hasta, PageRequest.of(0, tamano));
 
 		Set<Long> ids = new HashSet<>();
 		for (AuditLog evento : eventos) {
@@ -109,6 +139,63 @@ public class AdminService {
 
 		return resultado;
 	}
+
+
+	/**
+	 * Desactiva un usuario: ya no puede iniciar sesión y se cierran todas sus sesiones.
+	 *
+	 * @param adminId id del administrador que hace el cambio
+	 * @param userId  id del usuario a desactivar
+	 * @param ip      dirección IP desde la que se hace el cambio
+	 * @return 0 = desactivado, 1 = no existe, 2 = no puede desactivarse a sí mismo,
+	 *         3 = ya estaba desactivado
+	 */
+	@Transactional
+	public int disableUser(Long adminId, Long userId, String ip) {
+		Optional<User> found = userRepo.findById(userId);
+		if (found.isEmpty()) {
+			return 1;
+		}
+		if (userId.equals(adminId)) {
+			return 2;
+		}
+		User user = found.get();
+		if (!user.isEnabled()) {
+			return 3;
+		}
+		user.setEnabled(false);
+		userRepo.save(user);
+		refreshTokenRepo.revokeAllByUser(user);
+		auditService.log(AuditAction.ADMIN_USER_UPDATED, adminId, ip, "desactivó al usuario id=" + userId);
+		return 0;
+	}
+
+	/**
+	 * Activa un usuario y le quita el bloqueo por intentos fallidos si lo tenía.
+	 *
+	 * @param adminId id del administrador que hace el cambio
+	 * @param userId  id del usuario a activar
+	 * @param ip      dirección IP desde la que se hace el cambio
+	 * @return 0 = activado, 1 = no existe, 2 = ya estaba activo
+	 */
+	@Transactional
+	public int enableUser(Long adminId, Long userId, String ip) {
+		Optional<User> found = userRepo.findById(userId);
+		if (found.isEmpty()) {
+			return 1;
+		}
+		User user = found.get();
+		if (user.isEnabled() && user.getLockedUntil() == null) {
+			return 2;
+		}
+		user.setEnabled(true);
+		user.setFailedAttempts(0);
+		user.setLockedUntil(null);
+		userRepo.save(user);
+		auditService.log(AuditAction.ADMIN_USER_UPDATED, adminId, ip, "activó al usuario id=" + userId);
+		return 0;
+	}
+
 
 	/**
 	 * Devuelve todos los chats con participantes y cantidad de mensajes.
@@ -178,7 +265,7 @@ public class AdminService {
 	}
 
 	/**
-	 * Devuelve la clave de un chat ya descifrada.
+	 * Devuelve la clave de un chat ya descifrada y deja el acceso en la auditoría.
 	 *
 	 * @param chatId  identificador del chat
 	 * @param adminId identificador del administrador que consulta
@@ -191,6 +278,7 @@ public class AdminService {
 		auditService.log(AuditAction.ADMIN_READ_CHAT, adminId, ip, "clave del chat=" + chat.getCode());
 		return crypto.recuperarLlave(chat.getKeyEnc());
 	}
+
 
 	/** Busca un chat por id o responde 404 si no existe. */
 	private Chat buscarChat(Long chatId) {
