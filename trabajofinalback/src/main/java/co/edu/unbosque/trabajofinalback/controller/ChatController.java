@@ -38,6 +38,9 @@ public class ChatController {
 
   public ChatController() {}
 
+  /**
+   * Crea un chat con un contacto a partir de los datos JSON proporcionados.
+   */
   @Operation(
       summary = "Crear chat con un contacto",
       description = "Body: {\"contactoId\": 1}. Genera un código único y una llave AES propia.")
@@ -86,6 +89,9 @@ public class ChatController {
     return new ResponseEntity<>(chat, HttpStatus.OK);
   }
 
+  /**
+   * Envía un mensaje de texto al chat indicado y devuelve el resultado de la operación.
+   */
   @Operation(
       summary = "Enviar mensaje de texto",
       description = "Body: {\"contenido\": \"Hola\"}. Se guarda cifrado con la llave del chat.")
@@ -112,6 +118,9 @@ public class ChatController {
     }
   }
 
+  /**
+   * Obtiene el historial paginado de mensajes de un chat si el usuario tiene acceso.
+   */
   @Operation(
       summary = "Historial de mensajes (paginado)",
       description = "page 0 = los más recientes. size = mensajes por página (máx. 50)")
@@ -130,6 +139,46 @@ public class ChatController {
     return new ResponseEntity<>(mensajes, HttpStatus.OK);
   }
 
+  @Operation(
+      summary = "Mensajes nuevos de un chat",
+      description = "Devuelve los mensajes con id mayor a afterId, del más antiguo al más reciente")
+  @GetMapping("/getnewmessages/{chatId}")
+  public ResponseEntity<List<ChatMessageDTO>> getNewMessages(
+      @PathVariable Long chatId, @RequestParam(defaultValue = "0") Long afterId) {
+    int acceso = chatServ.checkAccess(authContext.getUserId(), chatId);
+    if (acceso == 1) {
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    } else if (acceso == 2) {
+      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+    List<ChatMessageDTO> nuevos = chatServ.getNewMessages(chatId, afterId);
+    return new ResponseEntity<>(nuevos, HttpStatus.OK);
+  }
+
+  @Operation(summary = "Mensajes enviados", description = "En todos los chats del usuario")
+  @GetMapping("/getsent")
+  public ResponseEntity<List<ChatMessageDTO>> getSent(
+      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+    List<ChatMessageDTO> enviados = chatServ.getSent(authContext.getUserId(), page, size);
+    return new ResponseEntity<>(enviados, HttpStatus.OK);
+  }
+
+  @Operation(
+      summary = "Mensajes recibidos",
+      description = "En todos los chats del usuario. Con afterId solo trae los más recientes")
+  @GetMapping("/getreceived")
+  public ResponseEntity<List<ChatMessageDTO>> getReceived(
+      @RequestParam(defaultValue = "0") Long afterId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size) {
+    List<ChatMessageDTO> recibidos =
+        chatServ.getReceived(authContext.getUserId(), afterId, page, size);
+    return new ResponseEntity<>(recibidos, HttpStatus.OK);
+  }
+
+  /**
+   * Marca el chat como leído para el usuario autenticado.
+   */
   @Operation(summary = "Marcar chat como leído")
   @PutMapping("/markasread/{chatId}")
   public ResponseEntity<String> markAsRead(@PathVariable Long chatId) {
