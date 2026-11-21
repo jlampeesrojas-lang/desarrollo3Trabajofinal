@@ -16,27 +16,27 @@ export class Chatsservice {
     }
 
     obtenerOpciones() {
-        let token = this.obtenerToken();
+        const token = this.obtenerToken();
 
         let headers = new HttpHeaders();
 
         if (token) {
-            headers = headers.set('Authorization', 'Bearer ' + token);
+            headers = headers.set('Authorization', `Bearer ${token}`);
         }
 
-        return {headers: headers};
+        return {headers};
     }
 
     obtenerMensajes(idChat: string) {
-        return this.http.get<any[]>(
+        return this.http.get<unknown[]>(
             this.url + '/' + idChat,
             this.obtenerOpciones()
         );
     }
 
     enviarMensaje(idChat: string, texto: string) {
-        return this.http.post<any>(
-            this.url + '/' + idChat,
+        return this.http.post<unknown>(
+            `${this.url}/${idChat}`,
             {texto: texto},
             this.obtenerOpciones()
         );
@@ -44,7 +44,7 @@ export class Chatsservice {
 
     eliminarMensaje(idMensaje: string) {
         return this.http.delete(
-            this.url + '/eliminar/' + idMensaje,
+            `${this.url}/eliminar/${idMensaje}`,
             this.obtenerOpciones()
         );
     }
@@ -75,12 +75,12 @@ export class Chatsservice {
         }
     }
 
-    descargar(adjunto: any) {
-        let url = URL.createObjectURL(adjunto.archivo);
-        let a = document.createElement('a');
-        a.href = url;
-        a.download = adjunto.nombre;
-        a.click();
+    descargar(adjunto: { archivo: Blob; nombre: string }) {
+        const url = URL.createObjectURL(adjunto.archivo);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = adjunto.nombre;
+        enlace.click();
         URL.revokeObjectURL(url);
     }
 

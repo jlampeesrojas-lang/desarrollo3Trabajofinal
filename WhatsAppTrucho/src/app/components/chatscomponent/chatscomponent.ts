@@ -123,10 +123,10 @@ export class Chatscomponent implements OnInit, OnDestroy {
 
     get chat() {
 
-        for (let i = 0; i < this.chats.length; i++) {
+        for (const chat of this.chats) {
 
-            if (this.chats[i].id === this.seleccionado) {
-                return this.chats[i];
+            if (chat.id === this.seleccionado) {
+                return chat;
             }
         }
 
@@ -167,14 +167,14 @@ export class Chatscomponent implements OnInit, OnDestroy {
 
     // ULTIMO MENSAJE
 
-    ultimoMensaje(conversacion: any) {
+    ultimoMensaje(conversacion: { mensajes: { texto?: string | null }[] }) {
 
         if (conversacion.mensajes.length === 0) {
             return 'Sin mensajes';
         }
 
-        let mensajes = conversacion.mensajes;
-        let ultimo = mensajes[mensajes.length - 1];
+        const mensajes = conversacion.mensajes;
+        const ultimo = mensajes[mensajes.length - 1];
 
         return ultimo.texto || 'Archivo adjunto';
     }
@@ -183,13 +183,13 @@ export class Chatscomponent implements OnInit, OnDestroy {
 
     enviar() {
 
-        let conversacion = this.chat;
+        const conversacion = this.chat;
 
         if (conversacion === null || this.enviando) {
             return;
         }
 
-        let texto = this.borrador.texto.trim();
+        const texto = this.borrador.texto.trim();
 
         if (texto === '' && this.borrador.archivos.length === 0) {
             return;
@@ -197,22 +197,22 @@ export class Chatscomponent implements OnInit, OnDestroy {
 
         this.enviando = true;
 
-        let adjuntos: any[] = [];
+        const adjuntos: { nombre: string; archivo: (typeof this.borrador.archivos)[number] }[] = [];
 
-        for (let archivo of this.borrador.archivos) {
+        for (const archivo of this.borrador.archivos) {
 
             adjuntos.push({
                 nombre: archivo.name,
-                archivo: archivo
+                archivo
             });
         }
 
-        let mensaje = {
+        const mensaje = {
             id: Date.now().toString() + Math.random().toString(),
-            texto: texto,
+            texto,
             enviado: true,
             fecha: new Date(),
-            adjuntos: adjuntos
+            adjuntos
         };
 
         conversacion.mensajes.push(mensaje);
@@ -230,12 +230,12 @@ export class Chatscomponent implements OnInit, OnDestroy {
 
     adjuntar(event: Event) {
 
-        let input = event.target as HTMLInputElement;
+        const input = event.target as HTMLInputElement;
 
         if (input.files) {
 
-            for (let i = 0; i < input.files.length; i++) {
-                this.borrador.archivos.push(input.files[i]);
+            for (const file of input.files) {
+                this.borrador.archivos.push(file);
             }
         }
 
@@ -289,8 +289,7 @@ export class Chatscomponent implements OnInit, OnDestroy {
             this.cerrarCamara();
 
             if (error instanceof Error) {
-                this.error = 'Error de cámara: ' +
-                    error.name + ' - ' + error.message;
+                this.error = `Error de cámara: ${error.name} - ${error.message}`;
             } else {
                 this.error = 'No se pudo abrir la cámara';
             }
@@ -312,14 +311,14 @@ export class Chatscomponent implements OnInit, OnDestroy {
             return;
         }
 
-        let conversacion = this.chat;
+        const conversacion = this.chat;
 
         if (!conversacion) {
             this.error = 'No hay una conversación seleccionada';
             return;
         }
 
-        let video = this.videoCamara.nativeElement;
+        const video = this.videoCamara.nativeElement;
 
         if (video.videoWidth === 0 || video.videoHeight === 0) {
             this.error = 'La cámara todavía no está lista';
@@ -330,12 +329,12 @@ export class Chatscomponent implements OnInit, OnDestroy {
 
         try {
 
-            let canvas = document.createElement('canvas');
+            const canvas = document.createElement('canvas');
 
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
 
-            let contexto = canvas.getContext('2d');
+            const contexto = canvas.getContext('2d');
 
             if (!contexto) {
                 throw new Error('No se pudo capturar la imagen');
@@ -343,7 +342,7 @@ export class Chatscomponent implements OnInit, OnDestroy {
 
             contexto.drawImage(video, 0, 0);
 
-            let blob = await new Promise<Blob | null>(resolve => {
+            const blob = await new Promise<Blob | null>(resolve => {
                 canvas.toBlob(resolve, 'image/jpeg', 0.85);
             });
 
@@ -351,14 +350,14 @@ export class Chatscomponent implements OnInit, OnDestroy {
                 throw new Error('No se pudo crear la foto');
             }
 
-            let foto = new File(
+            const foto = new File(
                 [blob],
-                'foto-' + Date.now() + '.jpg',
+                `foto-${Date.now()}.jpg`,
                 { type: 'image/jpeg' }
             );
 
             conversacion.mensajes.push({
-                id: Date.now().toString() + Math.random(),
+                id: `${Date.now().toString()}${Math.random()}`,
                 texto: '',
                 enviado: true,
                 fecha: new Date(),
