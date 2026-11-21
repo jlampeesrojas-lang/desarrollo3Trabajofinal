@@ -136,47 +136,45 @@
         }
 
         <form class="barra" (ngSubmit)="enviar(historial)">
-            @if (!modoIa) {
-                <input #selectorArchivo type="file" hidden
-                       (change)="seleccionarArchivo(selectorArchivo)">
+            <input #selectorArchivo type="file" hidden
+                   (change)="seleccionarArchivo(selectorArchivo)">
 
-                <div class="adjuntos" (keydown.escape)="menuAbierto = false; mas.focus()">
-                    <button #mas class="icono mas" type="button"
-                            aria-label="Opciones de adjuntos"
-                            [attr.aria-expanded]="menuAbierto"
-                            [disabled]="chatId === null || enviando || camaraAbierta"
-                            (click)="menuAbierto = !menuAbierto">
-                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                    </button>
+            <div class="adjuntos" (keydown.escape)="menuAbierto = false; mas.focus()">
+                <button #mas class="icono mas" type="button"
+                        aria-label="Opciones de adjuntos"
+                        [attr.aria-expanded]="menuAbierto"
+                        [disabled]="chatId === null || enviando || camaraAbierta"
+                        (click)="menuAbierto = !menuAbierto">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                </button>
 
-                    @if (menuAbierto) {
-                        <div class="menu">
-                            <button type="button"
-                                    (click)="menuAbierto = false; panelGifAbierto = true">
-                                <i class="fa-solid fa-film"></i> GIF
-                            </button>
-                            <button type="button"
-                                    (click)="menuAbierto = false; panelGifAbierto = false; selectorArchivo.click()">
-                                <i class="fa-solid fa-paperclip"></i> Archivo
-                            </button>
-                            <button type="button"
-                                    (click)="menuAbierto = false; panelGifAbierto = false; abrirCamara(videoCamara)">
-                                <i class="fa-solid fa-camera"></i> Cámara
-                            </button>
-                        </div>
-                    }
-                </div>
-
-                @if (chatId !== null && !enviando && !archivo && !camaraAbierta) {
-                    <app-audiocomponent
-                            (audioListo)="prepararAdjunto($event)">
-                    </app-audiocomponent>
+                @if (menuAbierto) {
+                    <div class="menu">
+                        <button type="button"
+                                (click)="menuAbierto = false; panelGifAbierto = true">
+                            <i class="fa-solid fa-film"></i> GIF
+                        </button>
+                        <button type="button"
+                                (click)="menuAbierto = false; panelGifAbierto = false; selectorArchivo.click()">
+                            <i class="fa-solid fa-paperclip"></i> Archivo
+                        </button>
+                        <button type="button"
+                                (click)="menuAbierto = false; panelGifAbierto = false; abrirCamara(videoCamara)">
+                            <i class="fa-solid fa-camera"></i> Cámara
+                        </button>
+                    </div>
                 }
+            </div>
+
+            @if (chatId !== null && !enviando && !archivo && !camaraAbierta) {
+                <app-audiocomponent
+                        (audioListo)="prepararAdjunto($event)">
+                </app-audiocomponent>
             }
             <input class="entrada" type="text" name="textoMensaje"
                    aria-label="Mensaje" placeholder="Escribe un mensaje..."
                    maxlength="2000" [(ngModel)]="texto"
-                   [disabled]="chatId === null || enviando || !!archivo">
+                   [disabled]="chatId === null || enviando">
 
             <button class="accion enviar" type="submit"
                     [disabled]="chatId === null || enviando || (!archivo && !texto.trim())">

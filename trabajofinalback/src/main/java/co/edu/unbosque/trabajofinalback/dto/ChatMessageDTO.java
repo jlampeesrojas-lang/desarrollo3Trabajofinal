@@ -14,6 +14,7 @@ public class ChatMessageDTO {
 	private String tipo;
 	private String mediaUrl;
 	private String fechaEnvio;
+	private String leyenda;
 
 	/** Constructor vacío. */
 	public ChatMessageDTO() {
@@ -86,5 +87,13 @@ public class ChatMessageDTO {
 
 	public void setFechaEnvio(String fechaEnvio) {
 		this.fechaEnvio = fechaEnvio;
+	}
+
+	public String getLeyenda() {
+		return leyenda;
+	}
+
+	public void setLeyenda(String leyenda) {
+		this.leyenda = leyenda;
 	}
 }

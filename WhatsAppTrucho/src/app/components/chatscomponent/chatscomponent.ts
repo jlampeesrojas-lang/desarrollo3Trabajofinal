@@ -207,7 +207,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         if (elegido) this.prepararAdjunto(elegido);
     }
 
-    /** Envía el archivo seleccionado o el texto escrito. */
+    /** Envía el archivo seleccionado con su texto en un solo mensaje, o solo el texto escrito. */
     enviar(historial: HTMLDivElement): void {
         if (this.chatId === null || this.enviando) return;
 
@@ -220,19 +220,21 @@ export class Chatscomponent implements OnChanges, OnDestroy {
             return;
         }
 
-        const peticion = this.servicio.enviarArchivo(this.chatId, adjunto);
+        const chatId = this.chatId;
+        const peticion = this.servicio.enviarArchivo(chatId, adjunto, contenido);
 
         this.enviando = true;
         this.avisoEnvio = '';
 
         this.solicitudes.add(peticion.subscribe({
             next: () => {
-                if (adjunto) {
-                    this.quitarAdjunto();
-                } else {
-                    this.texto = '';
-                }
+                this.quitarAdjunto();
+                this.texto = '';
                 this.enviando = false;
+
+                if (this.modoIa) {
+                    this.pedirRespuestaIa(chatId);
+                }
                 this.cdr.markForCheck();
             },
             error: error => {
@@ -428,12 +430,18 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         this.enviando = true;
         this.avisoGif = '';
 
+        const chatId = this.chatId;
+
         this.solicitudes.add(
-            this.servicio.enviarGif(this.chatId, gif.originalUrl).subscribe({
+            this.servicio.enviarGif(chatId, gif.originalUrl).subscribe({
                 next: () => {
                     this.enviando = false;
                     this.panelGifAbierto = false;
                     this.resultadosGif = [];
+
+                    if (this.modoIa) {
+                        this.pedirRespuestaIa(chatId);
+                    }
                     this.cdr.markForCheck();
                 },
                 error: error => {
@@ -444,6 +452,43 @@ export class Chatscomponent implements OnChanges, OnDestroy {
                 }
             })
         );
+    }
+
+    /**
+     * Muestra el adjunto recién enviado y pide a la IA que responda al último mensaje del chat.
+     * Mientras la IA responde se muestra el aviso de que está escribiendo.
+     */
+    private pedirRespuestaIa(chatId: number, pregunta = ''): void {
+        this.enviando = true;
+        this.avisoEnvio = '';
+        this.leerMensajes(chatId);
+
+        this.solicitudes.add(this.iaApi.responder(chatId, pregunta).subscribe({
+            next: () => {
+                this.enviando = false;
+                this.leerMensajes(chatId);
+                this.cdr.markForCheck();
+            },
+            error: error => {
+                this.enviando = false;
+
+                if (pregunta) {
+                    this.texto = pregunta;
+                }
+
+                if (error.status === 502) {
+                    this.avisoEnvio = 'La IA no pudo revisar el adjunto. Intenta de nuevo en un momento.';
+                } else if (error.status === 0) {
+                    this.avisoEnvio = 'Se perdió la conexión. Revisa el historial antes de reenviar.';
+                } else {
+                    this.avisoEnvio = `La IA no pudo responder (HTTP ${error.status}).`;
+                }
+
+                this.comprobarSesion(error.status);
+                this.leerMensajes(chatId);
+                this.cdr.markForCheck();
+            }
+        }));
     }
 
     /** Valida el archivo seleccionado y prepara la vista previa si es un audio. */
