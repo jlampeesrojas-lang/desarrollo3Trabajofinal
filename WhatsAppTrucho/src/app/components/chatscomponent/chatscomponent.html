@@ -1,0 +1,171 @@
+<section class="bloque">
+
+    <h1>Mis chats</h1>
+    <p>Mis conversaciones</p>
+
+    @if (error) {
+        <p class="error">{{ error }}</p>
+    }
+
+    @if (cargando) {
+        <p>Cargando conversaciones...</p>
+    } @else {
+
+        <div class="chats">
+
+            <div class="lista">
+
+                <input type="text"
+                       placeholder="Buscar conversación..."
+                       [(ngModel)]="busqueda">
+
+                @for (item of filtrados; track item.id) {
+
+                    <div class="chat"
+                         [class.activo]="item.id === seleccionado"
+                         (click)="seleccionarChat(item.id)">
+
+                        <div class="avatar">
+                            {{ item.nombre.charAt(0) }}
+                        </div>
+
+                        <div class="chat-datos">
+
+                            <strong>{{ item.nombre }}</strong>
+                            <p>{{ ultimoMensaje(item) }}</p>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+
+            @if (chat) {
+
+                <div class="visor-chat">
+
+                    <div class="cabecera-chat">
+
+                        <div class="avatar">
+                            {{ chat.nombre.charAt(0) }}
+                        </div>
+
+                        <strong>{{ chat.nombre }}</strong>
+
+                    </div>
+
+                    <!-- MENSAJES -->
+
+                    <div class="mensajes">
+
+                        @for (mensaje of chat.mensajes; track mensaje.id) {
+
+                            <div class="mensaje"
+                                 [class.enviado]="mensaje.enviado"
+                                 [class.recibido]="!mensaje.enviado">
+
+                                @if (mensaje.texto) {
+                                    <p>{{ mensaje.texto }}</p>
+                                }
+
+                                @for (adjunto of mensaje.adjuntos; track $index) {
+
+                                    <button type="button"
+                                            (click)="descargar(adjunto)">
+                                        Descargar {{ adjunto.nombre }}
+                                    </button>
+
+                                }
+
+                                <span>
+                                    {{ mensaje.fecha | date:'dd/MM HH:mm' }}
+                                </span>
+
+                            </div>
+                        }
+
+                    </div>
+
+                    <!-- CAMARA -->
+
+                    <div class="zona-camara" [hidden]="!camaraAbierta">
+
+                        <video #videoCamara
+                               autoplay
+                               playsinline
+                               muted>
+                        </video>
+
+                        <button type="button"
+                                [disabled]="enviando"
+                                (click)="tomarFoto()">
+                            Tomar foto y enviar
+                        </button>
+
+                        <button type="button"
+                                (click)="cerrarCamara()">
+                            Cancelar
+                        </button>
+
+                    </div>
+
+                    <!-- ARCHIVOS ADJUNTOS -->
+
+                    <div class="adjuntos">
+
+                        @for (archivo of borrador.archivos; track $index) {
+
+                            <button type="button"
+                                    (click)="quitarArchivo($index)">
+                                {{ archivo.name }} X
+                            </button>
+
+                        }
+
+                    </div>
+
+                    <!-- BARRA PARA ENVIAR -->
+
+                    <form class="barra-enviar" (ngSubmit)="enviar()">
+
+                        <input #selector
+                               type="file"
+                               hidden
+                               multiple
+                               (change)="adjuntar($event)">
+
+                        <button type="button"
+                                [disabled]="enviando"
+                                (click)="selector.click()">
+                            Adjuntar
+                        </button>
+
+                        <button type="button"
+                                [disabled]="camaraAbierta || abriendoCamara"
+                                (click)="abrirCamara()">
+                            Cámara
+                        </button>
+
+                        <input type="text"
+                               name="mensaje"
+                               placeholder="Escribe un mensaje..."
+                               [(ngModel)]="borrador.texto">
+
+                        <button type="submit"
+                                [disabled]="enviando || (!borrador.texto.trim() && !borrador.archivos.length)">
+                            Enviar
+                        </button>
+
+                    </form>
+
+                </div>
+
+            }
+
+        </div>
+
+    }
+
+</section>
+

@@ -9,6 +9,7 @@ import { Logincomponent } from "./components/logincomponent/logincomponent";
 import { Admincomponent } from "./components/admincomponent/admincomponent";
 import { Confirmaremailcomponent } from "./components/confirmaremailcomponent/confirmaremailcomponent";
 import { Adminchatscomponent } from "./components/adminchatscomponent/adminchatscomponent";
+import { Chatscomponent } from "./components/chatscomponent/chatscomponent";
 import { Contactoscomponent } from "./components/contactoscomponent/contactoscomponent";
 import { Errorcomponent } from "./components/errorcomponent/errorcomponent";
 import { Audiocomponent } from "./components/audiocomponent/audiocomponent";
@@ -22,6 +23,7 @@ import { Audiocomponent } from "./components/audiocomponent/audiocomponent";
         Admincomponent,
         Confirmaremailcomponent,
         Adminchatscomponent,
+        Chatscomponent,
         Contactoscomponent,
         Errorcomponent,
         Audiocomponent,
