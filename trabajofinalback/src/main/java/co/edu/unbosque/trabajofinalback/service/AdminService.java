@@ -92,7 +92,8 @@ public class AdminService {
 	}
 
 	/**
-	 * Devuelve eventos de auditoría con filtros opcionales. Un filtro en null no se aplica.
+	 * Devuelve eventos de auditoría con filtros opcionales. Un filtro en null no se
+	 * aplica.
 	 *
 	 * @param limit    cantidad de eventos a devolver (se ajusta entre 1 y 500)
 	 * @param userId   id del usuario
@@ -142,7 +143,8 @@ public class AdminService {
 
 
 	/**
-	 * Desactiva un usuario: ya no puede iniciar sesión y se cierran todas sus sesiones.
+	 * Desactiva un usuario: ya no puede iniciar sesión y se cierran todas sus
+	 * sesiones.
 	 *
 	 * @param adminId id del administrador que hace el cambio
 	 * @param userId  id del usuario a desactivar
@@ -163,9 +165,11 @@ public class AdminService {
 		if (!user.isEnabled()) {
 			return 3;
 		}
+
 		user.setEnabled(false);
 		userRepo.save(user);
 		refreshTokenRepo.revokeAllByUser(user);
+
 		auditService.log(AuditAction.ADMIN_USER_UPDATED, adminId, ip, "desactivó al usuario id=" + userId);
 		return 0;
 	}
@@ -188,10 +192,12 @@ public class AdminService {
 		if (user.isEnabled() && user.getLockedUntil() == null) {
 			return 2;
 		}
+
 		user.setEnabled(true);
 		user.setFailedAttempts(0);
 		user.setLockedUntil(null);
 		userRepo.save(user);
+
 		auditService.log(AuditAction.ADMIN_USER_UPDATED, adminId, ip, "activó al usuario id=" + userId);
 		return 0;
 	}
@@ -200,7 +206,8 @@ public class AdminService {
 	/**
 	 * Devuelve todos los chats con participantes y cantidad de mensajes.
 	 *
-	 * @return chats ordenados por fecha del último mensaje, del más reciente al más antiguo
+	 * @return chats ordenados por fecha del último mensaje, del más reciente al más
+	 *         antiguo
 	 */
 	@Transactional(readOnly = true)
 	public List<ChatAdminDTO> chats() {
@@ -279,6 +286,7 @@ public class AdminService {
 		return crypto.recuperarLlave(chat.getKeyEnc());
 	}
 
+	// ============================================================ UTILIDADES
 
 	/** Busca un chat por id o responde 404 si no existe. */
 	private Chat buscarChat(Long chatId) {
@@ -295,7 +303,7 @@ public class AdminService {
 				recibida.getBytes(StandardCharsets.UTF_8));
 	}
 
-	/** Descifra un mensaje; si falla, devuelve un texto de aviso en vez de romper toda la lista. */
+	/** Descifra un mensaje; si falla, devuelve un texto de aviso en vez de romper la lista. */
 	private String descifrarSeguro(String clave, String contenidoCifrado) {
 		if (contenidoCifrado == null) {
 			return null;
