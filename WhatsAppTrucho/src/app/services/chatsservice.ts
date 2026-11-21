@@ -79,10 +79,10 @@ export class Chatsservice {
 
     /** El backend existente devuelve la confirmación como texto. */
     enviarMensaje(chatId: number, contenido: string) {
-        return this.http.post(
+        return this.http.post<MensajeHistorial>(
             `${API}/chats/sendmessage/${chatId}`,
-            {contenido},
-            {headers: this.headers(), responseType: 'text'}
+            { contenido },
+            { headers: this.headers() }
         );
     }
 

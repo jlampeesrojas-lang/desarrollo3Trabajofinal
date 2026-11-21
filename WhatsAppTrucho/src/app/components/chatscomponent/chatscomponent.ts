@@ -45,6 +45,9 @@ export class Chatscomponent implements OnChanges, OnDestroy {
     private temporizador?: ReturnType<typeof setTimeout>;
     private flujo: MediaStream | null = null;
     private turnoCamara = 0;
+    private siguienteIdTemporal = -1;
+    private versionEnvio = 0;
+    private textoEnProceso = false;
 
     constructor(
         private servicio: Chatsservice,
@@ -70,6 +73,8 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         this.enviando = false;
         this.aviso = '';
         this.avisoEnvio = '';
+        this.textoEnProceso = false;
+        this.versionEnvio++;
 
         if (!this.contacto) {
             return;
@@ -90,9 +95,36 @@ export class Chatscomponent implements OnChanges, OnDestroy {
 
     /** Consulta otra vez un segundo después de recibir la respuesta anterior. */
     private leerMensajes(id: number): void {
+        const versionAlConsultar = this.versionEnvio;
         this.solicitudes.add(this.servicio.obtenerMensajes(id).subscribe({
             next: lista => {
+                if (this.textoEnProceso || versionAlConsultar !== this.versionEnvio) {
+                    this.programarLectura(id);
+                    return;
+                }
+                const historial = document.getElementById('historial-chat');
+                const primeraCarga = !this.cargado;
+
+                let estabaAbajo = false;
+                if (historial) {
+                    const distancia = historial.scrollHeight
+                        - historial.scrollTop
+                        - historial.clientHeight;
+
+                    estabaAbajo = distancia <= 80;
+                }
+
+                const ultimoAnterior = this.mensajes[this.mensajes.length - 1];
                 this.mensajes = lista.slice().reverse();
+                const ultimoActual = this.mensajes[this.mensajes.length - 1];
+
+                const llegoMensaje = ultimoActual != null
+                    && ultimoActual.id !== ultimoAnterior?.id;
+
+                if (historial && (primeraCarga || (estabaAbajo && llegoMensaje))) {
+                    this.cdr.detectChanges();
+                    historial.scrollTop = historial.scrollHeight;
+                }
                 this.cargado = true;
                 this.aviso = '';
                 this.actualizarImagenes();
@@ -113,7 +145,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
     }
 
     private programarLectura(id: number): void {
-        this.temporizador = setTimeout(() => this.leerMensajes(id), 1000);
+        this.temporizador = setTimeout(() => this.leerMensajes(id), 500);
     }
 
     /** Carga cada imagen con autorización y reutiliza su URL en los refrescos. */
@@ -163,16 +195,19 @@ export class Chatscomponent implements OnChanges, OnDestroy {
     }
 
     /** Envía el archivo seleccionado o el texto escrito. */
-    enviar(): void {
+    enviar(historial: HTMLDivElement): void {
         if (this.chatId === null || this.enviando) return;
 
         const contenido = this.texto.trim();
         const adjunto = this.archivo;
         if (!adjunto && !contenido) return;
 
-        const peticion = adjunto
-            ? this.servicio.enviarArchivo(this.chatId, adjunto)
-            : this.servicio.enviarMensaje(this.chatId, contenido);
+        if (!adjunto) {
+            this.enviarTexto(this.chatId, contenido, historial);
+            return;
+        }
+
+        const peticion = this.servicio.enviarArchivo(this.chatId, adjunto);
 
         this.enviando = true;
         this.avisoEnvio = '';
@@ -413,5 +448,59 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         }
         this.vistaAudio = '';
         this.archivo = null;
+    }
+
+    private enviarTexto(chatId: number, contenido: string, historial: HTMLDivElement): void {
+        const idTemporal = this.siguienteIdTemporal--;
+
+        const pendiente: MensajeHistorial = {
+            id: idTemporal,
+            remitenteNombre: this.usuario,
+            contenido: contenido,
+            tipo: 'TEXTO',
+            mediaUrl: null,
+            fechaEnvio: new Date().toISOString()
+        };
+
+        this.versionEnvio++;
+        this.textoEnProceso = true;
+        this.enviando = true;
+        this.avisoEnvio = '';
+        this.texto = '';
+
+        this.mensajes.push(pendiente);
+        this.cdr.detectChanges();
+        historial.scrollTop = historial.scrollHeight;
+
+        this.solicitudes.add(
+            this.servicio.enviarMensaje(chatId, contenido).subscribe({
+                next: guardado => {
+                    this.versionEnvio++;
+                    this.textoEnProceso = false;
+                    this.enviando = false;
+
+                    this.mensajes = this.mensajes.map(m =>
+                        m.id === idTemporal ? guardado : m
+                    );
+
+                    this.cdr.markForCheck();
+                },
+                error: error => {
+                    this.versionEnvio++;
+                    this.textoEnProceso = false;
+                    this.enviando = false;
+
+                    this.mensajes = this.mensajes.filter(m => m.id !== idTemporal);
+                    this.texto = contenido;
+
+                    this.avisoEnvio = error.status === 0
+                        ? 'Se perdió la conexión. Revisa el historial antes de reenviar.'
+                        : `No se pudo enviar el mensaje (HTTP ${error.status}).`;
+
+                    this.comprobarSesion(error.status);
+                    this.cdr.markForCheck();
+                }
+            })
+        );
     }
 }

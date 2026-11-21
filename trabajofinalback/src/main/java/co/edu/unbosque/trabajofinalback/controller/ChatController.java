@@ -84,12 +84,12 @@ public class ChatController {
 
 	@Operation(summary = "Enviar mensaje de texto", description = "Body: {\"contenido\": \"Hola\"}. Se guarda cifrado con la llave del chat.")
 	@PostMapping(path = "/sendmessage/{chatId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> sendMessage(@PathVariable Long chatId, @RequestBody ChatMessageDTO newMessage,
+	public ResponseEntity<?> sendMessage(@PathVariable Long chatId, @RequestBody ChatMessageDTO newMessage,
 			HttpServletRequest request) {
 		int status = chatServ.sendMessage(authContext.getUserId(), chatId, newMessage, request.getRemoteAddr());
 
 		if (status == 0) {
-			return new ResponseEntity<>("Mensaje enviado exitosamente", HttpStatus.CREATED);
+			return new ResponseEntity<>(newMessage, HttpStatus.CREATED);
 		} else if (status == 1) {
 			return new ResponseEntity<>("El chat no existe", HttpStatus.NOT_FOUND);
 		} else if (status == 2) {

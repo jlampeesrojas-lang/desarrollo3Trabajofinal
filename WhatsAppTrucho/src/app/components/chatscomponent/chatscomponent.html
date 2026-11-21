@@ -1,6 +1,6 @@
 @if (contacto) {
     <section class="visor-chat" aria-label="Conversación con {{ contacto.nombre }}">
-        <div class="mensajes">
+        <div #historial id="historial-chat" class="mensajes">
             @if (aviso) {
                 <p class="aviso" role="status">{{ aviso }}</p>
             }
@@ -51,7 +51,13 @@
                         <p class="texto">{{ m.contenido }}</p>
                     }
 
-                    <small>{{ m.fechaEnvio | date:'HH:mm' }}</small>
+                    <small>
+                        @if (m.id < 0) {
+                            Enviando…
+                        } @else {
+                            {{ m.fechaEnvio | date:'HH:mm' }}
+                        }
+                    </small>
                 </article>
             }
         </div>
@@ -59,7 +65,8 @@
             <div class="titulo-panel">
                 <strong>Cámara</strong>
                 <button type="button" class="icono" aria-label="Cerrar cámara"
-                        (click)="cerrarCamara()">×</button>
+                        (click)="cerrarCamara()">×
+                </button>
             </div>
             <video #videoCamara autoplay playsinline muted></video>
             <button type="button" class="accion" (click)="tomarFoto(videoCamara)">
@@ -73,7 +80,8 @@
                 <div class="titulo-panel">
                     <strong>Enviar GIF</strong>
                     <button type="button" class="icono" aria-label="Cerrar buscador"
-                            (click)="panelGifAbierto = false">×</button>
+                            (click)="panelGifAbierto = false">×
+                    </button>
                 </div>
 
                 <form class="buscador" (ngSubmit)="buscarGif(consulta.value)">
@@ -114,7 +122,8 @@
                     }
                 </div>
                 <button class="secundario" type="button" [disabled]="enviando"
-                        (click)="quitarAdjunto()">Quitar</button>
+                        (click)="quitarAdjunto()">Quitar
+                </button>
             </div>
         }
 
@@ -122,7 +131,7 @@
             <p class="aviso" role="status">{{ avisoEnvio }}</p>
         }
 
-        <form class="barra" (ngSubmit)="enviar()">
+        <form class="barra" (ngSubmit)="enviar(historial)">
             <input #selectorArchivo type="file" hidden
                    (change)="seleccionarArchivo(selectorArchivo)">
 
