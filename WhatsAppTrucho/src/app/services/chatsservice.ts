@@ -16,8 +16,10 @@ export class Chatsservice {
     ) {
     }
 
+    /** Crea las cabeceras HTTP con el token de acceso de la sesión actual. */
     private headers(): HttpHeaders {
         const token = this.auth.obtenerToken();
+
         return token
             ? new HttpHeaders({Authorization: `Bearer ${token}`})
             : new HttpHeaders();
@@ -81,8 +83,8 @@ export class Chatsservice {
     enviarMensaje(chatId: number, contenido: string) {
         return this.http.post<MensajeHistorial>(
             `${API}/chats/sendmessage/${chatId}`,
-            { contenido },
-            { headers: this.headers() }
+            {contenido},
+            {headers: this.headers()}
         );
     }
 
@@ -90,8 +92,8 @@ export class Chatsservice {
     enviarGif(chatId: number, url: string) {
         return this.http.post(
             `${API}/chats/sendmessage/${chatId}`,
-            { tipo: 'GIF', contenido: url },
-            { headers: this.headers(), responseType: 'text' }
+            {tipo: 'GIF', contenido: url},
+            {headers: this.headers(), responseType: 'text'}
         );
     }
 

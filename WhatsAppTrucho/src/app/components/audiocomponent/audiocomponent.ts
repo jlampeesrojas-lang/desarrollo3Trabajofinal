@@ -17,7 +17,7 @@ export class Audiocomponent implements OnDestroy {
     private grabadora?: MediaRecorder;
     private microfono?: MediaStream;
     private destruido = false;
-    @Output() audioListo = new EventEmitter<File>();
+    @Output() readonly audioListo = new EventEmitter<File>();
 
     constructor(private cambios: ChangeDetectorRef) {
     }

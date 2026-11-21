@@ -13,6 +13,7 @@ import {
     OnDestroy
 } from '@angular/core';
 
+/** Muestra la conversación del contacto seleccionado y permite enviar mensajes y adjuntos. */
 @Component({
     selector: 'app-chatscomponent',
     standalone: false,
@@ -144,6 +145,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         }));
     }
 
+    /** Programa la siguiente consulta del historial del chat abierto. */
     private programarLectura(id: number): void {
         this.temporizador = setTimeout(() => this.leerMensajes(id), 500);
     }
@@ -252,7 +254,8 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         }));
     }
 
-    /** El HTML entrega directamente el elemento de video. */abrirCamara(video: HTMLVideoElement): void {
+    /** El HTML entrega directamente el elemento de video. */
+    abrirCamara(video: HTMLVideoElement): void {
         if (this.camaraAbierta) return;
 
         if (!navigator.mediaDevices?.getUserMedia) {
@@ -269,8 +272,10 @@ export class Chatscomponent implements OnChanges, OnDestroy {
             audio: false
         }).then(flujo => {
             if (turno !== this.turnoCamara) {
-                flujo.getTracks().forEach(pista => pista.stop());
-                return;
+                for (const pista of flujo.getTracks()) {
+                    pista.stop();
+                }
+                return Promise.resolve();
             }
 
             this.flujo = flujo;
@@ -278,6 +283,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
             return video.play();
         }).catch(() => {
             if (turno !== this.turnoCamara) return;
+
             this.cerrarCamara();
             this.avisoEnvio = 'No se pudo abrir la cámara. Revisa el permiso del navegador.';
             this.cdr.markForCheck();
@@ -312,6 +318,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         }, 'image/jpeg', 0.85);
     }
 
+    /** Detiene las pistas de video y cierra la vista previa de la cámara. */
     cerrarCamara(): void {
         this.turnoCamara++;
         this.flujo?.getTracks().forEach(pista => pista.stop());
@@ -340,10 +347,12 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         }));
     }
 
+    /** Notifica el vencimiento de la sesión cuando el servidor responde con HTTP 401. */
     private comprobarSesion(estado: number): void {
         if (estado === 401) this.auth.avisarVencimiento();
     }
 
+    /** Cancela las consultas pendientes y libera los recursos de la conversación. */
     private limpiar(): void {
         this.menuAbierto = false;
         this.quitarAdjunto();
@@ -360,6 +369,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         this.cargandoImagenes.clear();
     }
 
+    /** Libera los recursos del chat cuando Angular destruye el componente. */
     ngOnDestroy(): void {
         this.limpiar();
     }
@@ -425,6 +435,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         );
     }
 
+    /** Valida el archivo seleccionado y prepara la vista previa si es un audio. */
     prepararAdjunto(elegido: File): void {
         if (!elegido.size || elegido.size > 10 * 1024 * 1024) {
             this.avisoEnvio = 'El archivo debe tener contenido y pesar máximo 10 MB.';
@@ -442,6 +453,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         this.cdr.markForCheck();
     }
 
+    /** Descarta el archivo pendiente y libera la URL de la vista previa de audio. */
     quitarAdjunto(): void {
         if (this.vistaAudio) {
             URL.revokeObjectURL(this.vistaAudio);
@@ -450,13 +462,14 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         this.archivo = null;
     }
 
+    /** Muestra el texto de inmediato y actualiza la burbuja cuando el servidor confirma el envío. */
     private enviarTexto(chatId: number, contenido: string, historial: HTMLDivElement): void {
         const idTemporal = this.siguienteIdTemporal--;
 
         const pendiente: MensajeHistorial = {
             id: idTemporal,
             remitenteNombre: this.usuario,
-            contenido: contenido,
+            contenido,
             tipo: 'TEXTO',
             mediaUrl: null,
             fechaEnvio: new Date().toISOString()
