@@ -17,7 +17,9 @@ import co.edu.unbosque.trabajofinalback.repository.UserRepository;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,8 +30,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class ChatService {
 
+  /** Letras usadas para generar el código del chat (sin caracteres confusos como O, 0, I, 1). */
   private static final String LETRAS_CODIGO = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
+  /** Longitud máxima de un mensaje de texto. */
   private static final int MAX_CARACTERES = 2000;
 
   @Autowired private ChatRepository chatRepo;
@@ -50,12 +54,12 @@ public class ChatService {
 
   public ChatService() {}
 
-  // =================================================================== CHATS
+ 
 
   /**
    * Crea un chat 1 a 1 con un contacto. Llena el id y el código en el mismo DTO.
    *
-   * @return 0 = creado, 1 = el usuario no existe, 2 = es uno mismo, 3 = no está en tus contactos,
+   * @return 0 = creado, 1 = el usuario no existe, 2 = es uno mismo, 3 = no está en los contactos,
    *     4 = ya existía un chat con ese contacto
    */
   public int create(Long userId, ChatDTO data) {
@@ -81,7 +85,6 @@ public class ChatService {
       return 4;
     }
 
-    // Llave AES propia del chat; en la base de datos se guarda cifrada
     String llave = crypto.generarLlave();
     Chat chat = chatRepo.save(new Chat(generarCodigo(), crypto.protegerLlave(llave)));
     participantRepo.save(new ChatParticipant(chat, userRepo.findById(userId).get()));
@@ -130,7 +133,11 @@ public class ChatService {
     }
   }
 
-  /** Marca el chat como leído: los no leídos vuelven a 0. */
+  /**
+   * Marca el chat como leído: los no leídos vuelven a 0.
+   *
+   * @return 0 = marcado, 1 = no participa en el chat
+   */
   public int markAsRead(Long userId, Long chatId) {
     Optional<ChatParticipant> found = participantRepo.findByChatIdAndUserId(chatId, userId);
     if (found.isPresent()) {
@@ -143,8 +150,7 @@ public class ChatService {
     }
   }
 
-  // ================================================================ MENSAJES
-
+ 
   /**
    * Cifra y guarda un mensaje de texto. Llena los datos del mensaje guardado en el mismo DTO.
    *
@@ -167,7 +173,6 @@ public class ChatService {
     ChatParticipant p = participantRepo.findByChatIdAndUserId(chatId, userId).get();
     Chat chat = p.getChat();
 
-    // Se cifra con la llave del chat ANTES de guardar
     String llave = crypto.recuperarLlave(chat.getKeyEnc());
     Message m =
         messageRepo.save(
@@ -175,7 +180,6 @@ public class ChatService {
     chat.setLastMessageAt(m.getCreatedAt());
     chatRepo.save(chat);
 
-    // Metadatos del mensaje en la auditoría: NUNCA el texto
     auditService.log(
         AuditAction.MESSAGE_SENT,
         userId,
@@ -194,7 +198,7 @@ public class ChatService {
   /**
    * Historial paginado y descifrado. Página 0 = los mensajes más recientes.
    *
-   * @param size cuántos mensajes por página (de 1 a 50; por defecto 20)
+   * @param size cantidad de mensajes por página (de 1 a 50; por defecto 20)
    */
   public List<ChatMessageDTO> getMessages(Long chatId, int page, int size) {
     if (page < 0) {
@@ -218,8 +222,49 @@ public class ChatService {
     return dtoList;
   }
 
-  // =============================================================== UTILIDADES
+  /**
+   * Mensajes del chat con id mayor a afterId, del más antiguo al más reciente.
+   *
+   * @param afterId id del último mensaje que el cliente ya tiene (0 = todos)
+   */
+  public List<ChatMessageDTO> getNewMessages(Long chatId, Long afterId) {
+    if (afterId == null || afterId < 0) {
+      afterId = 0L;
+    }
+    List<Message> nuevos = messageRepo.findByChatIdAndIdGreaterThanOrderByIdAsc(chatId, afterId);
+    return toMessageDTOList(nuevos);
+  }
 
+  /** Mensajes enviados por el usuario en todos sus chats, lo más reciente primero. */
+  public List<ChatMessageDTO> getSent(Long userId, int page, int size) {
+    if (page < 0) {
+      page = 0;
+    }
+    if (size < 1 || size > 50) {
+      size = 20;
+    }
+    List<Message> enviados =
+        messageRepo.findBySenderIdOrderByIdDesc(userId, PageRequest.of(page, size));
+    return toMessageDTOList(enviados);
+  }
+
+  /** Mensajes recibidos por el usuario en todos sus chats con id mayor a afterId. */
+  public List<ChatMessageDTO> getReceived(Long userId, Long afterId, int page, int size) {
+    if (afterId == null || afterId < 0) {
+      afterId = 0L;
+    }
+    if (page < 0) {
+      page = 0;
+    }
+    if (size < 1 || size > 50) {
+      size = 20;
+    }
+    List<Message> recibidos =
+        messageRepo.findReceived(userId, afterId, PageRequest.of(page, size));
+    return toMessageDTOList(recibidos);
+  }
+
+  
   /** Pasa un chat a DTO, visto desde el usuario de esa participación. */
   private ChatDTO toDTO(ChatParticipant mia) {
     Chat chat = mia.getChat();
@@ -276,7 +321,27 @@ public class ChatService {
     return dto;
   }
 
-  /** Genera un código único tipo CH-7KQ2MZ (sin letras confusas como O, 0, I, 1). */
+  /**
+   * Descifra una lista de mensajes que pueden pertenecer a chats distintos. La llave de cada chat
+   * se consulta una sola vez.
+   */
+  private List<ChatMessageDTO> toMessageDTOList(List<Message> mensajes) {
+    Map<Long, String> llaves = new HashMap<>();
+    List<ChatMessageDTO> dtoList = new ArrayList<>();
+    mensajes.forEach(
+        (m) -> {
+          Chat chat = m.getChat();
+          String llave = llaves.get(chat.getId());
+          if (llave == null) {
+            llave = crypto.recuperarLlave(chat.getKeyEnc());
+            llaves.put(chat.getId(), llave);
+          }
+          dtoList.add(toMessageDTO(m, llave));
+        });
+    return dtoList;
+  }
+
+  /** Genera un código único tipo CH-7KQ2MZ. */
   private String generarCodigo() {
     String codigo;
     do {
