@@ -1,5 +1,6 @@
-@if (contacto) {
-    <section class="visor-chat" aria-label="Conversación con {{ contacto.nombre }}">
+@if (contacto || modoIa) {
+    <section class="visor-chat"
+             [attr.aria-label]="modoIa ? 'Conversación con la IA' : 'Conversación con ' + contacto?.nombre">
         <div #historial id="historial-chat" class="mensajes">
             @if (aviso) {
                 <p class="aviso" role="status">{{ aviso }}</p>
@@ -18,8 +19,8 @@
 
             @for (m of mensajes; track m.id) {
                 <article class="burbuja"
-                         [class.propia]="m.remitenteNombre === usuario"
-                         [class.ajena]="m.remitenteNombre !== usuario">
+                         [class.propia]="m.tipo !== 'IA' && m.remitenteNombre === usuario"
+                         [class.ajena]="m.tipo === 'IA' || m.remitenteNombre !== usuario">
 
                     @if (m.tipo === 'GIF') {
                         <img class="foto" [src]="m.contenido" alt="GIF del chat">
@@ -59,6 +60,9 @@
                         }
                     </small>
                 </article>
+            }
+            @if (modoIa && enviando) {
+                <p class="aviso" role="status">La IA está escribiendo…</p>
             }
         </div>
         <section class="panel camara" [hidden]="!camaraAbierta" aria-label="Cámara">
@@ -132,42 +136,43 @@
         }
 
         <form class="barra" (ngSubmit)="enviar(historial)">
-            <input #selectorArchivo type="file" hidden
-                   (change)="seleccionarArchivo(selectorArchivo)">
+            @if (!modoIa) {
+                <input #selectorArchivo type="file" hidden
+                       (change)="seleccionarArchivo(selectorArchivo)">
 
-            <div class="adjuntos" (keydown.escape)="menuAbierto = false; mas.focus()">
-                <button #mas class="icono mas" type="button"
-                        aria-label="Opciones de adjuntos"
-                        [attr.aria-expanded]="menuAbierto"
-                        [disabled]="chatId === null || enviando || camaraAbierta"
-                        (click)="menuAbierto = !menuAbierto">
-                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                </button>
+                <div class="adjuntos" (keydown.escape)="menuAbierto = false; mas.focus()">
+                    <button #mas class="icono mas" type="button"
+                            aria-label="Opciones de adjuntos"
+                            [attr.aria-expanded]="menuAbierto"
+                            [disabled]="chatId === null || enviando || camaraAbierta"
+                            (click)="menuAbierto = !menuAbierto">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    </button>
 
-                @if (menuAbierto) {
-                    <div class="menu">
-                        <button type="button"
-                                (click)="menuAbierto = false; panelGifAbierto = true">
-                            <i class="fa-solid fa-film"></i> GIF
-                        </button>
-                        <button type="button"
-                                (click)="menuAbierto = false; panelGifAbierto = false; selectorArchivo.click()">
-                            <i class="fa-solid fa-paperclip"></i> Archivo
-                        </button>
-                        <button type="button"
-                                (click)="menuAbierto = false; panelGifAbierto = false; abrirCamara(videoCamara)">
-                            <i class="fa-solid fa-camera"></i> Cámara
-                        </button>
-                    </div>
+                    @if (menuAbierto) {
+                        <div class="menu">
+                            <button type="button"
+                                    (click)="menuAbierto = false; panelGifAbierto = true">
+                                <i class="fa-solid fa-film"></i> GIF
+                            </button>
+                            <button type="button"
+                                    (click)="menuAbierto = false; panelGifAbierto = false; selectorArchivo.click()">
+                                <i class="fa-solid fa-paperclip"></i> Archivo
+                            </button>
+                            <button type="button"
+                                    (click)="menuAbierto = false; panelGifAbierto = false; abrirCamara(videoCamara)">
+                                <i class="fa-solid fa-camera"></i> Cámara
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                @if (chatId !== null && !enviando && !archivo && !camaraAbierta) {
+                    <app-audiocomponent
+                            (audioListo)="prepararAdjunto($event)">
+                    </app-audiocomponent>
                 }
-            </div>
-
-            @if (chatId !== null && !enviando && !archivo && !camaraAbierta) {
-                <app-audiocomponent
-                        (audioListo)="prepararAdjunto($event)">
-                </app-audiocomponent>
             }
-
             <input class="entrada" type="text" name="textoMensaje"
                    aria-label="Mensaje" placeholder="Escribe un mensaje..."
                    maxlength="2000" [(ngModel)]="texto"

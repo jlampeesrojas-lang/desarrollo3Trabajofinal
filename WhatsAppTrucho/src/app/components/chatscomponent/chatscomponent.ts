@@ -12,6 +12,7 @@ import {
     OnChanges,
     OnDestroy
 } from '@angular/core';
+import {Iaservice} from "../../services/iaservice";
 
 /** Muestra la conversación del contacto seleccionado y permite enviar mensajes y adjuntos. */
 @Component({
@@ -40,6 +41,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
     imagenes = new Map<number, string>();
     menuAbierto = false;
     vistaAudio = '';
+    @Input() modoIa = false;
 
     private solicitudes = new Subscription();
     private cargandoImagenes = new Set<number>();
@@ -54,7 +56,8 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         private servicio: Chatsservice,
         private auth: AuthService,
         private cdr: ChangeDetectorRef,
-        private gifsApi: GifService
+        private gifsApi: GifService,
+        private iaApi: Iaservice
     ) {
         this.usuario = this.auth.obtenerUsuario() || '';
     }
@@ -76,12 +79,16 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         this.avisoEnvio = '';
         this.textoEnProceso = false;
         this.versionEnvio++;
-
-        if (!this.contacto) {
+        let apertura;
+        if (this.modoIa) {
+            apertura = this.iaApi.abrirChat();
+        } else if (this.contacto) {
+            apertura = this.servicio.abrirChat(this.contacto.id);
+        } else {
             return;
         }
 
-        this.solicitudes.add(this.servicio.abrirChat(this.contacto.id).subscribe({
+        this.solicitudes.add(apertura.subscribe({
             next: id => {
                 this.chatId = id;
                 this.leerMensajes(id);
@@ -145,8 +152,12 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         }));
     }
 
-    /** Programa la siguiente consulta del historial del chat abierto. */
+    /** Programa otra lectura para recibir mensajes de otros usuarios. */
     private programarLectura(id: number): void {
+        if (this.modoIa) {
+            return;
+        }
+
         this.temporizador = setTimeout(() => this.leerMensajes(id), 500);
     }
 
@@ -484,6 +495,39 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         this.mensajes.push(pendiente);
         this.cdr.detectChanges();
         historial.scrollTop = historial.scrollHeight;
+        if (this.modoIa) {
+            this.solicitudes.add(this.iaApi.preguntar(chatId, contenido).subscribe({
+                next: () => {
+                    this.versionEnvio++;
+                    this.textoEnProceso = false;
+                    this.enviando = false;
+
+                    // Spring ya guardó la pregunta y la respuesta con sus ids reales.
+                    this.leerMensajes(chatId);
+                    this.cdr.markForCheck();
+                },
+                error: error => {
+                    this.versionEnvio++;
+                    this.textoEnProceso = false;
+                    this.enviando = false;
+                    this.mensajes = this.mensajes.filter(m => m.id !== idTemporal);
+                    this.texto = contenido;
+
+                    if (error.status === 502) {
+                        this.avisoEnvio = 'La IA no pudo responder. Intenta de nuevo en un momento.';
+                    } else if (error.status === 0) {
+                        this.avisoEnvio = 'Se perdió la conexión. Revisa el historial antes de reenviar.';
+                    } else {
+                        this.avisoEnvio = `No se pudo enviar la pregunta (HTTP ${error.status}).`;
+                    }
+
+                    this.comprobarSesion(error.status);
+                    this.cdr.markForCheck();
+                }
+            }));
+
+            return;
+        }
 
         this.solicitudes.add(
             this.servicio.enviarMensaje(chatId, contenido).subscribe({

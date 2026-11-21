@@ -195,4 +195,12 @@ public class ChatController {
         }
         return new ResponseEntity<>("No participas en este chat", HttpStatus.NOT_FOUND);
     }
+    
+    /** Obtiene el id de la conversación de IA del usuario autenticado. */
+    @Operation(summary = "Abrir mi chat privado con la IA")
+    @PostMapping("/ia")
+    public ResponseEntity<Long> abrirChatIa() {
+        Long chatId = chatServ.abrirChatIa(authContext.getUserId());
+        return ResponseEntity.ok(chatId);
+    }
 }
