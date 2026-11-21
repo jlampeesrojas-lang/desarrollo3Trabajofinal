@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -47,6 +48,12 @@ public class AuthService {
 
     /** Límite superior (exclusivo) del código de 6 dígitos. */
     private static final int LIMITE_CODIGO = 1_000_000;
+
+    /** Intentos fallidos seguidos antes de bloquear la cuenta. */
+    private static final int MAX_INTENTOS_FALLIDOS = 5;
+
+    /** Minutos que dura el bloqueo de la cuenta. */
+    private static final int MINUTOS_BLOQUEO = 15;
 
     private final UserRepository userRepo;
     private final EmailTokenRepository emailTokenRepo;
@@ -299,7 +306,9 @@ public class AuthService {
     }
 
     /**
-     * Autentica con correo o usuario y entrega los tokens de sesión.
+     * Autentica con correo o usuario y entrega los tokens de sesión. Tras 5 intentos fallidos
+     * seguidos la cuenta queda bloqueada 15 minutos. No revierte la transacción ante errores de
+     * autenticación para que el intento fallido quede guardado.
      *
      * @param dto credenciales de acceso
      * @param ip  dirección IP del cliente
@@ -308,7 +317,7 @@ public class AuthService {
      * @throws AuthenticationException    si las credenciales son incorrectas
      * @throws EmailNotVerifiedException  si el correo no está confirmado
      */
-    @Transactional
+    @Transactional(noRollbackFor = AuthenticationException.class)
     public AuthResponseDTO login(LoginDTO dto, String ip) {
         String identifier = dto.getIdentifier().trim();
         Authentication authentication;
@@ -321,8 +330,11 @@ public class AuthService {
         } catch (LockedException e) {
             auditService.log(AuditAction.LOGIN_FAIL, buscarIdUsuario(identifier), ip, "cuenta bloqueada");
             throw e;
+        } catch (BadCredentialsException e) {
+            registrarIntentoFallido(identifier, ip);
+            throw e;
         } catch (AuthenticationException e) {
-            auditService.log(AuditAction.LOGIN_FAIL, buscarIdUsuario(identifier), ip, "credenciales incorrectas");
+            auditService.log(AuditAction.LOGIN_FAIL, buscarIdUsuario(identifier), ip, "cuenta no disponible");
             throw e;
         }
 
@@ -333,15 +345,60 @@ public class AuthService {
             throw new EmailNotVerifiedException();
         }
 
+        if (user.getFailedAttempts() > 0 || user.getLockedUntil() != null) {
+            user.setFailedAttempts(0);
+            user.setLockedUntil(null);
+            userRepo.save(user);
+        }
+
         auditService.log(AuditAction.LOGIN_OK, user.getId(), ip, null);
         return buildSession(user);
     }
 
-    /** Busca el id de un usuario por nombre de usuario o correo; devuelve null si no existe. */
-    private Long buscarIdUsuario(String identifier) {
-        User user = userRepo.findByUsername(identifier)
+    /**
+     * Suma un intento fallido al usuario y lo bloquea si llega al máximo. Si un bloqueo anterior ya
+     * venció, el conteo empieza de nuevo.
+     *
+     * @param identifier nombre de usuario o correo escrito en el login
+     * @param ip         dirección IP del cliente
+     */
+    private void registrarIntentoFallido(String identifier, String ip) {
+        User user = buscarUsuario(identifier);
+        if (user == null) {
+            auditService.log(AuditAction.LOGIN_FAIL, null, ip, "credenciales incorrectas");
+            return;
+        }
+
+        LocalDateTime ahora = LocalDateTime.now();
+        if (user.getLockedUntil() != null && user.getLockedUntil().isBefore(ahora)) {
+            user.setFailedAttempts(0);
+            user.setLockedUntil(null);
+        }
+
+        int intentos = user.getFailedAttempts() + 1;
+        user.setFailedAttempts(intentos);
+        auditService.log(AuditAction.LOGIN_FAIL, user.getId(), ip,
+                "credenciales incorrectas (intento " + intentos + " de " + MAX_INTENTOS_FALLIDOS + ")");
+
+        if (intentos >= MAX_INTENTOS_FALLIDOS) {
+            user.setLockedUntil(ahora.plusMinutes(MINUTOS_BLOQUEO));
+            auditService.log(AuditAction.ACCOUNT_LOCKED, user.getId(), ip,
+                    "bloqueada por " + MINUTOS_BLOQUEO + " minutos");
+        }
+
+        userRepo.save(user);
+    }
+
+    /** Busca un usuario por nombre de usuario o correo; devuelve null si no existe. */
+    private User buscarUsuario(String identifier) {
+        return userRepo.findByUsername(identifier)
                 .or(() -> userRepo.findByEmail(identifier.toLowerCase(Locale.ROOT)))
                 .orElse(null);
+    }
+
+    /** Busca el id de un usuario por nombre de usuario o correo; devuelve null si no existe. */
+    private Long buscarIdUsuario(String identifier) {
+        User user = buscarUsuario(identifier);
         return user == null ? null : user.getId();
     }
 
