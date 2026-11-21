@@ -1,171 +1,255 @@
+
 <section class="bloque">
 
-    <h1>Mis chats</h1>
-    <p>Mis conversaciones</p>
+    <div class="chats">
 
-    @if (error) {
-        <p class="error">{{ error }}</p>
-    }
+        <aside class="lista">
 
-    @if (cargando) {
-        <p>Cargando conversaciones...</p>
-    } @else {
+            <div class="titulo">
+                <h1>Mis chats</h1>
 
-        <div class="chats">
+                <button type="button"
+                        class="boton-chat adjuntar"
+                        (click)="irAContactos()">
+                    + Contactos
+                </button>
+            </div>
 
-            <div class="lista">
+            <input type="search"
+                   placeholder="Buscar conversación..."
+                   [(ngModel)]="busquedaChat">
 
-                <input type="text"
-                       placeholder="Buscar conversación..."
-                       [(ngModel)]="busqueda">
+            @for (contacto of contactos; track contacto.id) {
 
-                @for (item of filtrados; track item.id) {
+                @if ((contacto.nombre + ' ' + contacto.usuario).toLowerCase().includes(busquedaChat.trim().toLowerCase())) {
 
-                    <div class="chat"
-                         [class.activo]="item.id === seleccionado"
-                         (click)="seleccionarChat(item.id)">
+                    <button type="button"
+                            class="chat"
+                            [class.activo]="seleccionado?.id === contacto.id"
+                            (click)="abrirChat(contacto)">
 
                         <div class="avatar">
-                            {{ item.nombre.charAt(0) }}
+                            {{ contacto.nombre.charAt(0) }}
                         </div>
 
                         <div class="chat-datos">
-
-                            <strong>{{ item.nombre }}</strong>
-                            <p>{{ ultimoMensaje(item) }}</p>
-
+                            <strong>{{ contacto.nombre }}</strong>
+                            <small>{{ contacto.usuario }}</small>
                         </div>
 
-                    </div>
+                    </button>
                 }
 
-            </div>
+            } @empty {
+                <p class="texto">No tienes contactos todavía.</p>
+            }
 
-            @if (chat) {
+            @if (avisoContactos) {
+                <p class="error">{{ avisoContactos }}</p>
+            }
 
-                <div class="visor-chat">
+        </aside>
 
-                    <div class="cabecera-chat">
+        <div class="visor-chat">
 
-                        <div class="avatar">
-                            {{ chat.nombre.charAt(0) }}
+            @if (seleccionado) {
+
+                <div class="cabecera-chat">
+
+                    <div class="avatar">
+                        {{ seleccionado.nombre.charAt(0) }}
+                    </div>
+
+                    <div>
+                        <strong>{{ seleccionado.nombre }}</strong>
+                        <p>{{ seleccionado.usuario }}</p>
+                    </div>
+
+                </div>
+
+                <div class="mensajes">
+
+                    @for (mensaje of mensajes; track $index) {
+
+                        <div class="mensaje"
+                             [class.enviado]="mensaje.enviado"
+                             [class.recibido]="!mensaje.enviado">
+
+                            @if (mensaje.texto) {
+                                <p>{{ mensaje.texto }}</p>
+                            }
+
+                            @if (mensaje.archivo; as archivoMensaje) {
+
+                                <button type="button"
+                                        (click)="descargar(archivoMensaje)">
+                                    <i class="fa-solid fa-download"></i>
+                                    {{ archivoMensaje.name }}
+                                </button>
+
+                            }
+
                         </div>
 
-                        <strong>{{ chat.nombre }}</strong>
+                    } @empty {
 
-                    </div>
+                        <p class="texto">
+                            Aún no hay mensajes en esta conversación.
+                        </p>
 
-                    <!-- MENSAJES -->
+                    }
 
-                    <div class="mensajes">
+                </div>
 
-                        @for (mensaje of chat.mensajes; track mensaje.id) {
+                <div class="zona-camara"
+                     [hidden]="!videoCamara && !abriendoCamara">
 
-                            <div class="mensaje"
-                                 [class.enviado]="mensaje.enviado"
-                                 [class.recibido]="!mensaje.enviado">
+                    <video #video
+                           autoplay
+                           playsinline
+                           muted
+                           style="width: 100%; max-width: 400px;">
+                    </video>
 
-                                @if (mensaje.texto) {
-                                    <p>{{ mensaje.texto }}</p>
-                                }
-
-                                @for (adjunto of mensaje.adjuntos; track $index) {
-
-                                    <button type="button"
-                                            (click)="descargar(adjunto)">
-                                        Descargar {{ adjunto.nombre }}
-                                    </button>
-
-                                }
-
-                                <span>
-                                    {{ mensaje.fecha | date:'dd/MM HH:mm' }}
-                                </span>
-
-                            </div>
-                        }
-
-                    </div>
-
-                    <!-- CAMARA -->
-
-                    <div class="zona-camara" [hidden]="!camaraAbierta">
-
-                        <video #videoCamara
-                               autoplay
-                               playsinline
-                               muted>
-                        </video>
+                    <div class="botones-chat">
 
                         <button type="button"
-                                [disabled]="enviando"
-                                (click)="tomarFoto()">
-                            Tomar foto y enviar
+                                class="boton-chat foto"
+                                [disabled]="abriendoCamara"
+                                (click)="tomarFoto(video)">
+                            <i class="fa-solid fa-camera"></i>
+                            Tomar foto
                         </button>
 
                         <button type="button"
+                                class="boton-chat adjuntar"
                                 (click)="cerrarCamara()">
                             Cancelar
                         </button>
 
                     </div>
 
-                    <!-- ARCHIVOS ADJUNTOS -->
+                </div>
 
-                    <div class="adjuntos">
+                <div #panelGifs class="panel-gifs" hidden>
 
-                        @for (archivo of borrador.archivos; track $index) {
+                    <form class="buscar-gifs"
+                          (ngSubmit)="buscarGifs(termino.value)">
 
-                            <button type="button"
-                                    (click)="quitarArchivo($index)">
-                                {{ archivo.name }} X
-                            </button>
+                        <input #termino
+                               type="search"
+                               placeholder="Buscar GIF..."
+                               [disabled]="buscandoGif">
+
+                        <button type="submit"
+                                class="boton-chat enviar"
+                                [disabled]="buscandoGif">
+                            Buscar
+                        </button>
+
+                    </form>
+
+                    @if (avisoGif) {
+                        <p>{{ avisoGif }}</p>
+                    }
+
+                    <div class="lista-gifs">
+
+                        @for (gif of gifs; track gif.id) {
+
+                            <a [href]="gif.originalUrl"
+                               target="_blank"
+                               rel="noopener">
+
+                                <img [src]="gif.previewUrl"
+                                     [alt]="gif.title || 'GIF'"
+                                     width="120">
+
+                            </a>
 
                         }
 
                     </div>
 
-                    <!-- BARRA PARA ENVIAR -->
+                </div>
 
-                    <form class="barra-enviar" (ngSubmit)="enviar()">
+                @if (adjunto) {
 
-                        <input #selector
-                               type="file"
-                               hidden
-                               multiple
-                               (change)="adjuntar($event)">
+                    <div class="archivo-seleccionado">
+                        <i class="fa-solid fa-paperclip"></i>
+                        {{ adjunto.name }}
+                    </div>
 
-                        <button type="button"
-                                [disabled]="enviando"
-                                (click)="selector.click()">
-                            Adjuntar
-                        </button>
+                }
 
-                        <button type="button"
-                                [disabled]="camaraAbierta || abriendoCamara"
-                                (click)="abrirCamara()">
-                            Cámara
-                        </button>
+                <form class="barra-enviar"
+                      (ngSubmit)="enviar()">
 
-                        <input type="text"
-                               name="mensaje"
-                               placeholder="Escribe un mensaje..."
-                               [(ngModel)]="borrador.texto">
+                    <input #archivo
+                           type="file"
+                           hidden
+                           (change)="adjuntar(archivo)">
 
-                        <button type="submit"
-                                [disabled]="enviando || (!borrador.texto.trim() && !borrador.archivos.length)">
-                            Enviar
-                        </button>
+                    <button type="button"
+                            class="boton-chat adjuntar"
+                            title="Adjuntar archivo"
+                            [disabled]="enviando"
+                            (click)="archivo.click()">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </button>
 
-                    </form>
+                    <button type="button"
+                            class="boton-chat foto"
+                            title="Abrir cámara"
+                            [disabled]="enviando || abriendoCamara || !!videoCamara"
+                            (click)="abrirCamara(video)">
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
 
+                    <button type="button"
+                            class="boton-chat adjuntar"
+                            title="Buscar GIF"
+                            (click)="panelGifs.hidden = !panelGifs.hidden">
+                        GIF
+                    </button>
+
+                    <app-audiocomponent></app-audiocomponent>
+
+                    <input type="text"
+                           name="mensaje"
+                           placeholder="Escribe un mensaje..."
+                           [(ngModel)]="mensajeNuevo"
+                           [disabled]="enviando">
+
+                    <button type="submit"
+                            class="boton-chat enviar"
+                            [disabled]="enviando || (!mensajeNuevo.trim() && !adjunto)">
+
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Enviar
+
+                    </button>
+
+                </form>
+
+                @if (avisoMensaje) {
+                    <p class="error" role="status">
+                        {{ avisoMensaje }}
+                    </p>
+                }
+
+            } @else {
+
+                <div class="mensajes">
+                    <p class="texto">
+                        Selecciona una conversación para comenzar.
+                    </p>
                 </div>
 
             }
 
         </div>
 
-    }
+    </div>
 
 </section>
-

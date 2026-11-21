@@ -276,6 +276,28 @@ img {
     text-align: center;
 }
 
+.mensajes:has(.burbuja) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.burbuja {
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: #30343c;
+    color: white;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.burbuja.enviada {
+    align-self: flex-end;
+    background: #8f2038;
+}
+
 .mensajes > p::before {
     content: "💬";
     display: block;

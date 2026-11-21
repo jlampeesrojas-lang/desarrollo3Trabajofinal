@@ -1,3 +1,5 @@
+import { Contacto } from '../models/contacto';
+import { Mensaje } from '../models/chat';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
@@ -27,19 +29,28 @@ export class Chatsservice {
         return {headers};
     }
 
-    obtenerMensajes(idChat: string) {
-        return this.http.get<unknown[]>(
-            this.url + '/' + idChat,
-            this.obtenerOpciones()
+    listarChats() {
+        return this.http.get<{ id: number; participantes: Contacto[] }[]>(
+            'http://localhost:8080/chats/getall', this.obtenerOpciones()
         );
     }
 
-    enviarMensaje(idChat: string, texto: string) {
-        return this.http.post<unknown>(
-            `${this.url}/${idChat}`,
-            {texto: texto},
-            this.obtenerOpciones()
+    crearChat(contactoId: number) {
+        return this.http.post('http://localhost:8080/chats/createjson', { contactoId }, {
+            ...this.obtenerOpciones(), responseType: 'text'
+        });
+    }
+
+    obtenerMensajes(idChat: number) {
+        return this.http.get<Mensaje[]>(
+            'http://localhost:8080/chats/getmessages/' + idChat, this.obtenerOpciones()
         );
+    }
+
+    enviarMensaje(idChat: number, contenido: string) {
+        return this.http.post('http://localhost:8080/chats/sendmessage/' + idChat, { contenido }, {
+            ...this.obtenerOpciones(), responseType: 'text'
+        });
     }
 
     eliminarMensaje(idMensaje: string) {

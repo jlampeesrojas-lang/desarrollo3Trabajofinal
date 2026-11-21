@@ -19,7 +19,7 @@
             <button type="button"
                     class="fila-chat"
                     [class.activa]="!seleccionado"
-                    (click)="seleccionado = null">
+                    (click)="abrirChat(null)">
                 <img src="assets/ia.jpg" alt="">
 
                 <span>
@@ -34,7 +34,7 @@
                 <button type="button"
                         class="fila-chat"
                         [class.activa]="seleccionado?.id === c.id"
-                        (click)="seleccionado = c">
+                        (click)="abrirChat(c)">
                     <span class="inicial">{{ c.nombre.charAt(0) }}</span>
 
                     <span>
@@ -64,13 +64,24 @@
 
                 <div>
                     <strong>IA</strong>
-                    <p>Código: CH-IA0001</p>
+                    <p>Código: CH-IA00067</p>
                 </div>
             }
         </header>
 
         <div class="mensajes">
-            <p>Aún no hay mensajes.</p>
+            @for (mensaje of mensajes; track $index) {
+                <div class="burbuja" [class.enviada]="mensaje.enviado">
+                    @if (mensaje.texto) { <div>{{ mensaje.texto }}</div> }
+                    @if (mensaje.archivo; as archivoMensaje) {
+                        <button type="button" (click)="descargar(archivoMensaje)">
+                            Descargar {{ archivoMensaje.name }}
+                        </button>
+                    }
+                </div>
+            } @empty {
+                <p>A&uacute;n no hay mensajes.</p>
+            }
         </div>
 
         <div #panelGifs id="panel-gifs" hidden>
@@ -101,12 +112,21 @@
             }
         </div>
 
-        <div class="escribir">
+        <div [hidden]="!videoCamara">
+            <video #vistaCamara autoplay muted playsinline width="240" style="max-width: 100%"></video>
+            <button type="button" [disabled]="abriendoCamara || enviando" (click)="tomarFoto(vistaCamara)">
+                Tomar foto
+            </button>
+            <button type="button" (click)="cerrarCamara()">Cerrar</button>
+        </div>
+
+        <form class="escribir" (ngSubmit)="enviar()">
             <div class="adjuntos">
                 <button #botonMas
                         type="button"
                         class="boton-mas"
                         aria-label="Opciones de adjuntos"
+                        [disabled]="enviando || !seleccionado"
                         aria-controls="menu-adjuntos"
                         [attr.aria-expanded]="!menuAdjuntos.hidden"
                         (click)="panelGifs.hidden = true; menuAdjuntos.hidden = !menuAdjuntos.hidden">
@@ -115,7 +135,8 @@
 
                 <div #menuAdjuntos id="menu-adjuntos" class="menu-adjuntos" hidden>
                     <button type="button"
-                            (click)="menuAdjuntos.hidden = true; camara.click()">
+                            [disabled]="abriendoCamara || !!videoCamara"
+                            (click)="menuAdjuntos.hidden = true; abrirCamara(vistaCamara)">
                         Cámara
                     </button>
 
@@ -131,8 +152,7 @@
                     </button>
                 </div>
 
-                <input #camara type="file" accept="image/*" capture="environment" hidden>
-                <input #archivo type="file" hidden>
+                <input #archivo type="file" hidden (change)="adjuntar(archivo)">
             </div>
 
             <app-audiocomponent></app-audiocomponent>
@@ -140,9 +160,12 @@
             <input type="text"
                    aria-label="Mensaje"
                    placeholder="Escribe un mensaje..."
+                   name="mensaje" [disabled]="enviando"
                    [(ngModel)]="mensajeNuevo">
 
-            <button type="button" disabled>Enviar</button>
-        </div>
+            @if (adjunto) { <span>{{ adjunto.name }}</span> }
+            <button type="submit" [disabled]="!seleccionado || enviando || (!mensajeNuevo.trim() && !adjunto)">Enviar  67</button>
+        </form>
+        @if (avisoMensaje) { <p role="status">{{ avisoMensaje }}</p> }
     </section>
 </main>

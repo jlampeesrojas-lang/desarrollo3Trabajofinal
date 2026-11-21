@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { Paginaprincipalcomponent } from './paginaprincipalcomponent';
 import { Chatscomponent } from '../chatscomponent/chatscomponent';
 import { FormsModule } from '@angular/forms';
-import { ChatService } from '../../services/chatservice';
+import {Chatsservice} from "../../services/chatsservice";
 import { AuthService } from '../../services/authservice';
 import { Router } from '@angular/router';
 
@@ -18,7 +18,7 @@ describe('Paginaprincipalcomponent', () => {
             declarations: [Paginaprincipalcomponent, Chatscomponent],
             imports: [FormsModule],
             providers: [provideHttpClient(), provideRouter([]),
-                { provide: ChatService, useValue: { cargar: () => Promise.resolve([]) } }],
+                { provide: Chatsservice, useValue: { cargar: () => Promise.resolve([]) } }],
         }).compileComponents();
 
         fixture = TestBed.createComponent(Paginaprincipalcomponent);
