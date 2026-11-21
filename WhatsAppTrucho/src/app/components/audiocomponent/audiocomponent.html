@@ -1,0 +1,31 @@
+<button type="button"
+        class="microfono"
+        [class.activo]="grabando"
+        [disabled]="ocupado"
+        [attr.aria-label]="grabando ? 'Detener grabación' : 'Grabar audio'"
+        [title]="grabando ? 'Detener grabación' : 'Grabar audio'"
+        (click)="pulsarMicrofono()">
+
+    <span [style.display]="grabando ? 'none' : 'inline-flex'" aria-hidden="true">
+        <i class="fa-solid fa-microphone"></i>
+    </span>
+
+    <span [style.display]="grabando ? 'inline-flex' : 'none'" aria-hidden="true">
+        ■
+    </span>
+</button>
+
+@if (grabando || audioUrl || aviso) {
+    <div class="vista">
+        @if (grabando) {
+            <span role="status">Grabando… pulsa ■ para terminar.</span>
+        } @else if (audioUrl) {
+            <audio controls [src]="audioUrl" aria-label="Escuchar grabación"></audio>
+            <button type="button" (click)="borrar()">Borrar</button>
+        }
+
+        @if (aviso) {
+            <span role="status">{{ aviso }}</span>
+        }
+    </div>
+}

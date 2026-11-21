@@ -6,8 +6,9 @@ import {
     ChatAdmin, ClaveChat, EditarUsuario, MensajeAdmin, NuevoUsuario, RegistroAuditoria, UsuarioAdmin
 } from "../models/admin";
 
-const USAR_MOCK = true;
+const USAR_MOCK = false;
 
+/** Servicio que llama a los endpoints de administración: usuarios, auditoría y chats. */
 @Injectable({providedIn: "root"})
 export class AdminService {
 
@@ -23,7 +24,7 @@ export class AdminService {
             username: "thomas1",
             action: "MESSAGE_SENT",
             ip: "181.52.10.4",
-            location: "Bogotá, Colombia",
+            location: null,
             detail: "TEXTO",
             createdAt: "2026-11-15T10:30:00"
         },
@@ -89,6 +90,7 @@ export class AdminService {
     constructor(private http: HttpClient, private auth: AuthService) {
     }
 
+    /** Arma el encabezado Authorization con el token de la sesión. */
     private headers(): HttpHeaders {
         const token = this.auth.obtenerToken();
         if (token != null) {
@@ -97,6 +99,7 @@ export class AdminService {
         return new HttpHeaders();
     }
 
+    /** Pide al back la lista de usuarios. */
     listarUsuarios(): Observable<UsuarioAdmin[]> {
         if (USAR_MOCK) {
             return of(this.usuariosMock);
@@ -106,6 +109,7 @@ export class AdminService {
         });
     }
 
+    /** Envía al back los datos de un usuario nuevo. */
     crearUsuario(datos: NuevoUsuario): Observable<HttpResponse<string>> {
         if (USAR_MOCK) {
             const nuevo: UsuarioAdmin = {
@@ -125,6 +129,7 @@ export class AdminService {
         });
     }
 
+    /** Envía al back los cambios de un usuario. */
     actualizarUsuario(id: number, datos: EditarUsuario): Observable<HttpResponse<string>> {
         if (USAR_MOCK) {
             for (const u of this.usuariosMock) {
@@ -144,6 +149,7 @@ export class AdminService {
         });
     }
 
+    /** Pide al back eliminar un usuario por su id. */
     eliminarUsuario(id: number): Observable<HttpResponse<string>> {
         if (USAR_MOCK) {
             const quedan: UsuarioAdmin[] = [];
@@ -162,6 +168,15 @@ export class AdminService {
         });
     }
 
+    /** Consulta en el backend la ubicación aproximada de una dirección IP. */
+    ubicarIp(ip: string): Observable<{text: string}> {
+        return this.http.get<{text: string}>(`${API}/ip/ubicacion`, {
+            headers: this.headers(),
+            params: {ip}
+        });
+    }
+
+    /** Pide al back los últimos registros de auditoría. */
     listarAuditoria(limite: number): Observable<RegistroAuditoria[]> {
         if (USAR_MOCK) {
             return of(this.auditoriaMock);

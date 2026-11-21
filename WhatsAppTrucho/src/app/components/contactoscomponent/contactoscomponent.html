@@ -1,0 +1,103 @@
+<main class="pagina">
+    <header class="cabecera">
+        <h2><img src="icono.png" alt="Imagen logo" height="40" weight="40">Sigma Chat</h2>
+        <div class="acciones">
+            <button type="button" class="btn btn-outline" (click)="volver()">Volver</button>
+            <button type="button" class="btn btn-outline" (click)="salir()">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <section class="contenido">
+        <h1>Contactos</h1>
+        <p class="texto">Personas que has agregado. Puedes buscarlas por nombre de usuario o correo.</p>
+
+        @if (mensaje) {
+            <p class="ok">{{ mensaje }}</p>
+        }
+        @if (error) {
+            <p class="error">{{ error }}</p>
+        }
+
+        <div class="barra">
+            <input type="text" placeholder="Buscar contacto" [(ngModel)]="busqueda">
+            <button type="button" class="btn btn-primary" (click)="abrirAgregar()">Agregar contacto</button>
+        </div>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Usuario</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+                @if (cargando && contactos.length === 0) {
+                    <tr>
+                        <td colspan="3">Cargando contactos...</td>
+                    </tr>
+                }
+                @if (!cargando && contactosFiltrados().length === 0) {
+                    <tr>
+                        <td colspan="3">No hay contactos para mostrar</td>
+                    </tr>
+                }
+                @for (c of contactosFiltrados(); track c.id) {
+                    <tr>
+                        <td>{{ c.nombre }}</td>
+                        <td>{{ c.usuario }}</td>
+                        <td>
+                            <button type="button" class="btn btn-outline" (click)="pedirEliminar(c)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</main>
+
+@if (modalAbierto) {
+    <div class="modal-fondo">
+        <div class="ventana">
+            <h3>Agregar contacto</h3>
+
+            <div class="campo-form">
+                <label for="c-usuario">Usuario o correo</label>
+                <input id="c-usuario" type="text" [(ngModel)]="formulario.usuario"
+                       placeholder="Nombre de usuario o correo">
+            </div>
+
+            <div class="campo-form">
+                <label for="c-alias">Alias (opcional)</label>
+                <input id="c-alias" type="text" [(ngModel)]="formulario.alias"
+                       placeholder="Cómo quieres verlo en tu lista">
+            </div>
+
+            @if (errorModal) {
+                <p class="error">{{ errorModal }}</p>
+            }
+
+            <div class="acciones-modal">
+                <button type="button" class="btn btn-outline" (click)="cerrarModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" [disabled]="guardando"
+                        (click)="guardarContacto()">Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (contactoAEliminar) {
+    <div class="modal-fondo">
+        <div class="ventana">
+            <h3>Eliminar contacto</h3>
+            <p class="texto">¿Seguro que quieres eliminar a {{ contactoAEliminar.nombre }} de tus contactos?</p>
+            <div class="acciones-modal">
+                <button type="button" class="btn btn-outline" (click)="cancelarEliminar()">Cancelar</button>
+                <button type="button" class="btn btn-primary" [disabled]="eliminando"
+                        (click)="confirmarEliminar()">Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+}

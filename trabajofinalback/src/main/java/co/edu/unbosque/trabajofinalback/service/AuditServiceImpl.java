@@ -19,16 +19,28 @@ public class AuditServiceImpl implements AuditService {
 
   private final AuditLogRepository auditLogRepository;
 
-  public AuditServiceImpl(AuditLogRepository auditLogRepository) {
+  private final IpLocationService ipLocationService;
+
+  /**
+   * Crea el servicio que registra los eventos de auditoría.
+   *
+   * @param auditLogRepository repositorio que guarda los eventos
+   * @param ipLocationService servicio que consulta la ubicación aproximada de una IP
+   */
+  public AuditServiceImpl(
+      AuditLogRepository auditLogRepository, IpLocationService ipLocationService) {
     this.auditLogRepository = auditLogRepository;
+    this.ipLocationService = ipLocationService;
   }
 
+  /** Log. */
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void log(AuditAction action, Long userId, String ip, String detail) {
-    log(action, userId, ip, null, detail);
+    log(action, userId, ip, ipLocationService.textoUbicacion(ip), detail);
   }
 
+  /** Log. */
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void log(AuditAction action, Long userId, String ip, String location, String detail) {

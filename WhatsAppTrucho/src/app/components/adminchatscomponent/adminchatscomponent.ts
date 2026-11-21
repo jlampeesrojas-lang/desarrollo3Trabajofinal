@@ -1,10 +1,10 @@
 import {ChangeDetectorRef, Component, OnInit} from "@angular/core";
 import {Router} from "@angular/router";
 import {HttpErrorResponse} from "@angular/common/http";
-import {AuthService} from "../../services/authservice";
 import {AdminService} from "../../services/adminservice";
-import {ChatAdmin, ClaveChat, MensajeAdmin} from "../../models/admin";
+import {ChatAdmin, ClaveChat, MensajeAdmin, UsuarioAdmin} from "../../models/admin";
 
+/** Sección de chats del panel admin: lista los chats y muestra sus mensajes al ingresar la clave. */
 @Component({
     selector: "app-adminchatscomponent",
     standalone: false,
@@ -26,9 +26,11 @@ export class Adminchatscomponent implements OnInit {
     errorClave = "";
     textosMedia: { [tipo: string]: string } = {IMAGEN: "[Imagen]", AUDIO: "[Audio]"};
     separadorParticipantes = " y ";
+    usuarioInfo: UsuarioAdmin | null = null;
+    errorInfo = "";
+    infoAbierta = false;
 
-    constructor(private auth: AuthService, private admin: AdminService,
-                private router: Router, private cdr: ChangeDetectorRef) {
+    constructor(private admin: AdminService, private router: Router, private cdr: ChangeDetectorRef) {
     }
 
     /** Al abrir la sección se cargan los chats. */
@@ -39,9 +41,12 @@ export class Adminchatscomponent implements OnInit {
     /** Convierte un error HTTP en un texto para el usuario. 401 cierra la sesión y 403 avisa que no hay permiso. */
     mensajeDeError(fallo: HttpErrorResponse, mensajePorDefecto: string): string {
         if (fallo.status === 401) {
-            this.auth.cerrarSesion();
-            this.router.navigate(["/login"]);
+            this.router.navigate(["/error", "401"]);
             return "Tu sesión venció, inicia sesión de nuevo";
+        }
+        if (fallo.status === 403) {
+            this.router.navigate(["/error", "403"]);
+            return "No tienes permiso para hacer esto";
         }
         if (typeof fallo.error === "string" && fallo.error !== "") {
             return fallo.error;
@@ -51,9 +56,6 @@ export class Adminchatscomponent implements OnInit {
         }
         if (fallo.status === 0) {
             return "No se pudo conectar con el servidor";
-        }
-        if (fallo.status === 403) {
-            return "No tienes permiso para hacer esto";
         }
         return mensajePorDefecto;
     }
@@ -175,6 +177,51 @@ export class Adminchatscomponent implements OnInit {
         this.claveVisible = false;
     }
 
+    /** Cierra la ventana del chat y borra la clave y los mensajes. */
+    cerrarChat() {
+        this.chatSeleccionado = null;
+        this.bloquearChat();
+    }
+
+    /** Busca al usuario en la lista del back y abre la mini ventana con su información. */
+    verUsuario(nombre: string) {
+        this.usuarioInfo = null;
+        this.errorInfo = "";
+        this.admin.listarUsuarios().subscribe({
+            next: (lista: UsuarioAdmin[]) => {
+                for (const u of lista) {
+                    if (u.username === nombre) {
+                        this.usuarioInfo = u;
+                    }
+                }
+                if (this.usuarioInfo == null) {
+                    this.errorInfo = "No se encontró al usuario";
+                }
+                this.infoAbierta = true;
+                this.cdr.markForCheck();
+            },
+            error: (fallo: HttpErrorResponse) => {
+                this.errorInfo = this.mensajeDeError(fallo, "No se pudo cargar la información del usuario");
+                this.infoAbierta = true;
+                this.cdr.markForCheck();
+            },
+        });
+    }
+
+    /** Cierra la mini ventana de información. */
+    cerrarInfo() {
+        this.infoAbierta = false;
+        this.usuarioInfo = null;
+    }
+
+    /** Dice si el usuario de la mini ventana ya confirmó su correo. */
+    get estadoInfo(): string {
+        if (this.usuarioInfo != null && this.usuarioInfo.emailVerified) {
+            return "Correo verificado";
+        }
+        return "Correo sin verificar";
+    }
+
     /** Texto de un mensaje. Las imágenes y los audios se muestran con una etiqueta. */
     contenidoMensaje(mensaje: MensajeAdmin): string {
         const etiqueta = this.textosMedia[mensaje.type];
@@ -184,14 +231,17 @@ export class Adminchatscomponent implements OnInit {
         return mensaje.content;
     }
 
+    /** Indica si se debe mostrar el aviso de que el chat está cifrado. */
     get mostrarAvisoCifrado(): boolean {
         return !this.desbloqueado && !this.cargandoMensajes;
     }
 
+    /** Indica si el chat abierto no tiene mensajes para mostrar. */
     get mostrarChatVacio(): boolean {
         return this.desbloqueado && this.mensajes.length === 0;
     }
 
+    /** Tipo del campo de la clave: texto si se muestra, contraseña si se oculta. */
     get tipoCampoClave(): string {
         if (this.claveVisible) {
             return "text";

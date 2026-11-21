@@ -4,9 +4,12 @@ import co.edu.unbosque.trabajofinalback.dto.AuthResponseDTO;
 import co.edu.unbosque.trabajofinalback.dto.ConfirmEmailDTO;
 import co.edu.unbosque.trabajofinalback.dto.LoginDTO;
 import co.edu.unbosque.trabajofinalback.dto.MessageDTO;
+import co.edu.unbosque.trabajofinalback.dto.NuevaClaveDTO;
+import co.edu.unbosque.trabajofinalback.dto.RecuperarDTO;
 import co.edu.unbosque.trabajofinalback.dto.RefreshTokenDTO;
 import co.edu.unbosque.trabajofinalback.dto.RegisterDTO;
 import co.edu.unbosque.trabajofinalback.dto.ResendConfirmationDTO;
+import co.edu.unbosque.trabajofinalback.dto.VerificarCodigoDTO;
 import co.edu.unbosque.trabajofinalback.exception.PasswordNotValidException;
 import co.edu.unbosque.trabajofinalback.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +34,7 @@ public class AuthController {
 
   private final AuthService authService;
 
+  /** Crea el controlador con el servicio de autenticación. */
   public AuthController(AuthService authService) {
     this.authService = authService;
   }
@@ -40,11 +44,12 @@ public class AuthController {
     return request.getRemoteAddr();
   }
 
+  /** Registra un usuario nuevo y envía el correo de confirmación. */
   @Operation(
       summary = "Registrar usuario",
       description =
           "Crea la cuenta con rol USER y envía un correo de confirmación. "
-              + "Contraseña: mínimo 8 caracteres con minúscula, mayúscula, número y símbolo.")
+              + "Contraseña: mínimo 12 caracteres con minúscula, mayúscula, número y símbolo.")
   @PostMapping("/register")
   public ResponseEntity<MessageDTO> register(
       @Valid @RequestBody RegisterDTO dto, HttpServletRequest request)
@@ -54,6 +59,7 @@ public class AuthController {
         .body(new MessageDTO("Usuario registrado. Revisa tu correo para confirmar la cuenta."));
   }
 
+  /** Confirma el correo con el token del enlace. */
   @Operation(
       summary = "Confirmar correo",
       description = "Recibe el token del enlace del correo (un solo uso, vence en 24 horas).")
@@ -64,6 +70,7 @@ public class AuthController {
     return ResponseEntity.ok(new MessageDTO("Correo confirmado. Ya puedes iniciar sesión."));
   }
 
+  /** Reenvía el correo de confirmación. */
   @Operation(
       summary = "Reenviar correo de confirmación",
       description = "Responde igual exista o no el correo, para no revelar qué correos están registrados.")
@@ -75,6 +82,46 @@ public class AuthController {
         new MessageDTO("Si el correo existe y está pendiente de confirmar, recibirás un mensaje."));
   }
 
+  /** Envía un código de recuperación al correo indicado. */
+  @Operation(
+      summary = "Pedir código de recuperación",
+      description =
+          "Body: {\"correo\": \"...\"}. Envía un código de 6 dígitos (vence en 15 minutos). "
+              + "Responde igual exista o no el correo.")
+  @PostMapping("/recuperar")
+  public ResponseEntity<MessageDTO> recuperar(
+      @Valid @RequestBody RecuperarDTO dto, HttpServletRequest request) {
+    authService.requestPasswordReset(dto.getCorreo(), clientIp(request));
+    return ResponseEntity.ok(
+        new MessageDTO("Si el correo existe, recibirás un código para recuperar tu contraseña."));
+  }
+
+  /** Comprueba el código de recuperación sin gastarlo. */
+  @Operation(
+      summary = "Verificar código de recuperación",
+      description = "Body: {\"correo\": \"...\", \"codigo\": \"123456\"}. No gasta el código.")
+  @PostMapping("/verificar-codigo")
+  public ResponseEntity<MessageDTO> verificarCodigo(@Valid @RequestBody VerificarCodigoDTO dto) {
+    authService.verifyResetCode(dto.getCorreo(), dto.getCodigo());
+    return ResponseEntity.ok(new MessageDTO("Código correcto"));
+  }
+
+  /** Cambia la contraseña usando el correo y el código recibido. */
+  @Operation(
+      summary = "Cambiar la contraseña",
+      description =
+          "Body: {\"correo\", \"codigo\", \"clave\"}. La clave sigue la misma política del registro. "
+              + "Cierra todas las sesiones de la cuenta.")
+  @PostMapping("/nueva-clave")
+  public ResponseEntity<MessageDTO> nuevaClave(
+      @Valid @RequestBody NuevaClaveDTO dto, HttpServletRequest request)
+      throws PasswordNotValidException {
+    authService.resetPassword(
+        dto.getCorreo(), dto.getCodigo(), dto.getClave(), clientIp(request));
+    return ResponseEntity.ok(new MessageDTO("Contraseña actualizada. Ya puedes iniciar sesión."));
+  }
+
+  /** Inicia sesión y devuelve los tokens. */
   @Operation(
       summary = "Iniciar sesión",
       description =
@@ -86,6 +133,7 @@ public class AuthController {
     return ResponseEntity.ok(authService.login(dto, clientIp(request)));
   }
 
+  /** Renueva la sesión con un refresh token. */
   @Operation(
       summary = "Renovar sesión",
       description = "Cambia un refresh token por un access token nuevo y un refresh token nuevo (rotación).")
@@ -95,6 +143,7 @@ public class AuthController {
     return ResponseEntity.ok(authService.refresh(dto.getRefreshToken(), clientIp(request)));
   }
 
+  /** Cierra la sesión revocando el refresh token. */
   @Operation(summary = "Cerrar sesión", description = "Revoca el refresh token enviado.")
   @PostMapping("/logout")
   public ResponseEntity<MessageDTO> logout(

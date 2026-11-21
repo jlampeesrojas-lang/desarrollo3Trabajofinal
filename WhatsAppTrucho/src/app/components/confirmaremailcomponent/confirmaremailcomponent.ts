@@ -1,7 +1,9 @@
 import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
+import {HttpErrorResponse} from '@angular/common/http';
 import {ActivatedRoute, Router} from '@angular/router';
 import {AuthService} from '../../services/authservice';
 
+/** Pantalla a la que llega el enlace del correo para confirmar la cuenta. */
 @Component({
     selector: 'app-confirmaremail',
     standalone: false,
@@ -16,6 +18,7 @@ export class Confirmaremailcomponent implements OnInit {
                 private auth: AuthService, private cdr: ChangeDetectorRef) {
     }
 
+    /** Se ejecuta al iniciar el componente y carga los datos iniciales. */
     ngOnInit() {
         const token = this.route.snapshot.queryParamMap.get('token');
         if (token == null || token === '') {
@@ -30,7 +33,7 @@ export class Confirmaremailcomponent implements OnInit {
                 this.mensaje = 'Correo confirmado. Ya puedes iniciar sesión.';
                 this.cdr.markForCheck();
             },
-            error: (e: any) => {
+            error: (e: HttpErrorResponse) => {
                 this.estado = 'error';
                 if (e.error && e.error.mensaje) {
                     this.mensaje = e.error.mensaje;
@@ -42,6 +45,7 @@ export class Confirmaremailcomponent implements OnInit {
         });
     }
 
+    /** Lleva al usuario a la pantalla de inicio de sesión. */
     irAlLogin() {
         this.router.navigate(['/login']);
     }
