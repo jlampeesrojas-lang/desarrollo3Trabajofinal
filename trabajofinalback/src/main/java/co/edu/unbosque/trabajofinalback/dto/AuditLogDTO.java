@@ -3,85 +3,79 @@ package co.edu.unbosque.trabajofinalback.dto;
 /** Un registro de la auditoría, como lo muestra el panel de administración. */
 public class AuditLogDTO {
 
-  private Long id;
+	private Long id;
+	private Long userId;
+	private String username;
+	private String action;
+	private String ip;
+	private String location;
+	private String detail;
+	private String createdAt;
 
-  private Long userId;
+	public AuditLogDTO() {
+	}
 
-  private String username;
+	public Long getId() {
+		return id;
+	}
 
-  private String action;
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-  private String ip;
+	public Long getUserId() {
+		return userId;
+	}
 
-  private String location;
+	public void setUserId(Long userId) {
+		this.userId = userId;
+	}
 
-  private String detail;
+	public String getUsername() {
+		return username;
+	}
 
-  private String createdAt;
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-  public AuditLogDTO() {}
+	public String getAction() {
+		return action;
+	}
 
-  public Long getId() {
-    return id;
-  }
+	public void setAction(String action) {
+		this.action = action;
+	}
 
-  public void setId(Long id) {
-    this.id = id;
-  }
+	public String getIp() {
+		return ip;
+	}
 
-  public Long getUserId() {
-    return userId;
-  }
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
 
-  public void setUserId(Long userId) {
-    this.userId = userId;
-  }
+	public String getLocation() {
+		return location;
+	}
 
-  public String getUsername() {
-    return username;
-  }
+	public void setLocation(String location) {
+		this.location = location;
+	}
 
-  public void setUsername(String username) {
-    this.username = username;
-  }
+	public String getDetail() {
+		return detail;
+	}
 
-  public String getAction() {
-    return action;
-  }
+	public void setDetail(String detail) {
+		this.detail = detail;
+	}
 
-  public void setAction(String action) {
-    this.action = action;
-  }
+	public String getCreatedAt() {
+		return createdAt;
+	}
 
-  public String getIp() {
-    return ip;
-  }
-
-  public void setIp(String ip) {
-    this.ip = ip;
-  }
-
-  public String getLocation() {
-    return location;
-  }
-
-  public void setLocation(String location) {
-    this.location = location;
-  }
-
-  public String getDetail() {
-    return detail;
-  }
-
-  public void setDetail(String detail) {
-    this.detail = detail;
-  }
-
-  public String getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(String createdAt) {
-    this.createdAt = createdAt;
-  }
+	public void setCreatedAt(String createdAt) {
+		this.createdAt = createdAt;
+	}
 }

@@ -1,9 +1,11 @@
 package co.edu.unbosque.trabajofinalback.model;
 
-/** Tipo de mensaje. Los nombres coinciden con TipoMensaje del front (mensajemodel.ts). */
+/** Tipos de mensaje que se pueden guardar en una conversación. */
 public enum MessageType {
-  TEXTO,
-  IMAGEN,
-  AUDIO,
-  IA
+    TEXTO,
+    IMAGEN,
+    AUDIO,
+    IA,
+    ARCHIVO,
+    GIF
 }

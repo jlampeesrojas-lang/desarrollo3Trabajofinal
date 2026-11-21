@@ -45,8 +45,9 @@ public class SecurityConfig {
 	/**
 	 * Crea la configuración de seguridad de la aplicación.
 	 *
-	 * @param jwtAuthFilter filtro que valida el token JWT de las peticiones
-	 * @param userDetailsService servicio que carga los datos del usuario para la autenticación
+	 * @param jwtAuthFilter      filtro que valida el token JWT de las peticiones
+	 * @param userDetailsService servicio que carga los datos del usuario para la
+	 *                           autenticación
 	 */
 	public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService userDetailsService) {
 		this.jwtAuthFilter = jwtAuthFilter;
@@ -54,7 +55,8 @@ public class SecurityConfig {
 	}
 
 	/**
-	 * Configura la autenticación con JWT y los permisos de acceso a las rutas de la API.
+	 * Configura la autenticación con JWT y los permisos de acceso a las rutas de la
+	 * API.
 	 *
 	 * @param http configuración de seguridad HTTP de Spring
 	 * @return cadena de filtros que aplica las reglas de acceso a las peticiones
@@ -62,18 +64,14 @@ public class SecurityConfig {
 	 */
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.csrf(csrf -> csrf.disable()) // API sin cookies de sesión: se usa JWT en el header
-				.cors(Customizer.withDefaults())
-				.authorizeHttpRequests(auth -> auth.requestMatchers("/auth/**").permitAll() // registro, login,
-																							// confirmación, refresh y
-																							// logout
+		http.csrf(csrf -> csrf.disable()).cors(Customizer.withDefaults())
+				.authorizeHttpRequests(auth -> auth.requestMatchers("/auth/**").permitAll()
 						.requestMatchers("/", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/error")
-						.permitAll() // documentación y página de error
+						.permitAll()
 						.requestMatchers("/user/getall", "/user/count", "/user/exists/**", "/user/getbyid/**")
 						.hasAnyRole("USER", "ADMIN").requestMatchers("/gif/**").hasAnyRole("USER", "ADMIN")
-	                    .requestMatchers("/ip/**")
-	                    .hasRole("ADMIN")
-						.requestMatchers("/user/**", "/admin/**").hasRole("ADMIN").anyRequest().authenticated())
+						.requestMatchers("/ip/**").hasRole("ADMIN").requestMatchers("/user/**", "/admin/**")
+						.hasRole("ADMIN").anyRequest().authenticated())
 				.exceptionHandling(ex -> ex
 						.authenticationEntryPoint((req, res, e) -> writeJson(res, HttpServletResponse.SC_UNAUTHORIZED,
 								"No autorizado", "Token ausente, inválido o vencido"))
@@ -113,7 +111,8 @@ public class SecurityConfig {
 	}
 
 	/**
-	 * Configura el proveedor que carga al usuario y verifica su contraseña con BCrypt.
+	 * Configura el proveedor que carga al usuario y verifica su contraseña con
+	 * BCrypt.
 	 *
 	 * @return proveedor de autenticación configurado
 	 */

@@ -1,451 +1,417 @@
+import {Subscription} from 'rxjs';
+import type {Contacto} from '../../models/contacto';
+import type {MensajeHistorial} from '../../models/chat';
+import {AuthService} from '../../services/authservice';
+import {Chatsservice} from '../../services/chatsservice';
+import type {Gif} from '../../models/gif';
+import {GifService} from '../../services/gifservice';
 import {
+    ChangeDetectorRef,
     Component,
-    OnInit,
-    OnDestroy,
-    ViewChild,
-    ElementRef
+    Input,
+    OnChanges,
+    OnDestroy
 } from '@angular/core';
 
-import { AuthService } from '../../services/authservice';
-import { Chatsservice } from '../../services/chatsservice';
-
-/**
- * Componente de conversaciones.
- * Muestra la lista de chats, los mensajes del chat seleccionado y permite
- * enviar mensajes de texto, adjuntar archivos y tomar fotos con la cámara.
- */
 @Component({
     selector: 'app-chatscomponent',
     standalone: false,
     templateUrl: './chatscomponent.html',
     styleUrl: './chatscomponent.css'
 })
-export class Chatscomponent implements OnInit, OnDestroy {
+export class Chatscomponent implements OnChanges, OnDestroy {
 
-    /** Conversaciones disponibles con sus mensajes. */
-    chats: any[] = [
-        {
-            id: '1',
-            nombre: 'Mia',
-            mensajes: [
-                {
-                    id: '1',
-                    texto: 'Holaaa, ¿cómo estás?',
-                    enviado: false,
-                    fecha: new Date(),
-                    adjuntos: []
-                },
-                {
-                    id: '2',
-                    texto: 'Holaa, todo bien ¿y tú?',
-                    enviado: true,
-                    fecha: new Date(),
-                    adjuntos: []
-                },
-                {
-                    id: '3',
-                    texto: 'Bien jajaja, ¿qué haces?',
-                    enviado: false,
-                    fecha: new Date(),
-                    adjuntos: []
-                }
-            ]
-        },
-        {
-            id: '2',
-            nombre: 'Juan',
-            mensajes: [
-                {
-                    id: '4',
-                    texto: 'Parce, ¿ya hiciste el proyecto?',
-                    enviado: false,
-                    fecha: new Date(),
-                    adjuntos: []
-                },
-                {
-                    id: '5',
-                    texto: 'Todavía me falta terminarlo',
-                    enviado: true,
-                    fecha: new Date(),
-                    adjuntos: []
-                },
-                {
-                    id: '6',
-                    texto: 'Dale, me avisas',
-                    enviado: false,
-                    fecha: new Date(),
-                    adjuntos: []
-                }
-            ]
-        },
-        {
-            id: '3',
-            nombre: 'Carlos',
-            mensajes: [
-                {
-                    id: '7',
-                    texto: 'Ey, ¿vamos a jugar?',
-                    enviado: false,
-                    fecha: new Date(),
-                    adjuntos: []
-                },
-                {
-                    id: '8',
-                    texto: 'Dale, en un rato',
-                    enviado: true,
-                    fecha: new Date(),
-                    adjuntos: []
-                }
-            ]
-        }
-    ];
-
-    /** Indica si las conversaciones se están cargando. */
-    cargando = true;
-
-    /** Indica si hay un mensaje o una foto enviándose. */
+    @Input() contacto: Contacto | null = null;
+    chatId: number | null = null;
+    mensajes: MensajeHistorial[] = [];
+    texto = '';
+    archivo: File | null = null;
     enviando = false;
-
-    /** Mensaje de error que se muestra al usuario. */
-    error = '';
-
-    /** Identificador del chat seleccionado. */
-    seleccionado = '1';
-
-    /** Texto para filtrar las conversaciones por nombre. */
-    busqueda = '';
-
-    /** Nombre del usuario que inició sesión. */
-    usuario = '';
-
-    /** Borradores de cada chat (texto y archivos sin enviar), indexados por id del chat. */
-    borradores: any = {};
-
-    /** Indica si la cámara está abierta. */
+    panelGifAbierto = false;
+    buscandoGif = false;
+    resultadosGif: Gif[] = [];
+    avisoGif = '';
+    cargado = false;
+    aviso = '';
+    avisoEnvio = '';
     camaraAbierta = false;
+    usuario: string;
+    imagenes = new Map<number, string>();
+    menuAbierto = false;
+    vistaAudio = '';
 
-    /** Indica si la cámara se está abriendo. */
-    abriendoCamara = false;
+    private solicitudes = new Subscription();
+    private cargandoImagenes = new Set<number>();
+    private temporizador?: ReturnType<typeof setTimeout>;
+    private flujo: MediaStream | null = null;
+    private turnoCamara = 0;
 
-    /** Elemento de video donde se muestra la cámara. */
-    @ViewChild('videoCamara')
-    videoCamara!: ElementRef<HTMLVideoElement>;
-
-    /**
-     * Inicializa los servicios de autenticación y de chats.
-     *
-     * @param auth     Servicio de autenticación.
-     * @param servicio Servicio de chats, cámara y descargas.
-     */
     constructor(
+        private servicio: Chatsservice,
         private auth: AuthService,
-        private servicio: Chatsservice
-    ) {}
-
-    /**
-     * Carga el nombre del usuario que inició sesión.
-     */
-    ngOnInit() {
-        this.usuario = this.auth.obtenerUsuario() || 'Usuario';
-        this.cargando = false;
+        private cdr: ChangeDetectorRef,
+        private gifsApi: GifService
+    ) {
+        this.usuario = this.auth.obtenerUsuario() || '';
     }
 
-    /**
-     * Obtiene el chat seleccionado.
-     *
-     * @returns El chat seleccionado, o null si no existe.
-     */
-    get chat() {
-        for (const chat of this.chats) {
-            if (chat.id === this.seleccionado) {
-                return chat;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Filtra las conversaciones según el texto de búsqueda.
-     *
-     * @returns Las conversaciones cuyo nombre contiene el texto buscado.
-     */
-    get filtrados() {
-        return this.chats.filter(c =>
-            c.nombre.toLowerCase().includes(this.busqueda.toLowerCase())
-        );
-    }
-
-    /**
-     * Cambia la conversación seleccionada.
-     *
-     * @param id Identificador del chat que se desea abrir.
-     */
-    seleccionarChat(id: string) {
-        this.cerrarCamara();
-        this.seleccionado = id;
-        this.error = '';
-    }
-
-    /**
-     * Obtiene el borrador del chat seleccionado. Si no existe, lo crea vacío.
-     *
-     * @returns El borrador con el texto y los archivos sin enviar.
-     */
-    get borrador() {
-        if (!this.borradores[this.seleccionado]) {
-            this.borradores[this.seleccionado] = {
-                texto: '',
-                archivos: []
-            };
-        }
-        return this.borradores[this.seleccionado];
-    }
-
-    /**
-     * Obtiene el texto del último mensaje de una conversación.
-     *
-     * @param conversacion Conversación que se desea consultar.
-     * @returns El texto del último mensaje, 'Archivo adjunto' si no tiene texto,
-     *          o 'Sin mensajes' si la conversación está vacía.
-     */
-    ultimoMensaje(conversacion: { mensajes: { texto?: string | null }[] }) {
-        if (conversacion.mensajes.length === 0) {
-            return 'Sin mensajes';
-        }
-
-        const mensajes = conversacion.mensajes;
-        const ultimo = mensajes[mensajes.length - 1];
-
-        return ultimo.texto || 'Archivo adjunto';
-    }
-
-    /**
-     * Envía el mensaje del borrador (texto y archivos) al chat seleccionado
-     * y deja el borrador vacío.
-     */
-    enviar() {
-        const conversacion = this.chat;
-
-        if (conversacion === null || this.enviando) {
-            return;
-        }
-
-        const texto = this.borrador.texto.trim();
-
-        if (texto === '' && this.borrador.archivos.length === 0) {
-            return;
-        }
-
-        this.enviando = true;
-
-        const adjuntos: { nombre: string; archivo: File }[] = [];
-
-        for (const archivo of this.borrador.archivos) {
-            adjuntos.push({
-                nombre: archivo.name,
-                archivo
-            });
-        }
-
-        const mensaje = {
-            id: Date.now().toString() + Math.random().toString(),
-            texto,
-            enviado: true,
-            fecha: new Date(),
-            adjuntos
-        };
-
-        conversacion.mensajes.push(mensaje);
-
-        this.borradores[this.seleccionado] = {
-            texto: '',
-            archivos: []
-        };
-
-        this.error = '';
+    /** Abre el chat correspondiente al contacto elegido en la página principal. */
+    ngOnChanges(): void {
+        this.limpiar();
+        this.panelGifAbierto = false;
+        this.buscandoGif = false;
+        this.resultadosGif = [];
+        this.avisoGif = '';
+        this.chatId = null;
+        this.mensajes = [];
+        this.texto = '';
+        this.archivo = null;
+        this.cargado = false;
         this.enviando = false;
+        this.aviso = '';
+        this.avisoEnvio = '';
+
+        if (!this.contacto) {
+            return;
+        }
+
+        this.solicitudes.add(this.servicio.abrirChat(this.contacto.id).subscribe({
+            next: id => {
+                this.chatId = id;
+                this.leerMensajes(id);
+            },
+            error: error => {
+                this.aviso = 'No se pudo abrir la conversación.';
+                this.comprobarSesion(error.status);
+                this.cdr.markForCheck();
+            }
+        }));
     }
 
-    /**
-     * Agrega al borrador los archivos elegidos por el usuario.
-     *
-     * @param event Evento del campo de selección de archivos.
-     */
-    adjuntar(event: Event) {
-        const input = event.target as HTMLInputElement;
+    /** Consulta otra vez un segundo después de recibir la respuesta anterior. */
+    private leerMensajes(id: number): void {
+        this.solicitudes.add(this.servicio.obtenerMensajes(id).subscribe({
+            next: lista => {
+                this.mensajes = lista.slice().reverse();
+                this.cargado = true;
+                this.aviso = '';
+                this.actualizarImagenes();
+                this.cdr.markForCheck();
+                this.programarLectura(id);
+            },
+            error: error => {
+                this.aviso = 'No se pudo actualizar la conversación.';
+                this.comprobarSesion(error.status);
 
-        if (input.files) {
-            for (const file of input.files) {
-                this.borrador.archivos.push(file);
+                if (![401, 403, 404].includes(error.status)) {
+                    this.programarLectura(id);
+                }
+
+                this.cdr.markForCheck();
+            }
+        }));
+    }
+
+    private programarLectura(id: number): void {
+        this.temporizador = setTimeout(() => this.leerMensajes(id), 1000);
+    }
+
+    /** Carga cada imagen con autorización y reutiliza su URL en los refrescos. */
+    private actualizarImagenes(): void {
+        const visibles = new Set(this.mensajes.map(m => m.id));
+
+        for (const [id, url] of this.imagenes) {
+            if (!visibles.has(id)) {
+                URL.revokeObjectURL(url);
+                this.imagenes.delete(id);
             }
         }
 
-        input.value = '';
-    }
-
-    /**
-     * Quita un archivo del borrador.
-     *
-     * @param posicion Posición del archivo en la lista de archivos del borrador.
-     */
-    quitarArchivo(posicion: number) {
-        this.borrador.archivos.splice(posicion, 1);
-    }
-
-    /**
-     * Espera a que la cámara entregue imagen, revisando cada 100 ms
-     * hasta un máximo de 5 segundos.
-     *
-     * @param video Elemento de video de la cámara.
-     * @throws Error si la cámara no entrega imagen a tiempo.
-     */
-    private async esperarVideoListo(video: HTMLVideoElement) {
-        let intentos = 0;
-
-        while (
-            (video.videoWidth === 0 || video.videoHeight === 0 || video.readyState < 2)
-            && intentos < 50
+        for (const m of this.mensajes) {
+            if (
+                (m.tipo !== 'IMAGEN' && m.tipo !== 'AUDIO') ||
+                !m.mediaUrl ||
+                this.imagenes.has(m.id) ||
+                this.cargandoImagenes.has(m.id)
             ) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            intentos++;
-        }
-
-        if (video.videoWidth === 0 || video.videoHeight === 0) {
-            throw new Error('La cámara todavía no entrega imagen');
-        }
-    }
-
-    /**
-     * Abre la cámara y muestra la imagen en el elemento de video.
-     */
-    async abrirCamara() {
-        if (this.camaraAbierta || this.abriendoCamara) {
-            return;
-        }
-
-        this.abriendoCamara = true;
-        this.camaraAbierta = true;
-        this.error = '';
-
-        try {
-            await this.servicio.abrirCamara(
-                this.videoCamara.nativeElement
-            );
-        } catch (error) {
-            console.error('Error de cámara:', error);
-
-            this.cerrarCamara();
-
-            if (error instanceof Error) {
-                this.error = `Error de cámara: ${error.name} - ${error.message}`;
-            } else {
-                this.error = 'No se pudo abrir la cámara';
+                continue;
             }
-        } finally {
-            this.abriendoCamara = false;
+
+            this.cargandoImagenes.add(m.id);
+
+            this.solicitudes.add(this.servicio.obtenerArchivo(m.mediaUrl).subscribe({
+                next: blob => {
+                    this.cargandoImagenes.delete(m.id);
+                    if (this.mensajes.some(actual => actual.id === m.id)) {
+                        this.imagenes.set(m.id, URL.createObjectURL(blob));
+                    }
+                    this.cdr.markForCheck();
+                },
+                error: error => {
+                    this.cargandoImagenes.delete(m.id);
+                    this.comprobarSesion(error.status);
+                }
+            }));
         }
     }
 
-    /**
-     * Toma una foto con la cámara y la envía como adjunto al chat seleccionado.
-     */
-    async tomarFoto() {
-        if (this.enviando) {
-            return;
-        }
+    /** Selecciona una imagen o documento y permite elegir el mismo archivo otra vez. */
+    seleccionarArchivo(input: HTMLInputElement): void {
+        const elegido = input.files?.item(0);
+        input.value = '';
+        if (elegido) this.prepararAdjunto(elegido);
+    }
 
-        const conversacion = this.chat;
+    /** Envía el archivo seleccionado o el texto escrito. */
+    enviar(): void {
+        if (this.chatId === null || this.enviando) return;
 
-        if (!conversacion) {
-            this.error = 'No hay una conversación seleccionada';
-            return;
-        }
+        const contenido = this.texto.trim();
+        const adjunto = this.archivo;
+        if (!adjunto && !contenido) return;
 
-        const video = this.videoCamara.nativeElement;
-
-        if (video.videoWidth === 0 || video.videoHeight === 0) {
-            this.error = 'La cámara todavía no está lista';
-            return;
-        }
+        const peticion = adjunto
+            ? this.servicio.enviarArchivo(this.chatId, adjunto)
+            : this.servicio.enviarMensaje(this.chatId, contenido);
 
         this.enviando = true;
+        this.avisoEnvio = '';
 
-        try {
-            const canvas = document.createElement('canvas');
+        this.solicitudes.add(peticion.subscribe({
+            next: () => {
+                if (adjunto) {
+                    this.quitarAdjunto();
+                } else {
+                    this.texto = '';
+                }
+                this.enviando = false;
+                this.cdr.markForCheck();
+            },
+            error: error => {
+                this.enviando = false;
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+                if (error.status === 413) {
+                    this.avisoEnvio = 'El servidor rechazó el tamaño del archivo.';
+                } else if (error.status === 0) {
+                    this.avisoEnvio = 'Se perdió la conexión. Revisa el historial antes de reenviar.';
+                } else {
+                    let detalle = '';
 
-            const contexto = canvas.getContext('2d');
-
-            if (!contexto) {
-                throw new Error('No se pudo capturar la imagen');
-            }
-
-            contexto.drawImage(video, 0, 0);
-
-            const blob = await new Promise<Blob | null>(resolve => {
-                canvas.toBlob(resolve, 'image/jpeg', 0.85);
-            });
-
-            if (!blob) {
-                throw new Error('No se pudo crear la foto');
-            }
-
-            const foto = new File(
-                [blob],
-                `foto-${Date.now()}.jpg`,
-                { type: 'image/jpeg' }
-            );
-
-            conversacion.mensajes.push({
-                id: `${Date.now().toString()}${Math.random()}`,
-                texto: '',
-                enviado: true,
-                fecha: new Date(),
-                adjuntos: [
-                    {
-                        nombre: foto.name,
-                        archivo: foto
+                    if (typeof error.error === 'string') {
+                        try {
+                            const cuerpo = JSON.parse(error.error);
+                            detalle = cuerpo.message || cuerpo.mensaje || cuerpo.error || '';
+                        } catch {
+                            if (!error.error.trim().startsWith('<')) {
+                                detalle = error.error.trim().slice(0, 180);
+                            }
+                        }
                     }
-                ]
-            });
 
-            this.cerrarCamara();
-            this.error = '';
-        } catch (error) {
-            console.error('Error al tomar foto:', error);
+                    this.avisoEnvio = `Error ${error.status} al enviar. ${detalle}`.trim();
+                }
 
-            this.error = 'No se pudo tomar la fotografía';
-        } finally {
-            this.enviando = false;
-        }
+                this.comprobarSesion(error.status);
+                this.cdr.markForCheck();
+            }
+        }));
     }
 
-    /**
-     * Cierra la cámara y libera el dispositivo.
-     */
-    cerrarCamara() {
-        this.servicio.cerrarCamara(
-            this.videoCamara?.nativeElement
-        );
+    /** El HTML entrega directamente el elemento de video. */abrirCamara(video: HTMLVideoElement): void {
+        if (this.camaraAbierta) return;
 
+        if (!navigator.mediaDevices?.getUserMedia) {
+            this.avisoEnvio = 'La cámara necesita localhost o HTTPS.';
+            return;
+        }
+
+        this.camaraAbierta = true;
+        this.avisoEnvio = '';
+        const turno = ++this.turnoCamara;
+
+        navigator.mediaDevices.getUserMedia({
+            video: {facingMode: 'environment'},
+            audio: false
+        }).then(flujo => {
+            if (turno !== this.turnoCamara) {
+                flujo.getTracks().forEach(pista => pista.stop());
+                return;
+            }
+
+            this.flujo = flujo;
+            video.srcObject = flujo;
+            return video.play();
+        }).catch(() => {
+            if (turno !== this.turnoCamara) return;
+            this.cerrarCamara();
+            this.avisoEnvio = 'No se pudo abrir la cámara. Revisa el permiso del navegador.';
+            this.cdr.markForCheck();
+        });
+    }
+
+    /** Deja la foto lista para enviar como imagen JPEG. */
+    tomarFoto(video: HTMLVideoElement): void {
+        if (!video.videoWidth || !video.videoHeight) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const contexto = canvas.getContext('2d');
+        if (!contexto) return;
+
+        contexto.drawImage(video, 0, 0);
+        const turno = this.turnoCamara;
+
+        canvas.toBlob(blob => {
+            if (turno !== this.turnoCamara) return;
+
+            if (blob) {
+                this.prepararAdjunto(new File([blob], 'foto.jpg', {type: 'image/jpeg'}));
+            } else {
+                this.avisoEnvio = 'No se pudo guardar la foto.';
+            }
+
+            this.cerrarCamara();
+            this.cdr.markForCheck();
+        }, 'image/jpeg', 0.85);
+    }
+
+    cerrarCamara(): void {
+        this.turnoCamara++;
+        this.flujo?.getTracks().forEach(pista => pista.stop());
+        this.flujo = null;
         this.camaraAbierta = false;
     }
 
-    /**
-     * Descarga un archivo adjunto de un mensaje.
-     *
-     * @param adjunto Archivo adjunto con su nombre y contenido.
-     */
-    descargar(adjunto: any) {
-        this.servicio.descargar(adjunto);
+    /** Al pulsar el nombre se descarga el documento. */
+    descargar(mensaje: MensajeHistorial): void {
+        if (!mensaje.mediaUrl) return;
+
+        this.solicitudes.add(this.servicio.obtenerArchivo(mensaje.mediaUrl).subscribe({
+            next: blob => {
+                const url = URL.createObjectURL(blob);
+                const enlace = document.createElement('a');
+                enlace.href = url;
+                enlace.download = mensaje.contenido;
+                enlace.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            },
+            error: error => {
+                this.avisoEnvio = 'No se pudo descargar el archivo.';
+                this.comprobarSesion(error.status);
+                this.cdr.markForCheck();
+            }
+        }));
     }
 
-    /**
-     * Cierra la cámara al salir del componente.
-     */
-    ngOnDestroy() {
+    private comprobarSesion(estado: number): void {
+        if (estado === 401) this.auth.avisarVencimiento();
+    }
+
+    private limpiar(): void {
+        this.menuAbierto = false;
+        this.quitarAdjunto();
+        clearTimeout(this.temporizador);
+        this.solicitudes.unsubscribe();
+        this.solicitudes = new Subscription();
         this.cerrarCamara();
+
+        for (const url of this.imagenes.values()) {
+            URL.revokeObjectURL(url);
+        }
+
+        this.imagenes.clear();
+        this.cargandoImagenes.clear();
+    }
+
+    ngOnDestroy(): void {
+        this.limpiar();
+    }
+
+    /** Busca GIF para la conversación abierta. */
+    buscarGif(termino: string): void {
+        const consulta = termino.trim();
+
+        if (!consulta || this.buscandoGif || this.chatId === null) {
+            return;
+        }
+
+        this.buscandoGif = true;
+        this.avisoGif = '';
+        this.resultadosGif = [];
+
+        this.solicitudes.add(
+            this.gifsApi.buscar(consulta).subscribe({
+                next: encontrados => {
+                    this.resultadosGif = encontrados;
+                    this.buscandoGif = false;
+
+                    if (encontrados.length === 0) {
+                        this.avisoGif = 'No se encontraron GIFs.';
+                    }
+
+                    this.cdr.markForCheck();
+                },
+                error: error => {
+                    this.buscandoGif = false;
+                    this.avisoGif = 'No se pudieron buscar los GIFs.';
+                    this.comprobarSesion(error.status);
+                    this.cdr.markForCheck();
+                }
+            })
+        );
+    }
+
+    /** Envía el GIF seleccionado y cierra el buscador al recibir confirmación. */
+    enviarGif(gif: Gif): void {
+        if (this.chatId === null || this.enviando) {
+            return;
+        }
+
+        this.enviando = true;
+        this.avisoGif = '';
+
+        this.solicitudes.add(
+            this.servicio.enviarGif(this.chatId, gif.originalUrl).subscribe({
+                next: () => {
+                    this.enviando = false;
+                    this.panelGifAbierto = false;
+                    this.resultadosGif = [];
+                    this.cdr.markForCheck();
+                },
+                error: error => {
+                    this.enviando = false;
+                    this.avisoGif = 'No se pudo confirmar el envío del GIF.';
+                    this.comprobarSesion(error.status);
+                    this.cdr.markForCheck();
+                }
+            })
+        );
+    }
+
+    prepararAdjunto(elegido: File): void {
+        if (!elegido.size || elegido.size > 10 * 1024 * 1024) {
+            this.avisoEnvio = 'El archivo debe tener contenido y pesar máximo 10 MB.';
+            return;
+        }
+
+        this.quitarAdjunto();
+        this.archivo = elegido;
+        this.avisoEnvio = '';
+
+        if (elegido.type.startsWith('audio/')) {
+            this.vistaAudio = URL.createObjectURL(elegido);
+        }
+
+        this.cdr.markForCheck();
+    }
+
+    quitarAdjunto(): void {
+        if (this.vistaAudio) {
+            URL.revokeObjectURL(this.vistaAudio);
+        }
+        this.vistaAudio = '';
+        this.archivo = null;
     }
 }

@@ -84,6 +84,5 @@ public class ChatAdminDTO {
 		return "ChatAdminDTO [id=" + id + ", code=" + code + ", participants=" + participants + ", lastMessageAt="
 				+ lastMessageAt + ", messageCount=" + messageCount + "]";
 	}
-	
-	
+
 }
