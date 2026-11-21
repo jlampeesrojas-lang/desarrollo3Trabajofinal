@@ -2,27 +2,17 @@ package co.edu.unbosque.trabajofinalback.repository;
 
 import co.edu.unbosque.trabajofinalback.model.Chat;
 import java.util.List;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-/** Repositorio de chats. */
+/** Repositorio de conversaciones. */
 public interface ChatRepository extends JpaRepository<Chat, Long> {
 
-	/** Exists by code. */
-	boolean existsByCode(String code);
-	
-	/** Busca la conversación privada de IA de un usuario. */
-	Optional<Chat> findByAiOwnerId(Long aiOwnerId);
+    boolean existsByCode(String code);
 
-	/** Todos los chats, los de actividad más reciente primero (panel admin). */
-	List<Chat> findAllByOrderByLastMessageAtDesc();
+    /** Busca la conversación personal de IA del usuario. */
+    Optional<Chat> findByAiOwnerId(Long aiOwnerId);
 
-	/** Find by code. */
-
-	/** Chats 1 a 1 que comparten los dos usuarios. */
-	@Query("select p1.chat from ChatParticipant p1, ChatParticipant p2 "
-			+ "where p1.chat = p2.chat and p1.user.id = :a and p2.user.id = :b")
-	List<Chat> findSharedChats(@Param("a") Long userA, @Param("b") Long userB);
+    /** Lista las conversaciones por actividad para el panel de administración. */
+    List<Chat> findAllByOrderByLastMessageAtDesc();
 }

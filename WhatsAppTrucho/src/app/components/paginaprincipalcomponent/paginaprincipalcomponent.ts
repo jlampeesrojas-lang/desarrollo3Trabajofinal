@@ -1,10 +1,11 @@
 import {ContactService} from "../../services/contactservice";
 import {Contacto} from "../../models/contacto";
 import {GifService} from "../../services/gifservice";
-import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, OnInit, OnDestroy} from '@angular/core';
 import {Router} from '@angular/router';
 import {AuthService} from '../../services/authservice';
 import {Gif} from "../../models/gif";
+import {Subscription} from 'rxjs';
 
 /** Página principal: lista de chats, conversación, adjuntos, GIFs y audio. */
 @Component({
@@ -13,7 +14,7 @@ import {Gif} from "../../models/gif";
     styleUrl: './paginaprincipalcomponent.css',
     templateUrl: './paginaprincipalcomponent.html',
 })
-export class Paginaprincipalcomponent implements OnInit {
+export class Paginaprincipalcomponent implements OnInit, OnDestroy {
     seccion: 'chats' | 'ia' | 'contactos' = 'chats';
     contactos: Contacto[] = [];
     seleccionado: Contacto | null = null;
@@ -29,6 +30,8 @@ export class Paginaprincipalcomponent implements OnInit {
     busquedaContacto = '';
     mensajeContacto = '';
     errorContacto = '';
+    private temporizadorContactos?: ReturnType<typeof setTimeout>;
+    private solicitudContactos?: Subscription;
 
     /**
      * Inicializa los servicios de autenticación y navegación.
@@ -51,17 +54,40 @@ export class Paginaprincipalcomponent implements OnInit {
             return;
         }
         this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
-        this.contactosApi.listarContactos().subscribe({
+        this.cargarContactos();
+    }
+
+    /** Actualiza los contactos de la barra lateral. */
+    private cargarContactos(): void {
+        this.solicitudContactos = this.contactosApi.listarContactos().subscribe({
             next: lista => {
                 this.contactos = lista;
+                this.avisoContactos = '';
                 this.cdr.markForCheck();
+                this.programarCargaContactos();
             },
             error: fallo => {
-                if (fallo.status === 401) this.auth.avisarVencimiento();
-                else this.avisoContactos = 'No se pudieron cargar los contactos.';
+                if (fallo.status === 401) {
+                    this.auth.avisarVencimiento();
+                    return;
+                }
+
+                this.avisoContactos = 'No se pudieron actualizar los contactos.';
                 this.cdr.markForCheck();
+                this.programarCargaContactos();
             }
         });
+    }
+
+    /** Espera dos segundos antes de consultar la lista otra vez. */
+    private programarCargaContactos(): void {
+        this.temporizadorContactos = setTimeout(() => this.cargarContactos(), 2000);
+    }
+
+    /** Cancela el temporizador y la petición al salir de la pantalla. */
+    ngOnDestroy(): void {
+        clearTimeout(this.temporizadorContactos);
+        this.solicitudContactos?.unsubscribe();
     }
 
     /** Busca GIF con el texto ingresado y actualiza los resultados del chat. */

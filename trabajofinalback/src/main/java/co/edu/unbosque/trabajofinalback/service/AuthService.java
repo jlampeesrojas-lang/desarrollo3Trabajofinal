@@ -197,7 +197,7 @@ public class AuthService {
             return;
         }
 
-        emailTokenRepo.invalidatePending(user, TokenType.CONFIRM_EMAIL, LocalDateTime.now());
+        invalidarPendientes(user, TokenType.CONFIRM_EMAIL, LocalDateTime.now());
         sendConfirmation(user);
         auditService.log(AuditAction.CONFIRMATION_RESENT, user.getId(), ip, null);
     }
@@ -230,7 +230,7 @@ public class AuthService {
             return;
         }
 
-        emailTokenRepo.invalidatePending(user, TokenType.RESET_PASSWORD, LocalDateTime.now());
+        invalidarPendientes(user, TokenType.RESET_PASSWORD, LocalDateTime.now());
 
         // %06d conserva los ceros iniciales de códigos como 002731.
         String codigo = String.format("%06d", RANDOM.nextInt(LIMITE_CODIGO));
@@ -389,11 +389,16 @@ public class AuthService {
         userRepo.save(user);
     }
 
-    /** Busca un usuario por nombre de usuario o correo; devuelve null si no existe. */
+    /** Busca por nombre de usuario y, si hace falta, por correo. */
     private User buscarUsuario(String identifier) {
-        return userRepo.findByUsername(identifier)
-                .or(() -> userRepo.findByEmail(identifier.toLowerCase(Locale.ROOT)))
-                .orElse(null);
+        User usuario = userRepo.findByUsername(identifier).orElse(null);
+
+        if (usuario == null) {
+            String correo = identifier.toLowerCase(Locale.ROOT);
+            usuario = userRepo.findByEmail(correo).orElse(null);
+        }
+
+        return usuario;
     }
 
     /** Busca el id de un usuario por nombre de usuario o correo; devuelve null si no existe. */
@@ -494,5 +499,14 @@ public class AuthService {
     /** Indica si un texto es null o solo tiene espacios. */
     private static boolean estaVacio(String texto) {
         return texto == null || texto.isBlank();
+    }
+    
+    /** Marca como usados los tokens pendientes del usuario y del tipo indicado. */
+    private void invalidarPendientes(User user, TokenType type, LocalDateTime ahora) {
+        for (EmailToken token : emailTokenRepo.findByUserAndTypeAndUsedAtIsNull(user, type)) {
+            token.setUsedAt(ahora);
+        }
+
+        emailTokenRepo.flush();
     }
 }

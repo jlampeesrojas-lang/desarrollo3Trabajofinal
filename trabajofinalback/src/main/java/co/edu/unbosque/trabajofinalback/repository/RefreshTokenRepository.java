@@ -2,23 +2,34 @@ package co.edu.unbosque.trabajofinalback.repository;
 
 import co.edu.unbosque.trabajofinalback.model.RefreshToken;
 import co.edu.unbosque.trabajofinalback.model.User;
+import jakarta.persistence.LockModeType;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.transaction.annotation.Transactional;
 
-/** Repositorio de refresh tokens. */
+/** Repositorio de tokens de renovación de sesión. */
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
-  /** Borra todas las sesiones de un usuario (antes de eliminarlo). */
-  void deleteByUser(User user);
+	void deleteByUser(User user);
 
-  /** Busca un refresh token por el hash SHA-256 del valor entregado al cliente. */
-  Optional<RefreshToken> findByTokenHash(String tokenHash);
+	Optional<RefreshToken> findByTokenHash(String tokenHash);
 
-  /** Revoca todas las sesiones de un usuario (cierre global o reuso sospechoso de un token). */
-  @Modifying(clearAutomatically = true, flushAutomatically = true)
-  @Query("update RefreshToken r set r.revoked = true where r.user = :user and r.revoked = false")
-  int revokeAllByUser(@Param("user") User user);
+	/** Obtiene los tokens de renovación que siguen activos. */
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	List<RefreshToken> findByUserAndRevokedFalse(User user);
+
+	/** Revoca las sesiones activas del usuario. */
+	@Transactional
+	default int revokeAllByUser(User user) {
+		List<RefreshToken> activos = findByUserAndRevokedFalse(user);
+
+		for (RefreshToken token : activos) {
+			token.setRevoked(true);
+		}
+
+		flush();
+		return activos.size();
+	}
 }

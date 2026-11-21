@@ -393,7 +393,7 @@ export class Admincomponent implements OnInit {
         this.cargandoAuditoria = true;
         this.errorAuditoria = "";
 
-        this.admin.listarAuditoria(200).subscribe({
+        this.admin.listarAuditoria(200, this.fechaAuditoria).subscribe({
             next: (lista: RegistroAuditoria[]) => {
                 if (lista == null) {
                     this.registros = [];

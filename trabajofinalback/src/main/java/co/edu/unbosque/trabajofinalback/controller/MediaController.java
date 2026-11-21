@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import co.edu.unbosque.trabajofinalback.service.ChatService;
 
 /** Permite enviar y recuperar adjuntos de una conversación. */
 @RestController
@@ -57,12 +58,13 @@ public class MediaController {
 	private final MessageRepository mensajes;
 	private final ChatCryptoService crypto;
 	private final MediaService mediaServ;
+	private final ChatService chatServ;
 
 	/**
 	 * Recibe las dependencias e inicializa el generador usado al cifrar archivos.
 	 */
 	public MediaController(AuthContext auth, ChatParticipantRepository participantes, MediaRepository archivos,
-			MessageRepository mensajes, ChatCryptoService crypto, MediaService mediaServ) {
+			MessageRepository mensajes, ChatCryptoService crypto, MediaService mediaServ, ChatService chatServ) {
 
 		this.auth = auth;
 		this.participantes = participantes;
@@ -70,6 +72,7 @@ public class MediaController {
 		this.mensajes = mensajes;
 		this.crypto = crypto;
 		this.mediaServ = mediaServ;
+		this.chatServ = chatServ;
 		this.random = new SecureRandom();
 	}
 
@@ -113,6 +116,7 @@ public class MediaController {
 		Message mensaje = new Message(chat, participante.getUser(), tipo, crypto.cifrar(llave, nombre),
 				adjunto.getId());
 		mensaje = mensajes.save(mensaje);
+		chatServ.agregarContactoAlRecibir(chatId, auth.getUserId());
 		chat.setLastMessageAt(mensaje.getCreatedAt());
 
 		return ResponseEntity.status(HttpStatus.CREATED).body("Archivo enviado.");

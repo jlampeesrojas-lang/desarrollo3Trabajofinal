@@ -100,6 +100,7 @@ public class MediaService {
             new Message(chat, p.getUser(), tipo, crypto.cifrar(llave, texto), media.getId()));
     chat.setLastMessageAt(m.getCreatedAt());
     chatRepo.save(chat);
+    chatServ.agregarContactoAlRecibir(chatId, userId);
 
     auditService.log(
         AuditAction.MESSAGE_SENT,
