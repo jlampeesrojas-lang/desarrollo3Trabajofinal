@@ -38,6 +38,7 @@ public class UserService implements CRUDOperation<UserDTO> {
     dto.setUsername(user.getUsername());
     dto.setEmail(user.getEmail());
     dto.setRole(user.getRole());
+    dto.setEmailVerified(user.isEmailVerified());
     return dto;
   }
 
