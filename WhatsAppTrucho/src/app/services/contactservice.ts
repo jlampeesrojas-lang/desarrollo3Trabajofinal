@@ -4,7 +4,7 @@ import {Observable, of, throwError} from "rxjs";
 import {API, AuthService} from "./authservice";
 import {Contacto, NuevoContacto} from "../models/contacto";
 
-const USAR_MOCK = true;
+const USAR_MOCK = false;
 
 /** Servicio que llama a los endpoints de contactos. */
 @Injectable({providedIn: "root"})

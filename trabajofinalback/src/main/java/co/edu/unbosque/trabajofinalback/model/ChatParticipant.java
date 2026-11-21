@@ -13,51 +13,78 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 
-/** Participante de un chat. Guarda hasta cuándo leyó, para calcular los mensajes no leídos. */
+/**
+ * Participante de un chat. Guarda hasta cuándo leyó, para calcular los mensajes
+ * no leídos.
+ */
 @Entity
-@Table(
-    name = "chat_participants",
-    uniqueConstraints =
-        @UniqueConstraint(name = "uk_chat_participants", columnNames = {"chat_id", "user_id"}))
+@Table(name = "chat_participants", uniqueConstraints = @UniqueConstraint(name = "uk_chat_participants", columnNames = {
+		"chat_id", "user_id" }))
 public class ChatParticipant {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "chat_id", nullable = false)
-  private Chat chat;
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "chat_id", nullable = false)
+	private Chat chat;
 
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "user_id", nullable = false)
+	private User user;
 
-  @Column(name = "joined_at", nullable = false, updatable = false)
-  private LocalDateTime joinedAt;
+	@Column(name = "joined_at", nullable = false, updatable = false)
+	private LocalDateTime joinedAt;
 
-  /** Última vez que el usuario marcó el chat como leído (null = nunca). */
-  @Column(name = "last_read_at")
-  private LocalDateTime lastReadAt;
+	/** Última vez que el usuario marcó el chat como leído (null = nunca). */
+	@Column(name = "last_read_at")
+	private LocalDateTime lastReadAt;
 
-  public ChatParticipant() {}
+	/** Constructor vacío. */
+	public ChatParticipant() {
+	}
 
-  public ChatParticipant(Chat chat, User user) {
-    this.chat = chat;
-    this.user = user;
-  }
+	/** Crea un ChatParticipant con sus datos. */
+	public ChatParticipant(Chat chat, User user) {
+		this.chat = chat;
+		this.user = user;
+	}
 
-  @PrePersist
-  void onCreate() {
-    if (joinedAt == null) {
-      joinedAt = LocalDateTime.now();
-    }
-  }
+	/** Asigna la fecha de creación justo antes de guardar. */
+	@PrePersist
+	void onCreate() {
+		if (joinedAt == null) {
+			joinedAt = LocalDateTime.now();
+		}
+	}
 
-  public Long getId() { return id; }
-  public Chat getChat() { return chat; }
-  public User getUser() { return user; }
-  public LocalDateTime getJoinedAt() { return joinedAt; }
-  public LocalDateTime getLastReadAt() { return lastReadAt; }
-  public void setLastReadAt(LocalDateTime lastReadAt) { this.lastReadAt = lastReadAt; }
+	public Long getId() {
+		return id;
+	}
+
+	/** Define el identificador (lo asigna la base de datos al guardar). */
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Chat getChat() {
+		return chat;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public LocalDateTime getJoinedAt() {
+		return joinedAt;
+	}
+
+	public LocalDateTime getLastReadAt() {
+		return lastReadAt;
+	}
+
+	public void setLastReadAt(LocalDateTime lastReadAt) {
+		this.lastReadAt = lastReadAt;
+	}
 }

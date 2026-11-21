@@ -4,7 +4,9 @@
             <div class="titulo">
                 <h1>Chats</h1>
 
-                <button type="button" class="contactos" (click)="irAContactos()">
+                <button type="button"
+                        class="contactos"
+                        (click)="irAContactos()">
                     + Añadir contactos
                 </button>
             </div>
@@ -53,7 +55,9 @@
     <section class="conversacion" aria-label="Conversación seleccionada">
         <header class="cabecera">
             @if (seleccionado) {
-                <span class="inicial">{{ seleccionado.nombre.charAt(0) }}</span>
+                <span class="inicial">
+                    {{ seleccionado.nombre.charAt(0) }}
+                </span>
 
                 <div>
                     <strong>{{ seleccionado.nombre }}</strong>
@@ -69,80 +73,89 @@
             }
         </header>
 
-        <div class="mensajes">
-            <p>Aún no hay mensajes.</p>
-        </div>
-
-        <div #panelGifs id="panel-gifs" hidden>
-            <form class="escribir buscar-gifs" (ngSubmit)="buscarGifs(termino.value)">
-                <input #termino
-                       type="search"
-                       placeholder="Buscar GIF"
-                       aria-label="Buscar GIF"
-                       [disabled]="buscandoGif">
-
-                <button type="submit" [disabled]="buscandoGif">
-                    {{ buscandoGif ? 'Buscando…' : 'Buscar GIF' }}
-                </button>
-            </form>
-
-            @if (avisoGif) {
-                <p class="aviso-gif" role="status">{{ avisoGif }}</p>
-            }
-
-            @if (gifs.length > 0) {
-                <div class="lista-gifs">
-                    @for (gif of gifs; track gif.id) {
-                        <a [href]="gif.originalUrl" target="_blank" rel="noopener">
-                            <img [src]="gif.previewUrl" [alt]="gif.title || 'Ver GIF'">
-                        </a>
-                    }
-                </div>
-            }
-        </div>
-
-        <div class="escribir">
-            <div class="adjuntos">
-                <button #botonMas
-                        type="button"
-                        class="boton-mas"
-                        aria-label="Opciones de adjuntos"
-                        aria-controls="menu-adjuntos"
-                        [attr.aria-expanded]="!menuAdjuntos.hidden"
-                        (click)="panelGifs.hidden = true; menuAdjuntos.hidden = !menuAdjuntos.hidden">
-                    <i class="fa-solid fa-plus"></i>
-                </button>
-
-                <div #menuAdjuntos id="menu-adjuntos" class="menu-adjuntos" hidden>
-                    <button type="button"
-                            (click)="menuAdjuntos.hidden = true; camara.click()">
-                        Cámara
-                    </button>
-
-                    <button type="button"
-                            (click)="menuAdjuntos.hidden = true; archivo.click()">
-                        Archivo
-                    </button>
-
-                    <button type="button"
-                            aria-controls="panel-gifs"
-                            (click)="menuAdjuntos.hidden = true; panelGifs.hidden = false; termino.focus()">
-                        GIF
-                    </button>
-                </div>
-
-                <input #camara type="file" accept="image/*" capture="environment" hidden>
-                <input #archivo type="file" hidden>
+        @if (seleccionado) {
+            <app-chatscomponent [contacto]="seleccionado"></app-chatscomponent>
+        } @else {
+            <div class="mensajes">
+                <p>Aún no hay mensajes.</p>
             </div>
 
-            <app-audiocomponent></app-audiocomponent>
+            <div #panelGifs id="panel-gifs" hidden>
+                <form class="escribir buscar-gifs"
+                      (ngSubmit)="buscarGifs(termino.value)">
+                    <input #termino
+                           type="search"
+                           placeholder="Buscar GIF"
+                           aria-label="Buscar GIF"
+                           [disabled]="buscandoGif">
 
-            <input type="text"
-                   aria-label="Mensaje"
-                   placeholder="Escribe un mensaje..."
-                   [(ngModel)]="mensajeNuevo">
+                    <button type="submit" [disabled]="buscandoGif">
+                        {{ buscandoGif ? 'Buscando…' : 'Buscar GIF' }}
+                    </button>
+                </form>
 
-            <button type="button" disabled>Enviar</button>
-        </div>
+                @if (avisoGif) {
+                    <p class="aviso-gif" role="status">{{ avisoGif }}</p>
+                }
+
+                @if (gifs.length > 0) {
+                    <div class="lista-gifs">
+                        @for (gif of gifs; track gif.id) {
+                            <a [href]="gif.originalUrl"
+                               target="_blank"
+                               rel="noopener">
+                                <img [src]="gif.previewUrl"
+                                     [alt]="gif.title || 'Ver GIF'">
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="escribir">
+                <div class="adjuntos">
+                    <button type="button"
+                            class="boton-mas"
+                            aria-label="Opciones de adjuntos"
+                            aria-controls="menu-adjuntos"
+                            [attr.aria-expanded]="!menuAdjuntos.hidden"
+                            (click)="panelGifs.hidden = true; menuAdjuntos.hidden = !menuAdjuntos.hidden">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+
+                    <div #menuAdjuntos id="menu-adjuntos"
+                         class="menu-adjuntos" hidden>
+                        <button type="button"
+                                (click)="menuAdjuntos.hidden = true; camara.click()">
+                            Cámara
+                        </button>
+
+                        <button type="button"
+                                (click)="menuAdjuntos.hidden = true; archivo.click()">
+                            Archivo
+                        </button>
+
+                        <button type="button"
+                                aria-controls="panel-gifs"
+                                (click)="menuAdjuntos.hidden = true; panelGifs.hidden = false; termino.focus()">
+                            GIF
+                        </button>
+                    </div>
+
+                    <input #camara type="file" accept="image/*"
+                           capture="environment" hidden>
+                    <input #archivo type="file" hidden>
+                </div>
+
+                <app-audiocomponent></app-audiocomponent>
+
+                <input type="text"
+                       aria-label="Mensaje"
+                       placeholder="Escribe un mensaje..."
+                       [(ngModel)]="mensajeNuevo">
+
+                <button type="button" disabled>Enviar</button>
+            </div>
+        }
     </section>
 </main>

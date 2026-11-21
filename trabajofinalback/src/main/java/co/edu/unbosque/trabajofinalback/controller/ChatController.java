@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Chats y mensajes del usuario que inició sesión. Requiere token JWT. */
+/** Chats y mensajes del usuario que inició sesión. */
 @RestController
 @RequestMapping("/chats")
 @Transactional
@@ -31,162 +31,168 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Chats", description = "Chats 1 a 1 y mensajes cifrados")
 public class ChatController {
 
-  @Autowired private ChatService chatServ;
+    @Autowired
+    private ChatService chatServ;
 
-  @Autowired private AuthContext authContext;
+    @Autowired
+    private AuthContext authContext;
 
-  public ChatController() {}
-
-  /**
-   * Crea un chat con un contacto a partir de los datos JSON proporcionados.
-   */
-  @Operation(
-      summary = "Crear chat con un contacto",
-      description = "Body: {\"contactoId\": 1}. Genera un código único y una llave AES propia.")
-  @PostMapping(path = "/createjson", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<String> createNewWithJSON(@RequestBody ChatDTO newChat) {
-    int status = chatServ.create(authContext.getUserId(), newChat);
-
-    if (status == 0) {
-      return new ResponseEntity<>(
-          "Chat creado exitosamente. Id: " + newChat.getId() + ", código: " + newChat.getCodigo(),
-          HttpStatus.CREATED);
-    } else if (status == 1) {
-      return new ResponseEntity<>("El usuario no existe", HttpStatus.NOT_FOUND);
-    } else if (status == 2) {
-      return new ResponseEntity<>("No puedes crear un chat contigo mismo", HttpStatus.BAD_REQUEST);
-    } else if (status == 3) {
-      return new ResponseEntity<>(
-          "Primero agrega a este usuario a tus contactos", HttpStatus.BAD_REQUEST);
-    } else {
-      return new ResponseEntity<>(
-          "Ya tienes un chat con este contacto. Id: "
-              + newChat.getId()
-              + ", código: "
-              + newChat.getCodigo(),
-          HttpStatus.NOT_ACCEPTABLE);
+    /** Crea el controlador de conversaciones. */
+    public ChatController() {
     }
-  }
 
-  @Operation(summary = "Listar mis chats", description = "El de actividad más reciente primero")
-  @GetMapping("/getall")
-  public ResponseEntity<List<ChatDTO>> getAll() {
-    List<ChatDTO> chats = chatServ.getAllByUser(authContext.getUserId());
-    return new ResponseEntity<>(chats, HttpStatus.OK);
-  }
+    /** Crea una conversación con un contacto del usuario autenticado. */
+    @Operation(summary = "Crear chat con un contacto",
+            description = "Body: {\"contactoId\": 1}. Genera un código y una llave para el chat.")
+    @PostMapping(path = "/createjson", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createNewWithJSON(@RequestBody ChatDTO newChat) {
+        int status = chatServ.create(authContext.getUserId(), newChat);
 
-  @Operation(summary = "Ver un chat", description = "403 si no participas, 404 si no existe")
-  @GetMapping("/getbyid/{id}")
-  public ResponseEntity<ChatDTO> getById(@PathVariable Long id) {
-    int acceso = chatServ.checkAccess(authContext.getUserId(), id);
-    if (acceso == 1) {
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-    } else if (acceso == 2) {
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        if (status == 0) {
+            return new ResponseEntity<>(
+                    "Chat creado exitosamente. Id: " + newChat.getId()
+                            + ", código: " + newChat.getCodigo(),
+                    HttpStatus.CREATED);
+        }
+        if (status == 1) {
+            return new ResponseEntity<>("El usuario no existe", HttpStatus.NOT_FOUND);
+        }
+        if (status == 2) {
+            return new ResponseEntity<>("No puedes crear un chat contigo mismo",
+                    HttpStatus.BAD_REQUEST);
+        }
+        if (status == 3) {
+            return new ResponseEntity<>("Primero agrega a este usuario a tus contactos",
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>(
+                "Ya tienes un chat con este contacto. Id: " + newChat.getId()
+                        + ", código: " + newChat.getCodigo(),
+                HttpStatus.NOT_ACCEPTABLE);
     }
-    ChatDTO chat = chatServ.getById(authContext.getUserId(), id);
-    return new ResponseEntity<>(chat, HttpStatus.OK);
-  }
 
-  /**
-   * Envía un mensaje de texto al chat indicado y devuelve el resultado de la operación.
-   */
-  @Operation(
-      summary = "Enviar mensaje de texto",
-      description = "Body: {\"contenido\": \"Hola\"}. Se guarda cifrado con la llave del chat.")
-  @PostMapping(path = "/sendmessage/{chatId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<String> sendMessage(
-      @PathVariable Long chatId,
-      @RequestBody ChatMessageDTO newMessage,
-      HttpServletRequest request) {
-    int status =
-        chatServ.sendMessage(
-            authContext.getUserId(), chatId, newMessage, request.getRemoteAddr());
-
-    if (status == 0) {
-      return new ResponseEntity<>("Mensaje enviado exitosamente", HttpStatus.CREATED);
-    } else if (status == 1) {
-      return new ResponseEntity<>("El chat no existe", HttpStatus.NOT_FOUND);
-    } else if (status == 2) {
-      return new ResponseEntity<>("No participas en este chat", HttpStatus.FORBIDDEN);
-    } else if (status == 3) {
-      return new ResponseEntity<>("El mensaje no puede estar vacío", HttpStatus.BAD_REQUEST);
-    } else {
-      return new ResponseEntity<>(
-          "El mensaje supera los 2000 caracteres", HttpStatus.BAD_REQUEST);
+    /** Lista los chats del usuario por actividad reciente. */
+    @Operation(summary = "Listar mis chats")
+    @GetMapping("/getall")
+    public ResponseEntity<List<ChatDTO>> getAll() {
+        return ResponseEntity.ok(chatServ.getAllByUser(authContext.getUserId()));
     }
-  }
 
-  /**
-   * Obtiene el historial paginado de mensajes de un chat si el usuario tiene acceso.
-   */
-  @Operation(
-      summary = "Historial de mensajes (paginado)",
-      description = "page 0 = los más recientes. size = mensajes por página (máx. 50)")
-  @GetMapping("/getmessages/{chatId}")
-  public ResponseEntity<List<ChatMessageDTO>> getMessages(
-      @PathVariable Long chatId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "20") int size) {
-    int acceso = chatServ.checkAccess(authContext.getUserId(), chatId);
-    if (acceso == 1) {
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-    } else if (acceso == 2) {
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    /** Consulta un chat al que pertenece el usuario. */
+    @Operation(summary = "Ver un chat")
+    @GetMapping("/getbyid/{id}")
+    public ResponseEntity<ChatDTO> getById(@PathVariable("id") Long id) {
+        Long userId = authContext.getUserId();
+        int acceso = chatServ.checkAccess(userId, id);
+
+        if (acceso == 1) {
+            return ResponseEntity.notFound().build();
+        }
+        if (acceso == 2) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(chatServ.getById(userId, id));
     }
-    List<ChatMessageDTO> mensajes = chatServ.getMessages(chatId, page, size);
-    return new ResponseEntity<>(mensajes, HttpStatus.OK);
-  }
 
-  @Operation(
-      summary = "Mensajes nuevos de un chat",
-      description = "Devuelve los mensajes con id mayor a afterId, del más antiguo al más reciente")
-  @GetMapping("/getnewmessages/{chatId}")
-  public ResponseEntity<List<ChatMessageDTO>> getNewMessages(
-      @PathVariable Long chatId, @RequestParam(defaultValue = "0") Long afterId) {
-    int acceso = chatServ.checkAccess(authContext.getUserId(), chatId);
-    if (acceso == 1) {
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-    } else if (acceso == 2) {
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    /** Guarda un texto o GIF y devuelve el mensaje confirmado al frontend. */
+    @Operation(summary = "Enviar un mensaje de texto o un GIF")
+    @PostMapping(path = "/sendmessage/{chatId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> sendMessage(
+            @PathVariable("chatId") Long chatId,
+            @RequestBody ChatMessageDTO newMessage,
+            HttpServletRequest request) {
+
+        int status = chatServ.sendMessage(
+                authContext.getUserId(), chatId, newMessage, request.getRemoteAddr());
+
+        if (status == 0) {
+            return new ResponseEntity<>(newMessage, HttpStatus.CREATED);
+        }
+        if (status == 1) {
+            return new ResponseEntity<>("El chat no existe", HttpStatus.NOT_FOUND);
+        }
+        if (status == 2) {
+            return new ResponseEntity<>("No participas en este chat", HttpStatus.FORBIDDEN);
+        }
+        if (status == 3) {
+            return ResponseEntity.badRequest().body("El mensaje no puede estar vacío");
+        }
+        if (status == 4) {
+            return ResponseEntity.badRequest().body("El mensaje supera los 2000 caracteres");
+        }
+        if (status == 5) {
+            return ResponseEntity.badRequest().body("El enlace del GIF no es válido");
+        }
+        return ResponseEntity.badRequest().body("Tipo de mensaje no permitido en esta ruta");
     }
-    List<ChatMessageDTO> nuevos = chatServ.getNewMessages(chatId, afterId);
-    return new ResponseEntity<>(nuevos, HttpStatus.OK);
-  }
 
-  @Operation(summary = "Mensajes enviados", description = "En todos los chats del usuario")
-  @GetMapping("/getsent")
-  public ResponseEntity<List<ChatMessageDTO>> getSent(
-      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-    List<ChatMessageDTO> enviados = chatServ.getSent(authContext.getUserId(), page, size);
-    return new ResponseEntity<>(enviados, HttpStatus.OK);
-  }
+    /** Obtiene una página del historial, con los mensajes recientes primero. */
+    @Operation(summary = "Historial de mensajes paginado")
+    @GetMapping("/getmessages/{chatId}")
+    public ResponseEntity<List<ChatMessageDTO>> getMessages(
+            @PathVariable("chatId") Long chatId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
 
-  @Operation(
-      summary = "Mensajes recibidos",
-      description = "En todos los chats del usuario. Con afterId solo trae los más recientes")
-  @GetMapping("/getreceived")
-  public ResponseEntity<List<ChatMessageDTO>> getReceived(
-      @RequestParam(defaultValue = "0") Long afterId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "20") int size) {
-    List<ChatMessageDTO> recibidos =
-        chatServ.getReceived(authContext.getUserId(), afterId, page, size);
-    return new ResponseEntity<>(recibidos, HttpStatus.OK);
-  }
-
-  /**
-   * Marca el chat como leído para el usuario autenticado.
-   */
-  @Operation(summary = "Marcar chat como leído")
-  @PutMapping("/markasread/{chatId}")
-  public ResponseEntity<String> markAsRead(@PathVariable Long chatId) {
-    int status = chatServ.markAsRead(authContext.getUserId(), chatId);
-
-    if (status == 0) {
-      return new ResponseEntity<>("Chat marcado como leído", HttpStatus.OK);
-    } else {
-      return new ResponseEntity<>("No participas en este chat", HttpStatus.NOT_FOUND);
+        int acceso = chatServ.checkAccess(authContext.getUserId(), chatId);
+        if (acceso == 1) {
+            return ResponseEntity.notFound().build();
+        }
+        if (acceso == 2) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(chatServ.getMessages(chatId, page, size));
     }
-  }
+
+    /** Obtiene los mensajes posteriores al último ID que tiene el cliente. */
+    @Operation(summary = "Mensajes nuevos de un chat")
+    @GetMapping("/getnewmessages/{chatId}")
+    public ResponseEntity<List<ChatMessageDTO>> getNewMessages(
+            @PathVariable("chatId") Long chatId,
+            @RequestParam(name = "afterId", defaultValue = "0") Long afterId) {
+
+        int acceso = chatServ.checkAccess(authContext.getUserId(), chatId);
+        if (acceso == 1) {
+            return ResponseEntity.notFound().build();
+        }
+        if (acceso == 2) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(chatServ.getNewMessages(chatId, afterId));
+    }
+
+    /** Lista los mensajes enviados por el usuario en sus conversaciones. */
+    @Operation(summary = "Mensajes enviados")
+    @GetMapping("/getsent")
+    public ResponseEntity<List<ChatMessageDTO>> getSent(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
+
+        return ResponseEntity.ok(chatServ.getSent(authContext.getUserId(), page, size));
+    }
+
+    /** Lista los mensajes recibidos por el usuario. */
+    @Operation(summary = "Mensajes recibidos")
+    @GetMapping("/getreceived")
+    public ResponseEntity<List<ChatMessageDTO>> getReceived(
+            @RequestParam(name = "afterId", defaultValue = "0") Long afterId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
+
+        return ResponseEntity.ok(
+                chatServ.getReceived(authContext.getUserId(), afterId, page, size));
+    }
+
+    /** Marca como leído el chat para el usuario que hizo la petición. */
+    @Operation(summary = "Marcar chat como leído")
+    @PutMapping("/markasread/{chatId}")
+    public ResponseEntity<String> markAsRead(@PathVariable("chatId") Long chatId) {
+        int status = chatServ.markAsRead(authContext.getUserId(), chatId);
+
+        if (status == 0) {
+            return ResponseEntity.ok("Chat marcado como leído");
+        }
+        return new ResponseEntity<>("No participas en este chat", HttpStatus.NOT_FOUND);
+    }
 }

@@ -19,12 +19,10 @@ export class Contactoscomponent implements OnInit {
     error = "";
     mensaje = "";
     busqueda = "";
-
     modalAbierto = false;
     formulario = {usuario: "", alias: ""};
     errorModal = "";
     guardando = false;
-
     contactoAEliminar: Contacto | null = null;
     eliminando = false;
 

@@ -73,6 +73,7 @@ public class AiService {
 
   @Autowired private AuditService auditService;
 
+  /** Constructor vacío. */
   public AiService() {}
 
   /**
@@ -174,11 +175,13 @@ public class AiService {
     return mensajes;
   }
 
+  /** Revisa que la clave de la API de Groq esté configurada. */
   private void validarClaveApi() throws AiApiException {
     if (apiKey == null || apiKey.isBlank()) {
       throw new AiApiException("Falta configurar la clave de la API de IA (GROQ_API_KEY).");
     }
   }
+  /** Arma la petición que se envía a Groq. */
   private HttpRequest crearSolicitudGroq(List<GroqMessageDTO> mensajes) {
     GroqRequestDTO cuerpo = new GroqRequestDTO(modelo, mensajes);
     if (modelo.startsWith("openai/gpt-oss")) {

@@ -28,3 +28,13 @@ export interface Chat {
     ultimoMensaje: Mensaje | null;
     noLeidos: number;
 }
+
+/** Datos del historial que devuelve ChatController. */
+export interface MensajeHistorial {
+    id: number;
+    remitenteNombre: string;
+    contenido: string;
+    tipo: string;
+    mediaUrl: string | null;
+    fechaEnvio: string;
+}

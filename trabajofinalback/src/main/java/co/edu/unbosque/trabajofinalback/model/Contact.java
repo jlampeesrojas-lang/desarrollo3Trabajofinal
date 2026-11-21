@@ -13,56 +13,74 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 
-
 @Entity
-@Table(
-    name = "contacts",
-    uniqueConstraints =
-        @UniqueConstraint(
-            name = "uk_contacts_owner_contact",
-            columnNames = {"owner_id", "contact_user_id"}))
+@Table(name = "contacts", uniqueConstraints = @UniqueConstraint(name = "uk_contacts_owner_contact", columnNames = {
+		"owner_id", "contact_user_id" }))
 public class Contact {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-  
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "owner_id", nullable = false)
-  private User owner;
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "owner_id", nullable = false)
+	private User owner;
 
-  
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "contact_user_id", nullable = false)
-  private User contactUser;
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "contact_user_id", nullable = false)
+	private User contactUser;
 
-  
-  @Column(length = 50)
-  private String alias;
+	@Column(length = 50)
+	private String alias;
 
-  @Column(name = "created_at", nullable = false, updatable = false)
-  private LocalDateTime createdAt;
+	@Column(name = "created_at", nullable = false, updatable = false)
+	private LocalDateTime createdAt;
 
-  public Contact() {}
+	/** Constructor vacío. */
+	public Contact() {
+	}
 
-  public Contact(User owner, User contactUser, String alias) {
-    this.owner = owner;
-    this.contactUser = contactUser;
-    this.alias = alias;
-  }
+	/** Crea un Contact con sus datos. */
+	public Contact(User owner, User contactUser, String alias) {
+		this.owner = owner;
+		this.contactUser = contactUser;
+		this.alias = alias;
+	}
 
-  @PrePersist
-  void onCreate() {
-    if (createdAt == null) {
-      createdAt = LocalDateTime.now();
-    }
-  }
+	/** Asigna la fecha de creación justo antes de guardar. */
+	@PrePersist
+	void onCreate() {
+		if (createdAt == null) {
+			createdAt = LocalDateTime.now();
+		}
+	}
 
-  public Long getId() { return id; }
-  public User getOwner() { return owner; }
-  public User getContactUser() { return contactUser; }
-  public String getAlias() { return alias; }
-  public void setAlias(String alias) { this.alias = alias; }
-  public LocalDateTime getCreatedAt() { return createdAt; }
+	public Long getId() {
+		return id;
+	}
+
+	/** Define el identificador (lo asigna la base de datos al guardar). */
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public User getOwner() {
+		return owner;
+	}
+
+	public User getContactUser() {
+		return contactUser;
+	}
+
+	public String getAlias() {
+		return alias;
+	}
+
+	public void setAlias(String alias) {
+		this.alias = alias;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
 }

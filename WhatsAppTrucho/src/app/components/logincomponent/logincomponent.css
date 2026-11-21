@@ -15,7 +15,9 @@
     font-family: "Segoe UI", Arial, sans-serif;
 }
 
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
 .login {
     min-height: 100%;
@@ -30,9 +32,8 @@
     align-items: center;
     padding: 40px;
     text-align: center;
-    background:
-            radial-gradient(circle at 85% 0%, rgba(232, 32, 58, 0.12), transparent 45%),
-            var(--fondo);
+    background: radial-gradient(circle at 85% 0%, rgba(232, 32, 58, 0.12), transparent 45%),
+    var(--fondo);
 }
 
 .hero-img {
@@ -71,9 +72,8 @@
     align-items: center;
     justify-content: center;
     padding: 40px 24px;
-    background:
-            radial-gradient(circle at 15% 100%, rgba(232, 32, 58, 0.07), transparent 45%),
-            linear-gradient(180deg, #181b20, var(--panel));
+    background: radial-gradient(circle at 15% 100%, rgba(232, 32, 58, 0.07), transparent 45%),
+    linear-gradient(180deg, #181b20, var(--panel));
     border-left: 1px solid var(--borde);
     box-shadow: -8px 0 32px rgba(0, 0, 0, 0.35);
 }
@@ -93,7 +93,9 @@
     animation: entrar 0.3s ease;
 }
 
-.form-ancho { max-width: 540px; }
+.form-ancho {
+    max-width: 540px;
+}
 
 .form h2 {
     margin: 0 0 8px;
@@ -120,7 +122,9 @@ input {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-input::placeholder { color: var(--suave); }
+input::placeholder {
+    color: var(--suave);
+}
 
 input:focus {
     outline: none;
@@ -128,7 +132,9 @@ input:focus {
     box-shadow: 0 0 0 3px rgba(232, 32, 58, 0.18);
 }
 
-input[type="date"] { color-scheme: dark; }
+input[type="date"] {
+    color-scheme: dark;
+}
 
 .etiqueta {
     margin: 4px 0 -4px 18px;
@@ -171,7 +177,9 @@ input:-webkit-autofill {
     transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
-.btn:hover { transform: translateY(-1px); }
+.btn:hover {
+    transform: translateY(-1px);
+}
 
 .btn:focus-visible {
     outline: none;
@@ -195,14 +203,18 @@ input:-webkit-autofill {
     color: #ff5c72;
 }
 
-.btn-outline:hover { background: rgba(232, 32, 58, 0.12); }
+.btn-outline:hover {
+    background: rgba(232, 32, 58, 0.12);
+}
 
 .btn-google {
     background: #fff;
     color: #333;
 }
 
-.btn-google:hover { background: #eee; }
+.btn-google:hover {
+    background: #eee;
+}
 
 .btn:disabled {
     opacity: 0.6;
@@ -220,7 +232,9 @@ input:-webkit-autofill {
     transition: color 0.15s ease;
 }
 
-.forgot:hover { color: #ff5c72; }
+.forgot:hover {
+    color: #ff5c72;
+}
 
 .texto {
     margin: 0 0 8px;
@@ -241,9 +255,13 @@ input:-webkit-autofill {
     animation: entrar 0.25s ease;
 }
 
-.error { color: #ff5c72; }
+.error {
+    color: #ff5c72;
+}
 
-.exito { color: #22c55e; }
+.exito {
+    color: #22c55e;
+}
 
 @keyframes entrar {
     from {
@@ -257,9 +275,23 @@ input:-webkit-autofill {
 }
 
 @media (max-width: 800px) {
-    .login { grid-template-columns: 1fr; }
-    .hero { display: none; }
-    .fila { grid-template-columns: 1fr; }
-    .panel { padding: 24px 16px; }
-    .form { padding: 24px 20px; }
+    .login {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        display: none;
+    }
+
+    .fila {
+        grid-template-columns: 1fr;
+    }
+
+    .panel {
+        padding: 24px 16px;
+    }
+
+    .form {
+        padding: 24px 20px;
+    }
 }

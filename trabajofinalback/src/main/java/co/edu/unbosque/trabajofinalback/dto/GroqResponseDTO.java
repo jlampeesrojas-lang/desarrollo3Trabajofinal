@@ -1,5 +1,6 @@
 package co.edu.unbosque.trabajofinalback.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** Respuesta de la API de Groq. Solo se leen los campos que usa este back. */
@@ -7,6 +8,7 @@ public class GroqResponseDTO {
 
   private List<GroqChoiceDTO> choices;
 
+  /** Constructor vacío. */
   public GroqResponseDTO() {}
 
   public List<GroqChoiceDTO> getChoices() {
@@ -14,6 +16,6 @@ public class GroqResponseDTO {
   }
 
   public void setChoices(List<GroqChoiceDTO> choices) {
-    this.choices = choices;
+    this.choices = choices == null ? new ArrayList<>() : new ArrayList<>(choices);
   }
 }

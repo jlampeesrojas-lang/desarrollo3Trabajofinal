@@ -9,8 +9,10 @@ public class GroqMessageDTO {
   private String role;
   private String content;
 
+  /** Constructor vacío. */
   public GroqMessageDTO() {}
 
+  /** Crea un GroqMessageDTO con sus datos. */
   public GroqMessageDTO(String role, String content) {
     this.role = role;
     this.content = content;
