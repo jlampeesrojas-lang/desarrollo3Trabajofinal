@@ -27,6 +27,10 @@ public class Chat {
 	/** Llave AES del chat (16 caracteres) cifrada con AESUtil.encrypt. */
 	@Column(name = "key_enc", nullable = false, length = 120)
 	private String keyEnc;
+	
+	/** Usuario al que pertenece esta conversación privada con la IA. */
+	@Column(name = "ai_owner_id", unique = true)
+	private Long aiOwnerId;
 
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
@@ -79,5 +83,10 @@ public class Chat {
 
 	public void setLastMessageAt(LocalDateTime lastMessageAt) {
 		this.lastMessageAt = lastMessageAt;
+	}
+	
+	/** Identifica al dueño de la conversación con la IA. */
+	public void setAiOwnerId(Long aiOwnerId) {
+	    this.aiOwnerId = aiOwnerId;
 	}
 }

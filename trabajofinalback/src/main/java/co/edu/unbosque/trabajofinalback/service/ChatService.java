@@ -62,6 +62,25 @@ public class ChatService {
     public ChatService() {
         this.random = new SecureRandom();
     }
+    
+    /** Abre el chat privado con la IA y lo crea la primera vez. */
+    public Long abrirChatIa(Long userId) {
+        User usuario = userRepo.buscarParaAbrirChatIa(userId).orElseThrow();
+
+        Optional<Chat> existente = chatRepo.findByAiOwnerId(userId);
+        if (existente.isPresent()) {
+            return existente.get().getId();
+        }
+
+        String llave = crypto.generarLlave();
+        Chat chat = new Chat(generarCodigo(), crypto.protegerLlave(llave));
+        chat.setAiOwnerId(userId);
+
+        chat = chatRepo.save(chat);
+        participantRepo.save(new ChatParticipant(chat, usuario));
+
+        return chat.getId();
+    }
 
     /**
      * Crea un chat entre el usuario y uno de sus contactos.
