@@ -5,6 +5,7 @@ public class GroqChoiceDTO {
 
   private GroqMessageDTO message;
 
+  /** Constructor vacío. */
   public GroqChoiceDTO() {}
 
   public GroqMessageDTO getMessage() {

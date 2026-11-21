@@ -34,14 +34,17 @@ public class Chat {
 	@Column(name = "last_message_at")
 	private LocalDateTime lastMessageAt;
 
+	/** Constructor vacío. */
 	public Chat() {
 	}
 
+	/** Crea un Chat con sus datos. */
 	public Chat(String code, String keyEnc) {
 		this.code = code;
 		this.keyEnc = keyEnc;
 	}
 
+	/** Asigna la fecha de creación justo antes de guardar. */
 	@PrePersist
 	void onCreate() {
 		if (createdAt == null) {

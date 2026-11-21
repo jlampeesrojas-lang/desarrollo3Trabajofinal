@@ -33,14 +33,17 @@ public class UserDTO {
 	/** Rol del usuario (USER, ADMIN). */
 	private Role role;
 
+	/** Constructor vacío. */
 	public UserDTO() {
 	}
 
+	/** Crea un UserDTO con sus datos. */
 	public UserDTO(String username, String password) {
 		this.username = username;
 		this.password = password;
 	}
 
+	/** Crea un UserDTO con sus datos. */
 	public UserDTO(String username, String password, Role role) {
 		this(username, password);
 		this.role = role;

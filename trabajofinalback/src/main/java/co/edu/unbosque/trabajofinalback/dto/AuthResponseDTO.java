@@ -13,9 +13,11 @@ public class AuthResponseDTO {
 	private String username;
 	private String role;
 
+	/** Constructor vacío. */
 	public AuthResponseDTO() {
 	}
 
+	/** Crea un AuthResponseDTO con sus datos. */
 	public AuthResponseDTO(String accessToken, String refreshToken, long expiresInSeconds, String username,
 			String role) {
 		this.accessToken = accessToken;

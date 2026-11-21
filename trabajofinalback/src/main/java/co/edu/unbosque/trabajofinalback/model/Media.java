@@ -50,9 +50,11 @@ public class Media {
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
+	/** Constructor vacío. */
 	public Media() {
 	}
 
+	/** Crea un Media con sus datos. */
 	public Media(Chat chat, User uploader, String mimeType, long sizeBytes, byte[] dataEnc) {
 		this.chat = chat;
 		this.uploader = uploader;
@@ -61,6 +63,7 @@ public class Media {
 		this.dataEnc = dataEnc;
 	}
 
+	/** Asigna la fecha de creación justo antes de guardar. */
 	@PrePersist
 	void onCreate() {
 		if (createdAt == null) {

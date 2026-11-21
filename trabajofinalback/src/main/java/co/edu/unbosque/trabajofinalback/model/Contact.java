@@ -36,15 +36,18 @@ public class Contact {
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
+	/** Constructor vacío. */
 	public Contact() {
 	}
 
+	/** Crea un Contact con sus datos. */
 	public Contact(User owner, User contactUser, String alias) {
 		this.owner = owner;
 		this.contactUser = contactUser;
 		this.alias = alias;
 	}
 
+	/** Asigna la fecha de creación justo antes de guardar. */
 	@PrePersist
 	void onCreate() {
 		if (createdAt == null) {

@@ -15,9 +15,11 @@ public class ChatMessageDTO {
 	private String mediaUrl;
 	private String fechaEnvio;
 
+	/** Constructor vacío. */
 	public ChatMessageDTO() {
 	}
 
+	/** Crea un ChatMessageDTO con sus datos. */
 	public ChatMessageDTO(String contenido) {
 		this.contenido = contenido;
 	}

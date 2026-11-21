@@ -51,9 +51,11 @@ public class Message {
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
+	/** Constructor vacío. */
 	public Message() {
 	}
 
+	/** Crea un Message con sus datos. */
 	public Message(Chat chat, User sender, MessageType type, String contentEnc, Long mediaId) {
 		this.chat = chat;
 		this.sender = sender;
@@ -62,6 +64,7 @@ public class Message {
 		this.mediaId = mediaId;
 	}
 
+	/** Asigna la fecha de creación justo antes de guardar. */
 	@PrePersist
 	void onCreate() {
 		if (createdAt == null) {

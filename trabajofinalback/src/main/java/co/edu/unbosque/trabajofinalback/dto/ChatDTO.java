@@ -16,9 +16,11 @@ public class ChatDTO {
 	private long noLeidos;
 	private String fechaCreacion;
 
+	/** Constructor vacío. */
 	public ChatDTO() {
 	}
 
+	/** Crea un ChatDTO con sus datos. */
 	public ChatDTO(Long contactoId) {
 		this.contactoId = contactoId;
 	}
