@@ -22,8 +22,6 @@ h1, h2, p {
     height: 100%;
 }
 
-/* MENÚ LATERAL */
-
 .menu {
     display: flex;
     flex-direction: column;
@@ -33,21 +31,23 @@ h1, h2, p {
     border-right: 1px solid #2a2d34;
 }
 
-.menu h2 {
+.menu h2, .tarjeta h2, .subtitulo {
     font-size: 1.1rem;
-    font-weight: 600;
+}
+
+.rol, .texto, .chat-datos small, .contacto-datos small {
+    color: #8b8f98;
 }
 
 .rol {
     margin-bottom: 20px;
-    color: #8b8f98;
     font-size: 0.8rem;
 }
 
-.menu nav {
+.menu nav, .menu-inferior {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
 .menu nav button {
@@ -62,42 +62,44 @@ h1, h2, p {
     transition: 0.2s;
 }
 
-.menu nav button:hover {
+.menu nav button:hover, .chat:hover {
     background: #1b1e23;
     color: #f5f6f7;
 }
 
-.menu nav button.activo {
+.menu nav button.activo, .chat.activo {
     background: rgba(232, 32, 58, 0.14);
     color: #e8203a;
 }
 
 .menu-inferior {
     margin-top: auto;
-    display: flex;
-    flex-direction: column;
     gap: 20px;
 }
 
-.perfil {
+.perfil, .cabecera-chat, .contacto {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.perfil {
     padding: 16px 0;
     border-top: 1px solid #2a2d34;
 }
 
-.perfil strong {
+.perfil strong, .chat-datos strong, .contacto-datos strong {
     font-size: 0.9rem;
 }
 
-.perfil p {
-    margin-top: 4px;
+.perfil p, .estado {
     color: #22c55e;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
 }
 
-/* CONTENIDO */
+.perfil p, .cabecera-chat p {
+    margin-top: 4px;
+}
 
 .contenido {
     min-width: 0;
@@ -115,16 +117,12 @@ h1, h2, p {
 
 .bloque h1 {
     font-size: 1.5rem;
-    font-weight: 600;
 }
 
 .texto {
     margin: 4px 0 20px;
-    color: #8b8f98;
     font-size: 0.9rem;
 }
-
-/* BOTONES E INPUTS */
 
 input {
     height: 44px;
@@ -133,7 +131,7 @@ input {
     border: 1px solid #2a2d34;
     border-radius: 22px;
     background: #0d0f12;
-    color: #f5f6f7;
+    color: white;
     font-size: 0.95rem;
     color-scheme: dark;
 }
@@ -169,20 +167,17 @@ input:focus {
 .btn-outline {
     background: transparent;
     border-color: #2a2d34;
-    color: #f5f6f7;
+    color: white;
 }
 
 .btn-outline:hover {
     border-color: #8b8f98;
 }
 
-button:disabled,
-input:disabled {
+button:disabled, input:disabled {
     opacity: 0.55;
     cursor: not-allowed;
 }
-
-/* CHATS */
 
 .chats {
     display: grid;
@@ -192,14 +187,17 @@ input:disabled {
     min-height: 0;
 }
 
+.lista, .visor-chat, .tarjeta, .contacto {
+    background: #15171b;
+    border: 1px solid #2a2d34;
+    border-radius: 16px;
+}
+
 .lista {
     display: flex;
     flex-direction: column;
     gap: 8px;
     padding: 16px;
-    background: #15171b;
-    border: 1px solid #2a2d34;
-    border-radius: 16px;
     overflow-y: auto;
 }
 
@@ -219,34 +217,22 @@ input:disabled {
     transition: 0.2s;
 }
 
-.chat:hover {
-    background: #1b1e23;
-}
-
 .chat.activo {
     border-color: #e8203a;
-    background: rgba(232, 32, 58, 0.14);
 }
 
-.chat-datos {
-    min-width: 0;
+.chat-datos, .contacto-datos {
     display: flex;
     flex-direction: column;
     gap: 5px;
-}
-
-.chat-datos strong {
-    font-size: 0.9rem;
+    min-width: 0;
 }
 
 .chat-datos small {
-    color: #8b8f98;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
-/* AVATARES */
 
 .avatar {
     width: 42px;
@@ -266,23 +252,15 @@ input:disabled {
     font-size: 1.3rem;
 }
 
-/* VISOR DE CONVERSACIONES */
-
 .visor-chat {
     display: flex;
     flex-direction: column;
     min-width: 0;
     min-height: 0;
     overflow: hidden;
-    background: #15171b;
-    border: 1px solid #2a2d34;
-    border-radius: 16px;
 }
 
 .cabecera-chat {
-    display: flex;
-    align-items: center;
-    gap: 12px;
     padding: 16px 20px;
     border-bottom: 1px solid #2a2d34;
 }
@@ -292,7 +270,6 @@ input:disabled {
 }
 
 .cabecera-chat p {
-    margin-top: 4px;
     color: #8b8f98;
     font-size: 0.75rem;
 }
@@ -340,23 +317,24 @@ input:disabled {
     color: #ffe0e5;
 }
 
-/* BARRA PARA ESCRIBIR */
-
-.barra-enviar {
+.barra-enviar, .barra {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.barra-enviar {
     padding: 16px;
     border-top: 1px solid #2a2d34;
 }
 
-.barra-enviar input {
+.barra-enviar input, .barra input {
     flex: 1;
 }
 
 .btn-icono {
-    height: 44px;
     width: 44px;
+    height: 44px;
     flex-shrink: 0;
     border: 1px solid #2a2d34;
     border-radius: 50%;
@@ -365,8 +343,6 @@ input:disabled {
     font-size: 1.2rem;
     cursor: pointer;
 }
-
-/* CHAT CON IA */
 
 .bloque-ia {
     max-width: 1000px;
@@ -377,67 +353,85 @@ input:disabled {
     flex: 1;
 }
 
-/* CONTACTOS */
-
 .tarjeta {
     padding: 24px;
     margin-bottom: 30px;
-    background: #15171b;
-    border: 1px solid #2a2d34;
-    border-radius: 16px;
 }
 
 .tarjeta h2 {
     margin-bottom: 10px;
-    font-size: 1.1rem;
-}
-
-.barra {
-    display: flex;
-    gap: 12px;
-}
-
-.barra input {
-    flex: 1;
 }
 
 .subtitulo {
     margin-bottom: 16px;
-    font-size: 1.1rem;
 }
 
 .contacto {
-    display: flex;
-    align-items: center;
     gap: 14px;
     padding: 16px;
     margin-bottom: 10px;
-    background: #15171b;
-    border: 1px solid #2a2d34;
     border-radius: 14px;
 }
 
 .contacto-datos {
-    display: flex;
     flex: 1;
-    flex-direction: column;
-    gap: 5px;
 }
 
-.contacto-datos strong {
-    font-size: 0.9rem;
+.boton-chat {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border: none;
+    border-radius: 10px;
+    font: 500 14px Arial, sans-serif;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
-.contacto-datos small {
-    color: #8b8f98;
+.adjuntar {
+    background: #292f39;
+    color: white;
 }
 
-.estado {
-    color: #22c55e;
-    font-size: 0.8rem;
+.adjuntar:hover {
+    background: #414957;
 }
 
-/* RESPONSIVE */
+.foto {
+    background: #174d46;
+    color: #b9f8dc;
+}
+
+.foto:hover {
+    background: #206c60;
+}
+
+.enviar {
+    background: #2563eb;
+    color: white;
+}
+
+.enviar:hover {
+    background: #1d4ed8;
+}
+
+.boton-chat:active {
+    transform: scale(0.96);
+}
+
+.boton-chat:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.botones-chat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
 
 @media (max-width: 860px) {
     .usuario {
@@ -452,9 +446,13 @@ input:disabled {
         padding: 12px;
     }
 
-    .rol,
-    .menu-inferior {
+    .rol, .menu-inferior .perfil {
         display: none;
+    }
+
+    .menu-inferior {
+        display: flex;
+        margin: 0 0 0 auto;
     }
 
     .menu nav {
@@ -507,36 +505,23 @@ input:disabled {
         flex-wrap: wrap;
     }
 
-    .avatar-foto {
-        width: 42px;
-        height: 42px;
-        min-width: 42px;
+    .avatar-foto, .chat .avatar {
+        width: 45px;
+        height: 45px;
+        min-width: 45px;
         border-radius: 50%;
         overflow: hidden;
         padding: 0;
         flex-shrink: 0;
     }
 
-    .avatar-foto img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-        display: block;
+    .avatar-foto {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
     }
 
-    .chat .avatar {
-        width: 45px;
-        height: 45px;
-        min-width: 45px;
-        flex: 0 0 45px;
-        border-radius: 50%;
-        overflow: hidden;
-        padding: 0;
-    }
-
-
-    .chat .avatar .foto-perfil {
+    .avatar-foto img, .chat .avatar .foto-perfil {
         display: block;
         width: 100%;
         height: 100%;
@@ -545,4 +530,3 @@ input:disabled {
         border-radius: 50%;
     }
 }
-@media (max-width: 860px) { .menu-inferior { display: flex; margin-top: 0; margin-left: auto; } .menu-inferior .perfil { display: none; } }
