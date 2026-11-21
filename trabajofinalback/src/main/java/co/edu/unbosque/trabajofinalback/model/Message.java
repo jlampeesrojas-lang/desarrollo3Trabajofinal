@@ -47,6 +47,9 @@ public class Message {
 	/** Archivo adjunto (tabla media) para mensajes IMAGEN o AUDIO. */
 	@Column(name = "media_id")
 	private Long mediaId;
+	
+	@Column(name = "caption_enc", columnDefinition = "TEXT")
+	private String captionEnc;
 
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
@@ -103,5 +106,13 @@ public class Message {
 
 	public LocalDateTime getCreatedAt() {
 		return createdAt;
+	}
+
+	public String getCaptionEnc() {
+		return captionEnc;
+	}
+
+	public void setCaptionEnc(String captionEnc) {
+		this.captionEnc = captionEnc;
 	}
 }

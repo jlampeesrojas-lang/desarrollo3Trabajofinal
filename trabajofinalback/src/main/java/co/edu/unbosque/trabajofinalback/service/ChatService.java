@@ -377,6 +377,9 @@ public class ChatService {
         } else {
             dto.setRemitenteNombre("IA");
         }
+        if (mensaje.getCaptionEnc() != null) {
+            dto.setLeyenda(crypto.descifrar(llave, mensaje.getCaptionEnc()));
+        }
 
         dto.setContenido(crypto.descifrar(llave, mensaje.getContentEnc()));
         dto.setTipo(mensaje.getType().name());

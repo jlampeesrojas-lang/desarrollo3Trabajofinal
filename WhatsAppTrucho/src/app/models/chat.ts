@@ -37,4 +37,5 @@ export interface MensajeHistorial {
     tipo: string;
     mediaUrl: string | null;
     fechaEnvio: string;
+    leyenda?: string | null;
 }
