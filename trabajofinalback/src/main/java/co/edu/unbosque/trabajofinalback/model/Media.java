@@ -60,7 +60,7 @@ public class Media {
 		this.uploader = uploader;
 		this.mimeType = mimeType;
 		this.sizeBytes = sizeBytes;
-		this.dataEnc = dataEnc;
+		this.dataEnc = dataEnc == null ? new byte[0] : dataEnc.clone();
 	}
 
 	/** Asigna la fecha de creación justo antes de guardar. */
@@ -73,6 +73,11 @@ public class Media {
 
 	public Long getId() {
 		return id;
+	}
+
+	/** Define el identificador (lo asigna la base de datos al guardar). */
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public Chat getChat() {
@@ -91,8 +96,9 @@ public class Media {
 		return sizeBytes;
 	}
 
+	/** Devuelve una copia de los bytes cifrados. */
 	public byte[] getDataEnc() {
-		return dataEnc;
+		return dataEnc == null ? new byte[0] : dataEnc.clone();
 	}
 
 	public LocalDateTime getCreatedAt() {

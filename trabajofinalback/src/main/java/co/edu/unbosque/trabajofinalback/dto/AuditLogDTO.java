@@ -12,6 +12,7 @@ public class AuditLogDTO {
 	private String detail;
 	private String createdAt;
 
+	/** Constructor vacío. */
 	public AuditLogDTO() {
 	}
 

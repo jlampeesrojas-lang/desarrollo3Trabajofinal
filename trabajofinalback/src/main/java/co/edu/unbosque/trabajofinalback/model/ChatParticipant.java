@@ -41,14 +41,17 @@ public class ChatParticipant {
 	@Column(name = "last_read_at")
 	private LocalDateTime lastReadAt;
 
+	/** Constructor vacío. */
 	public ChatParticipant() {
 	}
 
+	/** Crea un ChatParticipant con sus datos. */
 	public ChatParticipant(Chat chat, User user) {
 		this.chat = chat;
 		this.user = user;
 	}
 
+	/** Asigna la fecha de creación justo antes de guardar. */
 	@PrePersist
 	void onCreate() {
 		if (joinedAt == null) {
@@ -58,6 +61,11 @@ public class ChatParticipant {
 
 	public Long getId() {
 		return id;
+	}
+
+	/** Define el identificador (lo asigna la base de datos al guardar). */
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public Chat getChat() {

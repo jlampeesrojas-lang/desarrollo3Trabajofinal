@@ -15,9 +15,11 @@ public class ContactDTO {
 	private String nombre;
 	private String alias;
 
+	/** Constructor vacío. */
 	public ContactDTO() {
 	}
 
+	/** Crea un ContactDTO con sus datos. */
 	public ContactDTO(Long id, String usuario, String nombre, String alias) {
 		this.id = id;
 		this.usuario = usuario;

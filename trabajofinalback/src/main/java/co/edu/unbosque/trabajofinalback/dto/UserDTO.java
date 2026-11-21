@@ -89,6 +89,7 @@ public class UserDTO {
 		this.role = role;
 	}
 
+	/** Indica si el correo del usuario ya fue confirmado. */
 	public boolean isEmailVerified() {
 		return emailVerified;
 	}

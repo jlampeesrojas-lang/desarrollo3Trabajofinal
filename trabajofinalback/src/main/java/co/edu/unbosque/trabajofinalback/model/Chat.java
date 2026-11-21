@@ -56,6 +56,11 @@ public class Chat {
 		return id;
 	}
 
+	/** Define el identificador (lo asigna la base de datos al guardar). */
+	public void setId(Long id) {
+		this.id = id;
+	}
+
 	public String getCode() {
 		return code;
 	}
