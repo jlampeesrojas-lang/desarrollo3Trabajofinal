@@ -9,6 +9,9 @@
             <a [class.activo]="seccion === 'chats'" (click)="irASeccion('chats')">Chats</a>
         </nav>
 
+        <button type="button" class="btn btn-primary" (click)="irAChats()">
+            <i class="fa-regular fa-comments" aria-hidden="true"></i> Mis chats
+        </button>
         <button type="button" class="btn btn-outline" (click)="salir()">Cerrar sesión</button>
     </aside>
 

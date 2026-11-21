@@ -25,6 +25,7 @@ export class Paginaprincipalcomponent implements OnInit {
     buscandoGif = false;
     avisoGif = '';
     preguntaIA = '';
+    esAdmin = false;
 
     busquedaContacto = '';
     mensajeContacto = '';
@@ -51,6 +52,7 @@ export class Paginaprincipalcomponent implements OnInit {
             return;
         }
         this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
+        this.esAdmin = this.auth.obtenerRol() === 'ADMIN';
         this.contactosApi.listarContactos().subscribe({
             next: lista => {
                 this.contactos = lista;
@@ -112,5 +114,12 @@ export class Paginaprincipalcomponent implements OnInit {
      */
     irAContactos(): void {
         this.router.navigate(['/contactos']);
+    }
+
+    /**
+     * Abre el panel de administración (solo se muestra al administrador).
+     */
+    irAAdmin(): void {
+        this.router.navigate(['/admin']);
     }
 }

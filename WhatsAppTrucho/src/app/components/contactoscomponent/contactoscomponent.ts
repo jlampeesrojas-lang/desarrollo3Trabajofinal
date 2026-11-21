@@ -39,13 +39,9 @@ export class Contactoscomponent implements OnInit {
         this.cargarContactos();
     }
 
-    /** Regresa a la pantalla del admin o a la principal según el rol. */
+    /** Regresa a la pantalla de chats, tanto para usuarios como para administradores. */
     volver() {
-        if (this.auth.obtenerRol() === "ADMIN") {
-            this.router.navigate(["/admin"]);
-        } else {
-            this.router.navigate(["/principal"]);
-        }
+        this.router.navigate(["/principal"]);
     }
 
     /** Cierra la sesión y va al login. */
