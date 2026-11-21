@@ -9,6 +9,11 @@ import {
 import { AuthService } from '../../services/authservice';
 import { Chatsservice } from '../../services/chatsservice';
 
+/**
+ * Componente de conversaciones.
+ * Muestra la lista de chats, los mensajes del chat seleccionado y permite
+ * enviar mensajes de texto, adjuntar archivos y tomar fotos con la cámara.
+ */
 @Component({
     selector: 'app-chatscomponent',
     standalone: false,
@@ -17,6 +22,7 @@ import { Chatsservice } from '../../services/chatsservice';
 })
 export class Chatscomponent implements OnInit, OnDestroy {
 
+    /** Conversaciones disponibles con sus mensajes. */
     chats: any[] = [
         {
             id: '1',
@@ -94,81 +100,115 @@ export class Chatscomponent implements OnInit, OnDestroy {
         }
     ];
 
+    /** Indica si las conversaciones se están cargando. */
     cargando = true;
+
+    /** Indica si hay un mensaje o una foto enviándose. */
     enviando = false;
+
+    /** Mensaje de error que se muestra al usuario. */
     error = '';
+
+    /** Identificador del chat seleccionado. */
     seleccionado = '1';
+
+    /** Texto para filtrar las conversaciones por nombre. */
     busqueda = '';
+
+    /** Nombre del usuario que inició sesión. */
     usuario = '';
 
+    /** Borradores de cada chat (texto y archivos sin enviar), indexados por id del chat. */
     borradores: any = {};
 
+    /** Indica si la cámara está abierta. */
     camaraAbierta = false;
+
+    /** Indica si la cámara se está abriendo. */
     abriendoCamara = false;
 
+    /** Elemento de video donde se muestra la cámara. */
     @ViewChild('videoCamara')
     videoCamara!: ElementRef<HTMLVideoElement>;
 
+    /**
+     * Inicializa los servicios de autenticación y de chats.
+     *
+     * @param auth     Servicio de autenticación.
+     * @param servicio Servicio de chats, cámara y descargas.
+     */
     constructor(
         private auth: AuthService,
         private servicio: Chatsservice
     ) {}
 
+    /**
+     * Carga el nombre del usuario que inició sesión.
+     */
     ngOnInit() {
         this.usuario = this.auth.obtenerUsuario() || 'Usuario';
         this.cargando = false;
     }
 
-    // OBTENER CHAT SELECCIONADO
-
+    /**
+     * Obtiene el chat seleccionado.
+     *
+     * @returns El chat seleccionado, o null si no existe.
+     */
     get chat() {
-
         for (const chat of this.chats) {
-
             if (chat.id === this.seleccionado) {
                 return chat;
             }
         }
-
         return null;
     }
 
-    // BUSCAR CONVERSACIONES
-
+    /**
+     * Filtra las conversaciones según el texto de búsqueda.
+     *
+     * @returns Las conversaciones cuyo nombre contiene el texto buscado.
+     */
     get filtrados() {
-
         return this.chats.filter(c =>
             c.nombre.toLowerCase().includes(this.busqueda.toLowerCase())
         );
     }
 
-    // CAMBIAR CONVERSACION
-
+    /**
+     * Cambia la conversación seleccionada.
+     *
+     * @param id Identificador del chat que se desea abrir.
+     */
     seleccionarChat(id: string) {
         this.cerrarCamara();
         this.seleccionado = id;
         this.error = '';
     }
 
-    // BORRADOR
-
+    /**
+     * Obtiene el borrador del chat seleccionado. Si no existe, lo crea vacío.
+     *
+     * @returns El borrador con el texto y los archivos sin enviar.
+     */
     get borrador() {
-
         if (!this.borradores[this.seleccionado]) {
-
             this.borradores[this.seleccionado] = {
                 texto: '',
                 archivos: []
             };
         }
-
         return this.borradores[this.seleccionado];
     }
 
-    // ULTIMO MENSAJE
-
+    /**
+     * Obtiene el texto del último mensaje de una conversación.
+     *
+     * @param conversacion Conversación que se desea consultar.
+     * @returns El texto del último mensaje, 'Archivo adjunto' si no tiene texto,
+     *          o 'Sin mensajes' si la conversación está vacía.
+     */
     ultimoMensaje(conversacion: { mensajes: { texto?: string | null }[] }) {
-
         if (conversacion.mensajes.length === 0) {
             return 'Sin mensajes';
         }
@@ -179,10 +219,11 @@ export class Chatscomponent implements OnInit, OnDestroy {
         return ultimo.texto || 'Archivo adjunto';
     }
 
-    // ENVIAR MENSAJE
-
+    /**
+     * Envía el mensaje del borrador (texto y archivos) al chat seleccionado
+     * y deja el borrador vacío.
+     */
     enviar() {
-
         const conversacion = this.chat;
 
         if (conversacion === null || this.enviando) {
@@ -197,10 +238,9 @@ export class Chatscomponent implements OnInit, OnDestroy {
 
         this.enviando = true;
 
-        const adjuntos: { nombre: string; archivo: (typeof this.borrador.archivos)[number] }[] = [];
+        const adjuntos: { nombre: string; archivo: File }[] = [];
 
         for (const archivo of this.borrador.archivos) {
-
             adjuntos.push({
                 nombre: archivo.name,
                 archivo
@@ -226,14 +266,15 @@ export class Chatscomponent implements OnInit, OnDestroy {
         this.enviando = false;
     }
 
-    // ADJUNTAR ARCHIVOS
-
+    /**
+     * Agrega al borrador los archivos elegidos por el usuario.
+     *
+     * @param event Evento del campo de selección de archivos.
+     */
     adjuntar(event: Event) {
-
         const input = event.target as HTMLInputElement;
 
         if (input.files) {
-
             for (const file of input.files) {
                 this.borrador.archivos.push(file);
             }
@@ -242,13 +283,23 @@ export class Chatscomponent implements OnInit, OnDestroy {
         input.value = '';
     }
 
+    /**
+     * Quita un archivo del borrador.
+     *
+     * @param posicion Posición del archivo en la lista de archivos del borrador.
+     */
     quitarArchivo(posicion: number) {
         this.borrador.archivos.splice(posicion, 1);
     }
 
-
+    /**
+     * Espera a que la cámara entregue imagen, revisando cada 100 ms
+     * hasta un máximo de 5 segundos.
+     *
+     * @param video Elemento de video de la cámara.
+     * @throws Error si la cámara no entrega imagen a tiempo.
+     */
     private async esperarVideoListo(video: HTMLVideoElement) {
-
         let intentos = 0;
 
         while (
@@ -264,10 +315,10 @@ export class Chatscomponent implements OnInit, OnDestroy {
         }
     }
 
-    // ABRIR CAMARA
-
+    /**
+     * Abre la cámara y muestra la imagen en el elemento de video.
+     */
     async abrirCamara() {
-
         if (this.camaraAbierta || this.abriendoCamara) {
             return;
         }
@@ -277,13 +328,10 @@ export class Chatscomponent implements OnInit, OnDestroy {
         this.error = '';
 
         try {
-
             await this.servicio.abrirCamara(
                 this.videoCamara.nativeElement
             );
-
         } catch (error) {
-
             console.error('Error de cámara:', error);
 
             this.cerrarCamara();
@@ -293,20 +341,15 @@ export class Chatscomponent implements OnInit, OnDestroy {
             } else {
                 this.error = 'No se pudo abrir la cámara';
             }
-
         } finally {
             this.abriendoCamara = false;
         }
-
     }
 
-    // TOMAR FOTO Y ENVIAR AL CHAT
-
-
+    /**
+     * Toma una foto con la cámara y la envía como adjunto al chat seleccionado.
+     */
     async tomarFoto() {
-
-        console.log('Botón tomar foto presionado');
-
         if (this.enviando) {
             return;
         }
@@ -328,7 +371,6 @@ export class Chatscomponent implements OnInit, OnDestroy {
         this.enviando = true;
 
         try {
-
             const canvas = document.createElement('canvas');
 
             canvas.width = video.videoWidth;
@@ -371,26 +413,19 @@ export class Chatscomponent implements OnInit, OnDestroy {
 
             this.cerrarCamara();
             this.error = '';
-
-            console.log('Foto agregada al chat');
-
         } catch (error) {
-
             console.error('Error al tomar foto:', error);
 
             this.error = 'No se pudo tomar la fotografía';
-
         } finally {
-
             this.enviando = false;
         }
     }
-//aca
 
-    // CERRAR CAMARA
-
+    /**
+     * Cierra la cámara y libera el dispositivo.
+     */
     cerrarCamara() {
-
         this.servicio.cerrarCamara(
             this.videoCamara?.nativeElement
         );
@@ -398,14 +433,18 @@ export class Chatscomponent implements OnInit, OnDestroy {
         this.camaraAbierta = false;
     }
 
-    // DESCARGAR ARCHIVOS
-
+    /**
+     * Descarga un archivo adjunto de un mensaje.
+     *
+     * @param adjunto Archivo adjunto con su nombre y contenido.
+     */
     descargar(adjunto: any) {
         this.servicio.descargar(adjunto);
     }
 
-    // CERRAR CAMARA AL SALIR
-
+    /**
+     * Cierra la cámara al salir del componente.
+     */
     ngOnDestroy() {
         this.cerrarCamara();
     }
