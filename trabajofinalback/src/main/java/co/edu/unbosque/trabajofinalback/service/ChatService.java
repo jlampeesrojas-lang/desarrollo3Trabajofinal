@@ -1,5 +1,16 @@
 package co.edu.unbosque.trabajofinalback.service;
 
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+
 import co.edu.unbosque.trabajofinalback.dto.ChatDTO;
 import co.edu.unbosque.trabajofinalback.dto.ChatMessageDTO;
 import co.edu.unbosque.trabajofinalback.dto.ContactDTO;
@@ -14,15 +25,6 @@ import co.edu.unbosque.trabajofinalback.repository.ChatRepository;
 import co.edu.unbosque.trabajofinalback.repository.ContactRepository;
 import co.edu.unbosque.trabajofinalback.repository.MessageRepository;
 import co.edu.unbosque.trabajofinalback.repository.UserRepository;
-import java.security.SecureRandom;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
 
 /** Lógica de los chats 1 a 1 y de sus mensajes cifrados. */
 @Service
