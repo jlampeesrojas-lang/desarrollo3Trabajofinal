@@ -35,6 +35,9 @@ public class MediaController {
 
   public MediaController() {}
 
+  /**
+   * Envía una imagen o un audio a un chat y devuelve el resultado de la operación.
+   */
   @Operation(
       summary = "Enviar imagen o audio a un chat",
       description =
@@ -69,6 +72,12 @@ public class MediaController {
     }
   }
 
+  /**
+   * Descarga la imagen o el audio solicitado si el usuario tiene acceso.
+   *
+   * @param id identificador del archivo multimedia
+   * @return el contenido descifrado o una respuesta 404 si no está disponible
+   */
   @Operation(
       summary = "Descargar imagen o audio",
       description = "Solo para participantes del chat o administradores")

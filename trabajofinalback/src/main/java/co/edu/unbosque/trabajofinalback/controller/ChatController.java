@@ -37,6 +37,9 @@ public class ChatController {
 
   public ChatController() {}
 
+  /**
+   * Crea un chat con un contacto a partir de los datos JSON proporcionados.
+   */
   @Operation(
       summary = "Crear chat con un contacto",
       description = "Body: {\"contactoId\": 1}. Genera un código único y una llave AES propia.")
@@ -85,6 +88,9 @@ public class ChatController {
     return new ResponseEntity<>(chat, HttpStatus.OK);
   }
 
+  /**
+   * Envía un mensaje de texto al chat indicado y devuelve el resultado de la operación.
+   */
   @Operation(
       summary = "Enviar mensaje de texto",
       description = "Body: {\"contenido\": \"Hola\"}. Se guarda cifrado con la llave del chat.")
@@ -111,6 +117,9 @@ public class ChatController {
     }
   }
 
+  /**
+   * Obtiene el historial paginado de mensajes de un chat si el usuario tiene acceso.
+   */
   @Operation(
       summary = "Historial de mensajes (paginado)",
       description = "page 0 = los más recientes. size = mensajes por página (máx. 50)")
@@ -166,6 +175,9 @@ public class ChatController {
     return new ResponseEntity<>(recibidos, HttpStatus.OK);
   }
 
+  /**
+   * Marca el chat como leído para el usuario autenticado.
+   */
   @Operation(summary = "Marcar chat como leído")
   @PutMapping("/markasread/{chatId}")
   public ResponseEntity<String> markAsRead(@PathVariable Long chatId) {

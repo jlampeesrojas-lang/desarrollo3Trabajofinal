@@ -1,6 +1,7 @@
 package co.edu.unbosque.trabajofinalback.dto;
 
 import com.google.gson.annotations.SerializedName;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Cuerpo de la petición que se envía a la API de Groq. */
@@ -25,7 +26,7 @@ public class GroqRequestDTO {
 
   public GroqRequestDTO(String model, List<GroqMessageDTO> messages) {
     this.model = model;
-    this.messages = messages;
+    this.messages = messages == null ? null : new ArrayList<>(messages);
     this.temperature = 0.7;
     this.maxCompletionTokens = 1024;
   }

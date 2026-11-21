@@ -52,6 +52,9 @@ public class AiController {
     }
   }
 
+  /**
+   * Envía una pregunta a la IA en un chat y devuelve la respuesta o un error.
+   */
   @Operation(
       summary = "Preguntar a la IA dentro de un chat",
       description =

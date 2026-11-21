@@ -151,18 +151,21 @@ public class MediaService {
     if (d[0] == 'G' && d[1] == 'I' && d[2] == 'F') {
       return "image/gif";
     }
-    if (d[0] == 'R' && d[1] == 'I' && d[2] == 'F' && d[3] == 'F') {
-      if (d[8] == 'W' && d[9] == 'E' && d[10] == 'B' && d[11] == 'P') {
-        return "image/webp";
-      }
-      if (d[8] == 'W' && d[9] == 'A' && d[10] == 'V' && d[11] == 'E') {
-        return "audio/wav";
-      }
-      return null;
+    return null;
+  }
+  private boolean esRiff(byte[] d) {
+    return d[0] == 'R' && d[1] == 'I' && d[2] == 'F' && d[3] == 'F';
+  }
+  private String detectarTipoRiff(byte[] d) {
+    if (d[8] == 'W' && d[9] == 'E' && d[10] == 'B' && d[11] == 'P') {
+      return "image/webp";
     }
-    if (d[4] == 'f' && d[5] == 't' && d[6] == 'y' && d[7] == 'p') {
-      return tipoPorMarca(new String(d, 8, 4, StandardCharsets.US_ASCII));
+    if (d[8] == 'W' && d[9] == 'A' && d[10] == 'V' && d[11] == 'E') {
+      return "audio/wav";
     }
+    return null;
+  }
+  private String detectarAudio(byte[] d) {
     if (d[0] == 'O' && d[1] == 'g' && d[2] == 'g' && d[3] == 'S') {
       return "audio/ogg";
     }

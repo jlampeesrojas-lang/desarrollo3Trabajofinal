@@ -174,6 +174,26 @@ public class AiService {
     return mensajes;
   }
 
+  private void validarClaveApi() throws AiApiException {
+    if (apiKey == null || apiKey.isBlank()) {
+      throw new AiApiException("Falta configurar la clave de la API de IA (GROQ_API_KEY).");
+    }
+  }
+  private HttpRequest crearSolicitudGroq(List<GroqMessageDTO> mensajes) {
+    GroqRequestDTO cuerpo = new GroqRequestDTO(modelo, mensajes);
+    if (modelo.startsWith("openai/gpt-oss")) {
+      cuerpo.setReasoningEffort("low");
+    }
+    String json = new Gson().toJson(cuerpo);
+
+    return HttpRequest.newBuilder()
+        .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+        .uri(URI.create(url))
+        .header("Content-Type", "application/json")
+        .header("Authorization", "Bearer " + apiKey)
+        .timeout(Duration.ofSeconds(30))
+        .build();
+  }
   /**
    * Envía la conversación a la API de Groq y devuelve el texto de la respuesta.
    *
@@ -181,24 +201,9 @@ public class AiService {
    *     inesperado
    */
   private String consultar(List<GroqMessageDTO> mensajes) throws AiApiException {
-    if (apiKey == null || apiKey.isBlank()) {
-      throw new AiApiException("Falta configurar la clave de la API de IA (GROQ_API_KEY).");
-    }
+    validarClaveApi();
 
-    GroqRequestDTO cuerpo = new GroqRequestDTO(modelo, mensajes);
-    if (modelo.startsWith("openai/gpt-oss")) {
-      cuerpo.setReasoningEffort("low");
-    }
-    String json = new Gson().toJson(cuerpo);
-
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
-            .uri(URI.create(url))
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer " + apiKey)
-            .timeout(Duration.ofSeconds(30))
-            .build();
+    HttpRequest request = crearSolicitudGroq(mensajes);
 
     HttpResponse<String> response = null;
     try {
