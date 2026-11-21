@@ -1,0 +1,5 @@
+co\edu\unbosque\trabajofinalback\util\PasswordValidatorTest.class
+co\edu\unbosque\trabajofinalback\service\ChatCryptoServiceTest.class
+co\edu\unbosque\trabajofinalback\controller\AuthFlowIntegrationTest.class
+co\edu\unbosque\trabajofinalback\security\PasswordHashTest.class
+co\edu\unbosque\trabajofinalback\security\JwtUtilTest.class
