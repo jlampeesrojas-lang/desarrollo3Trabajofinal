@@ -19,6 +19,7 @@ const ACCIONES: { [clave: string]: string } = {
     PASSWORD_RESET_REQUESTED: "Recuperar contraseña",
     PASSWORD_RESET_DONE: "Contraseña cambiada",
     MESSAGE_SENT: "Mensaje enviado",
+    MESSAGE_DELETED: "Mensaje eliminado",
     ADMIN_READ_CHAT: "Chat leído por admin",
     ADMIN_USER_UPDATED: "Usuario modificado por admin",
 };

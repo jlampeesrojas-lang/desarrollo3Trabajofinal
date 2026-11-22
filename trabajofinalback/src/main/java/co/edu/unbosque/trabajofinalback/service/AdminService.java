@@ -232,7 +232,8 @@ public class AdminService {
 	}
 
 	/**
-	 * Devuelve los mensajes de un chat descifrados si la clave es correcta.
+	 * Devuelve los mensajes de un chat descifrados si la clave es correcta. Los
+	 * mensajes eliminados por su remitente se muestran con la etiqueta [Eliminado].
 	 *
 	 * @param chatId  identificador del chat
 	 * @param key     clave del chat escrita por el administrador
@@ -262,8 +263,13 @@ public class AdminService {
 			String remitente = mensaje.getSender() == null ? null : mensaje.getSender().getUsername();
 			String tipo = mensaje.getType() == null ? null : mensaje.getType().name();
 
+			String contenido = descifrarSeguro(claveReal, mensaje.getContentEnc());
+			if (mensaje.isDeleted()) {
+				contenido = "[Eliminado] " + contenido;
+			}
+
 			MensajeAdminDTO fila = new MensajeAdminDTO(mensaje.getId(), remitente, tipo,
-					descifrarSeguro(claveReal, mensaje.getContentEnc()), mensaje.getMediaId(), mensaje.getCreatedAt());
+					contenido, mensaje.getMediaId(), mensaje.getCreatedAt());
 			resultado.add(fila);
 		}
 

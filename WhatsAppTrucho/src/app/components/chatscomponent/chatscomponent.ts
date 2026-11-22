@@ -624,7 +624,36 @@ export class Chatscomponent implements OnChanges, OnDestroy {
             })
         );
     }
+    /** Pide confirmación y marca como eliminado uno de los mensajes propios. */
+    eliminarMensaje(m: MensajeHistorial): void {
+        if (this.chatId === null || !this.desbloqueado) {
+            return;
+        }
+        if (!confirm('¿Eliminar este mensaje? Se mostrará como "Este mensaje fue eliminado".')) {
+            return;
+        }
 
+        const chatId = this.chatId;
+        this.solicitudes.add(this.servicio.eliminarMensaje(m.id).subscribe({
+            next: () => {
+                this.avisoEnvio = '';
+                if (this.modoIa) {
+                    this.leerMensajes(chatId);
+                }
+                this.cdr.markForCheck();
+            },
+            error: error => {
+                if (error.status === 423) {
+                    this.bloquear();
+                }
+                this.avisoEnvio = typeof error.error === 'string' && error.error !== ''
+                    ? error.error
+                    : 'No se pudo eliminar el mensaje.';
+                this.comprobarSesion(error.status);
+                this.cdr.markForCheck();
+            }
+        }));
+    }
     /** Abre el cuadro para ver la clave o desbloquear la conversación. */
     abrirDialogo(tipo: 'clave' | 'desbloquear'): void {
         this.cerrarDialogo();

@@ -37,6 +37,7 @@ public class ChatService {
 
     private static final String LETRAS_CODIGO = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
     private static final int MAX_CARACTERES = 2000;
+    private static final String TEXTO_ELIMINADO = "Este mensaje fue eliminado";
     @Autowired
     private ChatRepository chatRepo;
     @Autowired
@@ -224,6 +225,42 @@ public class ChatService {
                         + " tipo=" + tipo.name() + " caracteres=" + contenido.length());
 
         completarDTO(data, mensaje, llave, permisos.abierto(chatId));
+        return 0;
+    }
+
+    /**
+     * Marca como eliminado un mensaje propio sin borrarlo de la base de datos: el contenido
+     * cifrado se conserva para el historial y la acción queda registrada en la auditoría.
+     * Retorna 0 si se eliminó, 1 si no existe, 2 si no es del usuario, 3 si ya estaba
+     * eliminado y 4 si el chat está bloqueado en esta pestaña.
+     */
+    @Transactional
+    public int deleteMessage(Long userId, Long messageId, String ip) {
+        Optional<Message> encontrado = messageRepo.findById(messageId);
+        if (encontrado.isEmpty()) {
+            return 1;
+        }
+
+        Message mensaje = encontrado.get();
+        if (mensaje.getSender() == null || !userId.equals(mensaje.getSender().getId())) {
+            return 2;
+        }
+        if (mensaje.isDeleted()) {
+            return 3;
+        }
+
+        Long chatId = mensaje.getChat().getId();
+        if (!permisos.abierto(chatId)) {
+            return 4;
+        }
+
+        mensaje.setDeleted(true);
+        mensaje.setDeletedAt(LocalDateTime.now());
+        messageRepo.save(mensaje);
+
+        auditService.log(AuditAction.MESSAGE_DELETED, userId, ip,
+                "chatId=" + chatId + " messageId=" + messageId
+                        + " tipo=" + mensaje.getType().name());
         return 0;
     }
 
@@ -418,7 +455,10 @@ public class ChatService {
         return dto;
     }
 
-    /** Aplica la misma presentación al historial y a la respuesta de envío. */
+    /**
+     * Aplica la misma presentación al historial y a la respuesta de envío. Un mensaje
+     * eliminado no se descifra: llega con tipo ELIMINADO y un texto fijo.
+     */
     private void completarDTO(
             ChatMessageDTO dto, Message mensaje, String llave, boolean legible) {
         dto.setId(mensaje.getId());
@@ -435,6 +475,12 @@ public class ChatService {
 
         dto.setMediaUrl(null);
         dto.setLeyenda(null);
+
+        if (mensaje.isDeleted()) {
+            dto.setContenido(TEXTO_ELIMINADO);
+            dto.setTipo("ELIMINADO");
+            return;
+        }
 
         if (legible) {
             dto.setContenido(crypto.descifrar(llave, mensaje.getContentEnc()));

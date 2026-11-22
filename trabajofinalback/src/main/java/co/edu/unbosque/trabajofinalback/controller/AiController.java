@@ -93,11 +93,13 @@ public class AiController {
 	/**
 	 * Hace que la IA responda al último mensaje del chat: una imagen, una nota de
 	 * voz, un GIF, un archivo o un texto ya enviados, junto con el texto opcional
-	 * que escribió el usuario.
+	 * que escribió el usuario. Se ejecuta dentro de una transacción para poder leer
+	 * el chat y el archivo del mensaje.
 	 */
 	@Operation(summary = "Respuesta de la IA al último mensaje del chat", description = "Primero se envía el adjunto con /media/chat/{chatId} o el GIF con"
 			+ " /chats/sendmessage/{chatId}; luego se llama esta ruta. Body opcional: {\"contenido\": \"texto"
 			+ " escrito junto con el adjunto\"}. La IA entiende imágenes, notas de voz, GIF y archivos de texto.")
+	@Transactional
 	@PostMapping("/reply/{chatId}")
 	public ResponseEntity<String> reply(@PathVariable Long chatId,
 			@RequestBody(required = false) ChatMessageDTO pregunta, HttpServletRequest request) {

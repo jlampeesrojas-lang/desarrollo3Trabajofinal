@@ -17,7 +17,8 @@ import java.time.LocalDateTime;
 
 /**
  * Mensaje de un chat. El texto se guarda SOLO cifrado con AESUtil (AES/GCM) y
- * la llave del chat. En MySQL la columna content_enc no es legible.
+ * la llave del chat. En MySQL la columna content_enc no es legible. Un mensaje
+ * eliminado no se borra: se marca con deleted y conserva su contenido cifrado.
  */
 @Entity
 @Table(name = "messages", indexes = @Index(name = "idx_messages_chat", columnList = "chat_id, id"))
@@ -48,8 +49,17 @@ public class Message {
 	@Column(name = "media_id")
 	private Long mediaId;
 	
+	/** Texto que acompaña a un archivo, cifrado con la llave del chat. */
 	@Column(name = "caption_enc", columnDefinition = "TEXT")
 	private String captionEnc;
+
+	/** Indica si el remitente eliminó el mensaje. */
+	@Column(name = "deleted", nullable = false, columnDefinition = "boolean default false")
+	private boolean deleted = false;
+
+	/** Fecha en la que se eliminó el mensaje (null si no se ha eliminado). */
+	@Column(name = "deleted_at")
+	private LocalDateTime deletedAt;
 
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
@@ -114,5 +124,23 @@ public class Message {
 
 	public void setCaptionEnc(String captionEnc) {
 		this.captionEnc = captionEnc;
+	}
+
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	/** Marca o desmarca el mensaje como eliminado. */
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}
+
+	public LocalDateTime getDeletedAt() {
+		return deletedAt;
+	}
+
+	/** Define la fecha en la que se eliminó el mensaje. */
+	public void setDeletedAt(LocalDateTime deletedAt) {
+		this.deletedAt = deletedAt;
 	}
 }

@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -133,6 +134,30 @@ public class ChatController {
 		}
 
 		return ResponseEntity.badRequest().body("Tipo de mensaje no permitido en esta ruta");
+	}
+
+	/** Marca como eliminado un mensaje propio; el contenido se conserva en el historial. */
+	@Operation(summary = "Eliminar un mensaje propio")
+	@DeleteMapping("/deletemessage/{messageId}")
+	public ResponseEntity<String> deleteMessage(@PathVariable("messageId") Long messageId,
+			HttpServletRequest request) {
+
+		int estado = chatServ.deleteMessage(authContext.getUserId(), messageId, request.getRemoteAddr());
+
+		if (estado == 0) {
+			return ResponseEntity.ok("Mensaje eliminado");
+		}
+		if (estado == 1) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("El mensaje no existe");
+		}
+		if (estado == 2) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Solo puedes eliminar tus propios mensajes");
+		}
+		if (estado == 3) {
+			return ResponseEntity.badRequest().body("El mensaje ya estaba eliminado");
+		}
+
+		return ResponseEntity.status(HttpStatus.LOCKED).body("Desbloquea el chat para eliminar mensajes.");
 	}
 
 	/** Devuelve el historial visible para la pestaña actual. */

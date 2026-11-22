@@ -4,6 +4,7 @@ C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\ma
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\controller\AiController.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\controller\AuthController.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\controller\ChatController.java
+C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\controller\ChatLockController.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\controller\ContactController.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\controller\GifController.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\controller\IpLocationController.java
@@ -56,6 +57,7 @@ C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\ma
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\model\Media.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\model\Message.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\model\MessageType.java
+C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\model\PermisoChat.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\model\RefreshToken.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\model\User.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\repository\AuditLogRepository.java
@@ -65,6 +67,7 @@ C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\ma
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\repository\EmailTokenRepository.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\repository\MediaRepository.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\repository\MessageRepository.java
+C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\repository\PermisoChatRepository.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\repository\RefreshTokenRepository.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\repository\UserRepository.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\security\AuthContext.java
@@ -80,6 +83,7 @@ C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\ma
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\service\AuthService.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\service\ChatCryptoService.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\service\ChatService.java
+C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\service\ChatUnlockService.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\service\ContactService.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\service\CRUDOperation.java
 C:\Users\Julian\Documents\GitHub\desarrollo3Trabajofinal\trabajofinalback\src\main\java\co\edu\unbosque\trabajofinalback\service\EmailService.java
