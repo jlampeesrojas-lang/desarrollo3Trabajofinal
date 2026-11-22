@@ -1,4 +1,4 @@
-<main class="chats">
+<main class="chats" [class.chat-movil-abierto]="chatAbiertoEnMovil">
     <aside class="lista">
         <header class="filtros">
             <div class="titulo">
@@ -29,12 +29,12 @@
             <button type="button"
                     class="fila-chat"
                     [class.activa]="!seleccionado"
-                    (click)="seleccionado = null">
+                    (click)="abrirConversacion(null)">
                 <img src="assets/ia.jpg" alt="">
 
                 <span>
                     <strong>IA</strong>
-                    <small>Sin mensajes todavía</small>
+                    <small>Asistente de Sigma Chat</small>
                 </span>
             </button>
         }
@@ -44,7 +44,7 @@
                 <button type="button"
                         class="fila-chat"
                         [class.activa]="seleccionado?.id === c.id"
-                        (click)="seleccionado = c">
+                        (click)="abrirConversacion(c)">
                     <span class="inicial">{{ c.nombre.charAt(0) }}</span>
 
                     <span>
@@ -62,10 +62,15 @@
 
     <section class="conversacion" aria-label="Conversación seleccionada">
         <header class="cabecera">
+            <button type="button"
+                    class="volver-chats"
+                    aria-label="Volver a la lista de chats"
+                    (click)="volverAChats()">
+                ‹ Chats
+            </button>
+
             @if (seleccionado) {
-                <span class="inicial">
-                    {{ seleccionado.nombre.charAt(0) }}
-                </span>
+                <span class="inicial">{{ seleccionado.nombre.charAt(0) }}</span>
 
                 <div>
                     <strong>{{ seleccionado.nombre }}</strong>
@@ -79,6 +84,7 @@
                     <p>Código: CH-IA0001</p>
                 </div>
             }
+
             <div class="acciones-seguridad">
                 <button type="button"
                         [disabled]="!chat.desbloqueado"
@@ -99,19 +105,21 @@
                 </button>
             </div>
         </header>
+
         <app-chatscomponent
             #chat
             [contacto]="seleccionado"
             [modoIa]="seleccionado === null">
         </app-chatscomponent>
-
     </section>
 </main>
 
 @if (!esAdmin) {
     <button type="button"
             class="informacion"
+            [class.ocultar-en-chat-movil]="chatAbiertoEnMovil"
             (click)="irAInformacion()">
-        <i class="fa-solid fa-circle-info" aria-hidden="true"></i> Información
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        Información
     </button>
 }

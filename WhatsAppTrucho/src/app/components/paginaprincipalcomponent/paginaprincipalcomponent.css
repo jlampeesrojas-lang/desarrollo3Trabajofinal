@@ -556,7 +556,7 @@ img {
         max-height: 110px;
         padding: 8px 14px 12px;
     }
-     .informacion {
+    .informacion {
         left: 16px;
         bottom: 90px;
         padding: 10px 16px;
@@ -599,5 +599,60 @@ img {
     .cabecera .acciones-seguridad {
         width: 100%;
         margin-left: 0;
+    }
+}
+
+/* El botón para regresar solo aparece en la vista móvil. */
+.volver-chats {
+    display: none;
+}
+
+@media (max-width: 650px) {
+    :host {
+        padding: 8px;
+        padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .chats {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr);
+    }
+
+    .chats > .lista {
+        min-height: 0;
+        max-height: none;
+        overflow-y: auto;
+        border: 0;
+    }
+
+    .chats:not(.chat-movil-abierto) > .conversacion,
+    .chats.chat-movil-abierto > .lista,
+    .informacion.ocultar-en-chat-movil {
+        display: none;
+    }
+
+    .cabecera {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .volver-chats {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 12px;
+        border: 1px solid var(--borde);
+        border-radius: 20px;
+        background: var(--panel);
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .cabecera .acciones-seguridad {
+        width: 100%;
+        margin-left: 0;
+        flex-wrap: wrap;
     }
 }
