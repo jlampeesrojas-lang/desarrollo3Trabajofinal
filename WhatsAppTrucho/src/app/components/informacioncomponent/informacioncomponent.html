@@ -1,0 +1,103 @@
+<main class="pagina">
+    <header class="cabecera">
+        <h2><img src="icono.png" alt="Logo Sigma Chat">Sigma Chat</h2>
+        <button type="button" class="btn-volver" (click)="volver()">
+            <i class="fa-regular fa-comments" aria-hidden="true"></i> Volver al chat
+        </button>
+    </header>
+
+    <section class="portada">
+        <div class="texto-portada">
+            <span class="etiqueta">Empresa colombiana · Bogotá D.C.</span>
+            <h1>Seguridad, compromiso y confianza en cada mensaje</h1>
+            <p>
+                En Sigma Chat creemos que tus conversaciones solo te pertenecen a ti. Por eso cada chat se protege con
+                cifrado, cada acceso queda registrado y trabajamos todos los días para que hablar con las personas que
+                te importan sea simple, rápido y seguro.
+            </p>
+        </div>
+
+        <div class="imagen-portada">
+            <span class="puntos puntos-arriba"></span>
+            <img src="icono.png" alt="Logo de Sigma Chat">
+            <span class="puntos puntos-abajo"></span>
+        </div>
+    </section>
+
+    <section class="valores">
+        <article class="valor">
+            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+            <h3>Seguridad</h3>
+            <p>
+                Mensajes y archivos cifrados con una llave única por chat, contraseñas protegidas y bloqueo
+                automático ante intentos de acceso sospechosos.
+            </p>
+        </article>
+
+        <article class="valor">
+            <i class="fa-solid fa-handshake" aria-hidden="true"></i>
+            <h3>Compromiso</h3>
+            <p>
+                Somos un equipo colombiano que escucha a sus usuarios. Respondemos tus dudas y mejoramos la aplicación
+                con cada sugerencia que recibimos.
+            </p>
+        </article>
+
+        <article class="valor">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <h3>Confiabilidad</h3>
+            <p>
+                Cada acción importante queda registrada en una auditoría, para que el servicio sea transparente y
+                siempre sepas que tu cuenta está en buenas manos.
+            </p>
+        </article>
+    </section>
+
+    <section class="faq">
+        <h2 class="titulo-seccion">Preguntas frecuentes</h2>
+        <p class="subtitulo">Las dudas más comunes de nuestros usuarios.</p>
+
+        <div class="lista-preguntas">
+            @for (p of preguntas; track p.pregunta; let i = $index) {
+                <div class="pregunta" [class.abierta]="abierta === i">
+                    <button type="button" [attr.aria-expanded]="abierta === i" (click)="alternar(i)">
+                        <span>{{ p.pregunta }}</span>
+                        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+                    @if (abierta === i) {
+                        <p>{{ p.respuesta }}</p>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="contacto">
+        <h2 class="titulo-seccion">Contáctanos</h2>
+        <p class="subtitulo">¿No encontraste lo que buscabas? Escríbenos o llámanos.</p>
+
+        <div class="datos-contacto">
+            <div class="dato-contacto">
+                <i class="fa-solid fa-phone" aria-hidden="true"></i>
+                <span>Teléfono</span>
+                <strong>+57 (601) 745 2380</strong>
+            </div>
+            <div class="dato-contacto">
+                <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                <span>Celular</span>
+                <strong>+57 310 482 7615</strong>
+            </div>
+            <div class="dato-contacto">
+                <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                <span>Correo</span>
+                <strong>soporte&#64;sigmachat.com.co</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+    <footer class="pie">
+        © 2026 Sigma Chat S.A.S. · Bogotá D.C., Colombia
+    </footer>
+</main>
