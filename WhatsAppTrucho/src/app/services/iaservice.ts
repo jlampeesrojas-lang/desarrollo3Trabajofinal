@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {API, AuthService} from './authservice';
+import {API} from './authservice';
 import {BloqueoChatService} from "./bloqueochatservice";
 
 /** Abre la conversación privada del usuario y envía preguntas a la IA. */

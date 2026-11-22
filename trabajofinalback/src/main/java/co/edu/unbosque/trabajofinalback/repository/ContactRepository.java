@@ -11,18 +11,18 @@ import org.springframework.data.jpa.repository.Lock;
 /** Repositorio de contactos de cada usuario. */
 public interface ContactRepository extends JpaRepository<Contact, Long> {
 
-    /** Lista los contactos con los datos del usuario agregado. */
+    /** Lista los contactos del propietario en el orden en que los agregó. */
     @EntityGraph(attributePaths = "contactUser")
     List<Contact> findByOwnerIdOrderByCreatedAtAsc(Long ownerId);
 
+    /** Busca un contacto en la lista del propietario y carga los datos del usuario agregado. */
     @EntityGraph(attributePaths = "contactUser")
-    Optional<Contact> findByOwnerIdAndContactUserId(
-            Long ownerId, Long contactUserId);
+    Optional<Contact> findByOwnerIdAndContactUserId(Long ownerId, Long contactUserId);
 
+    /** Comprueba si el propietario ya tiene agregado al usuario indicado. */
     boolean existsByOwnerIdAndContactUserId(Long ownerId, Long contactUserId);
 
-    /** Comprueba el contacto dentro de la transacción de envío. */
+    /** Busca el contacto con bloqueo de escritura durante la transacción de envío. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<Contact> findLockedByOwnerIdAndContactUserId(
-            Long ownerId, Long contactUserId);
+    Optional<Contact> findLockedByOwnerIdAndContactUserId(Long ownerId, Long contactUserId);
 }

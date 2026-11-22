@@ -9,14 +9,16 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 
-/** Repositorio de códigos de confirmación y recuperación de contraseña. */
+/** Repositorio de códigos de confirmación de correo y recuperación de contraseña. */
 public interface EmailTokenRepository extends JpaRepository<EmailToken, Long> {
 
-	void deleteByUser(User user);
+    /** Elimina los códigos de correo asociados al usuario. */
+    void deleteByUser(User user);
 
-	Optional<EmailToken> findByTokenHash(String tokenHash);
+    /** Busca el código de correo por su hash almacenado. */
+    Optional<EmailToken> findByTokenHash(String tokenHash);
 
-	/** Obtiene los tokens del tipo indicado que aún están pendientes. */
-	@Lock(LockModeType.PESSIMISTIC_WRITE)
-	List<EmailToken> findByUserAndTypeAndUsedAtIsNull(User user, TokenType type);
+    /** Obtiene con bloqueo de escritura los códigos del tipo indicado que siguen sin uso. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<EmailToken> findByUserAndTypeAndUsedAtIsNull(User user, TokenType type);
 }

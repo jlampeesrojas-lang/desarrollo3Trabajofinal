@@ -8,11 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 /** Repositorio de conversaciones. */
 public interface ChatRepository extends JpaRepository<Chat, Long> {
 
+    /** Comprueba si el código ya pertenece a una conversación. */
     boolean existsByCode(String code);
 
-    /** Busca la conversación personal de IA del usuario. */
+    /** Busca la conversación personal del usuario con la IA. */
     Optional<Chat> findByAiOwnerId(Long aiOwnerId);
 
-    /** Lista las conversaciones por actividad para el panel de administración. */
+    /** Lista las conversaciones por fecha del último mensaje para el panel de administración. */
     List<Chat> findAllByOrderByLastMessageAtDesc();
 }

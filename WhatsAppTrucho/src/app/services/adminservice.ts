@@ -177,7 +177,7 @@ export class AdminService {
     }
 
     /** Pide los eventos más recientes de la fecha elegida. */
-    listarAuditoria(limite: number, fecha: string = ''): Observable<RegistroAuditoria[]> {
+    listarAuditoria(limite: number, fecha = ''): Observable<RegistroAuditoria[]> {
         if (USAR_MOCK) {
             return of(this.auditoriaMock);
         }

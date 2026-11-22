@@ -27,6 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final JwtUtil jwtUtil;
   private final UserDetailsService userDetailsService;
 
+  /** Recibe el validador de JWT y el servicio que carga al usuario autenticado. */
   public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
     this.jwtUtil = jwtUtil;
     this.userDetailsService = userDetailsService;

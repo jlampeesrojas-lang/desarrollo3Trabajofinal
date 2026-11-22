@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {catchError, map, of, switchMap, throwError} from 'rxjs';
 
-import {API, AuthService} from './authservice';
+import {API} from './authservice';
 import type {Chat, MensajeHistorial} from '../models/chat';
 import {BloqueoChatService} from "./bloqueochatservice";
 

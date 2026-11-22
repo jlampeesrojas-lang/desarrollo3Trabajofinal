@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {API, AuthService} from './authservice';
 
+/** Administra el permiso temporal que utiliza esta pestaña para acceder al chat. */
 @Injectable({providedIn: 'root'})
 export class BloqueoChatService {
     private permiso = '';
@@ -20,16 +21,19 @@ export class BloqueoChatService {
         return headers;
     }
 
+    /** Solicita la clave compartida del chat usando la contraseña de la cuenta. */
     verClave(id: number, password: string) {
         return this.http.post(`${API}/chats/${id}/clave`, {password},
             {headers: this.headers(), responseType: 'text'});
     }
 
+    /** Envía la clave del chat y solicita un permiso temporal de lectura. */
     desbloquear(id: number, clave: string) {
         return this.http.post(`${API}/chats/${id}/desbloquear`, {clave},
             {headers: this.headers(), responseType: 'text'});
     }
 
+    /** Conserva el permiso recibido para incluirlo en las peticiones del chat. */
     guardarPermiso(permiso: string): void {
         this.permiso = permiso;
     }
@@ -41,8 +45,14 @@ export class BloqueoChatService {
         this.permiso = '';
 
         if (id !== null && habiaPermiso) {
-            this.http.post(`${API}/chats/${id}/bloquear`, null, {headers})
-                .subscribe({error: () => {}});
+            this.http.post(`${API}/chats/${id}/bloquear`, null, {
+                headers,
+                responseType: 'text'
+            }).subscribe({
+                error: () => {
+                    console.warn('No se pudo confirmar el bloqueo del chat en el servidor.');
+                }
+            });
         }
     }
 }

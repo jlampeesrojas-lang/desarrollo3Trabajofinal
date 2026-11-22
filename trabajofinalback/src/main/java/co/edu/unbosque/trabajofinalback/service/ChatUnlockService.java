@@ -18,6 +18,10 @@ public class ChatUnlockService {
 	private final AuthContext auth;
 	private final HttpServletRequest peticion;
 
+	/**
+	 * Recibe el repositorio de permisos, el usuario autenticado y la petición
+	 * actual.
+	 */
 	public ChatUnlockService(PermisoChatRepository permisoRepo, AuthContext auth, HttpServletRequest peticion) {
 		this.permisoRepo = permisoRepo;
 		this.auth = auth;

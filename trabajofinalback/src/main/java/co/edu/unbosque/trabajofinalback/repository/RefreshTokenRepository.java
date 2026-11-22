@@ -12,24 +12,26 @@ import org.springframework.transaction.annotation.Transactional;
 /** Repositorio de tokens de renovación de sesión. */
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
-	void deleteByUser(User user);
+    /** Elimina los tokens de renovación asociados al usuario. */
+    void deleteByUser(User user);
 
-	Optional<RefreshToken> findByTokenHash(String tokenHash);
+    /** Busca un token de renovación por su hash almacenado. */
+    Optional<RefreshToken> findByTokenHash(String tokenHash);
 
-	/** Obtiene los tokens de renovación que siguen activos. */
-	@Lock(LockModeType.PESSIMISTIC_WRITE)
-	List<RefreshToken> findByUserAndRevokedFalse(User user);
+    /** Obtiene con bloqueo de escritura los tokens del usuario que siguen sin revocar. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<RefreshToken> findByUserAndRevokedFalse(User user);
 
-	/** Revoca las sesiones activas del usuario. */
-	@Transactional
-	default int revokeAllByUser(User user) {
-		List<RefreshToken> activos = findByUserAndRevokedFalse(user);
+    /** Revoca los tokens activos del usuario y devuelve cuántos se revocaron. */
+    @Transactional
+    default int revokeAllByUser(User user) {
+        List<RefreshToken> activos = findByUserAndRevokedFalse(user);
 
-		for (RefreshToken token : activos) {
-			token.setRevoked(true);
-		}
+        for (RefreshToken token : activos) {
+            token.setRevoked(true);
+        }
 
-		flush();
-		return activos.size();
-	}
+        flush();
+        return activos.size();
+    }
 }

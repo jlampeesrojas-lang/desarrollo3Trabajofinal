@@ -24,9 +24,11 @@ public class PermisoChat {
     @Column(nullable = false)
     private Instant venceEn;
 
+    /** Constructor que utiliza JPA para recuperar un permiso guardado. */
     protected PermisoChat() {
     }
 
+    /** Crea un permiso para un usuario y un chat con la fecha de vencimiento indicada. */
     public PermisoChat(String codigo, Long usuarioId, Long chatId, Instant venceEn) {
         this.codigo = codigo;
         this.usuarioId = usuarioId;

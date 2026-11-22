@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+/** Permite consultar la clave compartida y controlar el bloqueo de una conversación. */
 @RestController
 @RequestMapping("/chats")
 public class ChatLockController {
@@ -29,6 +30,7 @@ public class ChatLockController {
     private final ChatUnlockService permisos;
     private final PasswordEncoder passwords;
 
+    /** Recibe los servicios que verifican al participante, su contraseña y el permiso del chat. */
     public ChatLockController(AuthContext auth, ChatRepository chats,
             ChatParticipantRepository participantes, UserRepository usuarios,
             ChatCryptoService crypto, ChatUnlockService permisos,
