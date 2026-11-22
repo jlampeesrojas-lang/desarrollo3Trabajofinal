@@ -19,6 +19,7 @@ export class Paginaprincipalcomponent implements OnInit, OnDestroy {
     seccion: 'chats' | 'ia' | 'contactos' = 'chats';
     contactos: Contacto[] = [];
     seleccionado: Contacto | null = null;
+    chatAbiertoEnMovil = false;
     avisoContactos = '';
     miUsuario = 'Usuario';
     busquedaChat = '';
@@ -56,6 +57,17 @@ export class Paginaprincipalcomponent implements OnInit, OnDestroy {
         this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
         this.esAdmin = this.auth.obtenerRol() === 'ADMIN';
         this.cargarContactos();
+    }
+
+    /** Abre el contacto seleccionado o la conversación con la IA. */
+    abrirConversacion(contacto: Contacto | null): void {
+        this.seleccionado = contacto;
+        this.chatAbiertoEnMovil = true;
+    }
+
+    /** Vuelve a la lista de chats en la vista móvil. */
+    volverAChats(): void {
+        this.chatAbiertoEnMovil = false;
     }
 
     /** Actualiza los contactos de la barra lateral. */
@@ -147,9 +159,7 @@ export class Paginaprincipalcomponent implements OnInit, OnDestroy {
         this.router.navigate(['/admin']);
     }
 
-    /**
-     * Abre la pantalla de información de la empresa y preguntas frecuentes.
-     */
+    /** Abre la pantalla de información de la empresa y preguntas frecuentes. */
     irAInformacion(): void {
         this.router.navigate(['/informacion']);
     }

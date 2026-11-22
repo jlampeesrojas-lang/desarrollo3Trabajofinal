@@ -168,11 +168,25 @@ export class AdminService {
         });
     }
 
-    /** Consulta en el backend la ubicación aproximada de una dirección IP. */
+    /** Consulta la ubicación de una IP pública para la auditoría. */
     ubicarIp(ip: string): Observable<{ text: string }> {
+        const direccion = ip.trim();
+        const esLocal = direccion === '::1'
+            || direccion === '0:0:0:0:0:0:0:1'
+            || direccion.startsWith('127.')
+            || direccion.startsWith('10.')
+            || direccion.startsWith('192.168.')
+            || /^172\.(1[6-9]|2[0-9]|3[01])\./.test(direccion);
+
+        if (!direccion || esLocal) {
+            return throwError(() => ({
+                error: {mensaje: 'No se pudo encontrar la IP.'}
+            }));
+        }
+
         return this.http.get<{ text: string }>(`${API}/ip/ubicacion`, {
             headers: this.headers(),
-            params: {ip}
+            params: {ip: direccion}
         });
     }
 
