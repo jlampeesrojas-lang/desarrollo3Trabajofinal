@@ -146,4 +146,11 @@ export class Paginaprincipalcomponent implements OnInit, OnDestroy {
     irAAdmin(): void {
         this.router.navigate(['/admin']);
     }
+
+    /**
+     * Abre la pantalla de información de la empresa y preguntas frecuentes.
+     */
+    irAInformacion(): void {
+        this.router.navigate(['/informacion']);
+    }
 }

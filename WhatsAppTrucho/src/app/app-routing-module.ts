@@ -7,6 +7,7 @@ import {Admincomponent} from './components/admincomponent/admincomponent';
 import {Confirmaremailcomponent} from './components/confirmaremailcomponent/confirmaremailcomponent';
 import {Contactoscomponent} from "./components/contactoscomponent/contactoscomponent";
 import {Errorcomponent} from "./components/errorcomponent/errorcomponent";
+import {Informacioncomponent} from "./components/informacioncomponent/informacioncomponent";
 
 /** Solo deja entrar si hay sesión iniciada; si no, manda al login. */
 const sesionRequerida: CanActivateFn = () =>
@@ -20,11 +21,12 @@ const routes: Routes = [
     { path: 'confirm-email', component: Confirmaremailcomponent },
     { path: 'chats', redirectTo: 'principal', pathMatch: 'full' },
     { path: 'contactos', component: Contactoscomponent, canActivate: [sesionRequerida] },
+    { path: 'informacion', component: Informacioncomponent, canActivate: [sesionRequerida] },
     { path: 'error/:codigo', component: Errorcomponent },
     { path: '**', redirectTo: 'error/404' },
 ];
 
-/** Rutas de la aplicación: login, principal, admin, contactos, confirmar correo y páginas de error. */
+/** Rutas de la aplicación: login, principal, admin, contactos, información, confirmar correo y páginas de error. */
 @NgModule({
     imports: [RouterModule.forRoot(routes)],
     exports: [RouterModule]
