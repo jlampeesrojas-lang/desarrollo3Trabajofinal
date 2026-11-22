@@ -8,7 +8,7 @@
                     <button type="button"
                             class="administrador"
                             (click)="irAAdmin()">
-                       Admin
+                        Admin
                     </button>
                 }
 
@@ -87,3 +87,11 @@
 
     </section>
 </main>
+
+@if (!esAdmin) {
+    <button type="button"
+            class="informacion"
+            (click)="irAInformacion()">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i> Información
+    </button>
+}
