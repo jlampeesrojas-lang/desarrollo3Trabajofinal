@@ -13,7 +13,7 @@ import {
 } from '../models/authentication';
 
 
-export const API = 'http://localhost:8080';
+export const API = 'https://gpcueb.org/trabajofinalback';
 const USAR_MOCK = false;
 const USAR_MOCK_RECUPERAR = false;
 
