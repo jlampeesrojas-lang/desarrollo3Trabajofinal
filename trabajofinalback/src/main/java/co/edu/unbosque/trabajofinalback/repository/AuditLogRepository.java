@@ -2,41 +2,23 @@ package co.edu.unbosque.trabajofinalback.repository;
 
 import co.edu.unbosque.trabajofinalback.model.AuditAction;
 import co.edu.unbosque.trabajofinalback.model.AuditLog;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
-/** Repositorio de la auditoría. */
+/** Repositorio de los eventos de auditoría. */
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
-  /** Eventos de un usuario, paginados (para el panel de administración). */
-  Page<AuditLog> findByUserId(Long userId, Pageable pageable);
+    /** Obtiene una página de eventos del usuario indicado. */
+    Page<AuditLog> findByUserId(Long userId, Pageable pageable);
 
-  /** Eventos de un tipo, paginados. */
-  Page<AuditLog> findByAction(AuditAction action, Pageable pageable);
+    /** Obtiene una página de eventos que registran la acción indicada. */
+    Page<AuditLog> findByAction(AuditAction action, Pageable pageable);
 
-  /** Cuenta los eventos de un usuario y tipo. */
-  long countByUserIdAndAction(Long userId, AuditAction action);
+    /** Cuenta cuántas veces se registró una acción para un usuario. */
+    long countByUserIdAndAction(Long userId, AuditAction action);
 
-  /**
-   * Búsqueda con filtros opcionales: si un filtro llega en null, no se aplica. Lo más reciente
-   * primero.
-   */
-  @Query(
-      "select a from AuditLog a "
-          + "where (:userId is null or a.userId = :userId) "
-          + "and (:action is null or a.action = :action) "
-          + "and (:desde is null or a.createdAt >= :desde) "
-          + "and (:hasta is null or a.createdAt < :hasta) "
-          + "order by a.id desc")
-  List<AuditLog> search(
-      @Param("userId") Long userId,
-      @Param("action") AuditAction action,
-      @Param("desde") LocalDateTime desde,
-      @Param("hasta") LocalDateTime hasta,
-      Pageable pageable);
+    /** Lee los eventos anteriores al identificador indicado, del más reciente al más antiguo. */
+    List<AuditLog> findByIdLessThanOrderByIdDesc(Long id, Pageable pageable);
 }

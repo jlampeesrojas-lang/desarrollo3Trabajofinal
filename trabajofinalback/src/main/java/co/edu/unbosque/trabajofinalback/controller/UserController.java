@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 
 /**
  * Controlador REST para la gestión de usuarios. Proporciona endpoints para crear, leer, actualizar
@@ -685,5 +687,12 @@ public class UserController {
     } else {
       return new ResponseEntity<>("Error al eliminar", HttpStatus.NOT_FOUND);
     }
+  }
+  
+  /** Muestra un aviso cuando hay datos vinculados que impiden completar la operación. */
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<String> manejarDatosVinculados(DataIntegrityViolationException error) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+              .body("No se pudo completar la operación porque hay datos vinculados a esta cuenta.");
   }
 }

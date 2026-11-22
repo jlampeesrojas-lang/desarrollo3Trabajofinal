@@ -556,10 +556,48 @@ img {
         max-height: 110px;
         padding: 8px 14px 12px;
     }
-
-    .informacion {
+     .informacion {
         left: 16px;
         bottom: 90px;
         padding: 10px 16px;
+    }
+}
+
+.cabecera .acciones-seguridad {
+    margin-left: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.acciones-seguridad button {
+    border: 1px solid #494c57;
+    border-radius: 20px;
+    background: #202229;
+    color: #fff;
+    padding: 8px 14px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.acciones-seguridad button:hover:enabled {
+    border-color: #ed1745;
+}
+
+.acciones-seguridad button:disabled {
+    opacity: .45;
+    cursor: default;
+}
+
+@media (max-width: 640px) {
+    .cabecera {
+        flex-wrap: wrap;
+    }
+
+    .cabecera .acciones-seguridad {
+        width: 100%;
+        margin-left: 0;
     }
 }

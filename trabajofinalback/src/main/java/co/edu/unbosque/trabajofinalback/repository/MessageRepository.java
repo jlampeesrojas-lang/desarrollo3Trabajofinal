@@ -8,49 +8,38 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
-/** Repositorio de mensajes. */
+/** Repositorio de mensajes e historial de conversaciones. */
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-  /** Historial paginado: lo más reciente primero. */
-  @EntityGraph(attributePaths = "sender")
-  Page<Message> findByChatIdOrderByIdDesc(Long chatId, Pageable pageable);
+    /** Obtiene una página del historial con los mensajes más recientes primero. */
+    @EntityGraph(attributePaths = "sender")
+    Page<Message> findByChatIdOrderByIdDesc(Long chatId, Pageable pageable);
 
-  /** Último mensaje del chat. */
-  @EntityGraph(attributePaths = "sender")
-  Optional<Message> findFirstByChatIdOrderByIdDesc(Long chatId);
+    /** Obtiene el último mensaje de la conversación. */
+    @EntityGraph(attributePaths = "sender")
+    Optional<Message> findFirstByChatIdOrderByIdDesc(Long chatId);
 
-  /** Cantidad total de mensajes de un chat. */
-  long countByChatId(Long chatId);
+    /** Cuenta los mensajes guardados en el chat. */
+    long countByChatId(Long chatId);
 
-  /** No leídos: mensajes de otros enviados después de la última lectura. */
-  long countByChatIdAndSenderIdNotAndCreatedAtAfter(
-      Long chatId, Long senderId, LocalDateTime after);
+    /** Cuenta los mensajes posteriores a la fecha indicada cuyo remitente tiene otro ID. */
+    long countByChatIdAndSenderIdNotAndCreatedAtAfter(
+            Long chatId, Long senderId, LocalDateTime after);
 
-  /** No leídos cuando el usuario nunca ha abierto el chat. */
-  long countByChatIdAndSenderIdNot(Long chatId, Long senderId);
+    /** Cuenta los mensajes del chat cuyo remitente tiene un ID distinto al indicado. */
+    long countByChatIdAndSenderIdNot(Long chatId, Long senderId);
 
-  /** Mensajes de un chat con id mayor a afterId, del más antiguo al más reciente. */
-  @EntityGraph(attributePaths = "sender")
-  List<Message> findByChatIdAndIdGreaterThanOrderByIdAsc(Long chatId, Long afterId);
+    /** Obtiene los mensajes posteriores al último ID recibido, en orden de llegada. */
+    @EntityGraph(attributePaths = "sender")
+    List<Message> findByChatIdAndIdGreaterThanOrderByIdAsc(Long chatId, Long afterId);
 
-  /** Mensajes enviados por un usuario en todos sus chats, lo más reciente primero. */
-  @EntityGraph(attributePaths = "sender")
-  List<Message> findBySenderIdOrderByIdDesc(Long senderId, Pageable pageable);
+    /** Obtiene los mensajes enviados por un usuario, del más reciente al más antiguo. */
+    @EntityGraph(attributePaths = "sender")
+    List<Message> findBySenderIdOrderByIdDesc(Long senderId, Pageable pageable);
 
-  /**
-   * Mensajes recibidos por un usuario: los de sus chats que envió otra persona, con id mayor a
-   * afterId. Lo más reciente primero.
-   */
-  @EntityGraph(attributePaths = "sender")
-  @Query(
-      "select m from Message m "
-          + "where m.id > :afterId "
-          + "and (m.sender is null or m.sender.id <> :userId) "
-          + "and m.chat.id in (select p.chat.id from ChatParticipant p where p.user.id = :userId) "
-          + "order by m.id desc")
-  List<Message> findReceived(
-      @Param("userId") Long userId, @Param("afterId") Long afterId, Pageable pageable);
+    /** Lee un bloque de mensajes de los chats indicados entre dos identificadores. */
+    @EntityGraph(attributePaths = "sender")
+    List<Message> findByChatIdInAndIdGreaterThanAndIdLessThanOrderByIdDesc(
+            List<Long> chats, Long despues, Long antes, Pageable pageable);
 }

@@ -79,10 +79,30 @@
                     <p>Código: CH-IA0001</p>
                 </div>
             }
+            <div class="acciones-seguridad">
+                <button type="button"
+                        [disabled]="!chat.desbloqueado"
+                        (click)="chat.bloquear()">
+                    Bloquear
+                </button>
+
+                <button type="button"
+                        [disabled]="chat.chatId === null || chat.desbloqueado || chat.procesandoClave"
+                        (click)="chat.abrirDialogo('desbloquear')">
+                    Desbloquear
+                </button>
+
+                <button type="button"
+                        [disabled]="chat.chatId === null || chat.procesandoClave"
+                        (click)="chat.abrirDialogo('clave')">
+                    Ver clave
+                </button>
+            </div>
         </header>
         <app-chatscomponent
-                [contacto]="seleccionado"
-                [modoIa]="seleccionado === null">
+            #chat
+            [contacto]="seleccionado"
+            [modoIa]="seleccionado === null">
         </app-chatscomponent>
 
     </section>

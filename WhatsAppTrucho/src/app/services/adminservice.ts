@@ -169,22 +169,28 @@ export class AdminService {
     }
 
     /** Consulta en el backend la ubicación aproximada de una dirección IP. */
-    ubicarIp(ip: string): Observable<{text: string}> {
-        return this.http.get<{text: string}>(`${API}/ip/ubicacion`, {
+    ubicarIp(ip: string): Observable<{ text: string }> {
+        return this.http.get<{ text: string }>(`${API}/ip/ubicacion`, {
             headers: this.headers(),
             params: {ip}
         });
     }
 
-    /** Pide al back los últimos registros de auditoría. */
-    listarAuditoria(limite: number): Observable<RegistroAuditoria[]> {
+    /** Pide los eventos más recientes de la fecha elegida. */
+    listarAuditoria(limite: number, fecha = ''): Observable<RegistroAuditoria[]> {
         if (USAR_MOCK) {
             return of(this.auditoriaMock);
         }
-        const params = new HttpParams().set("limit", limite);
+
+        let params = new HttpParams().set('limit', limite);
+
+        if (fecha) {
+            params = params.set('desde', fecha).set('hasta', fecha);
+        }
+
         return this.http.get<RegistroAuditoria[]>(`${API}/admin/audit`, {
             headers: this.headers(),
-            params: params,
+            params
         });
     }
 

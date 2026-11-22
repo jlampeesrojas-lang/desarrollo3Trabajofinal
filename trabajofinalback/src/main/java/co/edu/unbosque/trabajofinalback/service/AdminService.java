@@ -32,7 +32,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Operaciones del panel de administración: auditoría, usuarios y lectura de chats. */
+/**
+ * Operaciones del panel de administración: auditoría, usuarios y lectura de
+ * chats.
+ */
 @Service
 public class AdminService {
 
@@ -79,7 +82,6 @@ public class AdminService {
 		this.auditService = auditService;
 	}
 
-
 	/**
 	 * Devuelve los últimos eventos de auditoría con el nombre de usuario.
 	 *
@@ -104,8 +106,8 @@ public class AdminService {
 	 * @return eventos de auditoría, del más reciente al más antiguo
 	 */
 	@Transactional(readOnly = true)
-	public List<AuditAdminDTO> audit(int limit, Long userId, String username, AuditAction action,
-			LocalDateTime desde, LocalDateTime hasta) {
+	public List<AuditAdminDTO> audit(int limit, Long userId, String username, AuditAction action, LocalDateTime desde,
+			LocalDateTime hasta) {
 		int tamano = Math.max(1, Math.min(limit, LIMITE_MAXIMO_AUDITORIA));
 
 		if (username != null && !username.isBlank()) {
@@ -116,7 +118,7 @@ public class AdminService {
 			userId = usuario.get().getId();
 		}
 
-		List<AuditLog> eventos = auditRepo.search(userId, action, desde, hasta, PageRequest.of(0, tamano));
+		List<AuditLog> eventos = filtrarEventos(userId, action, desde, hasta, tamano);
 
 		Set<Long> ids = new HashSet<>();
 		for (AuditLog evento : eventos) {
@@ -140,7 +142,6 @@ public class AdminService {
 
 		return resultado;
 	}
-
 
 	/**
 	 * Desactiva un usuario: ya no puede iniciar sesión y se cierran todas sus
@@ -202,7 +203,6 @@ public class AdminService {
 		return 0;
 	}
 
-
 	/**
 	 * Devuelve todos los chats con participantes y cantidad de mensajes.
 	 *
@@ -263,8 +263,7 @@ public class AdminService {
 			String tipo = mensaje.getType() == null ? null : mensaje.getType().name();
 
 			MensajeAdminDTO fila = new MensajeAdminDTO(mensaje.getId(), remitente, tipo,
-					descifrarSeguro(claveReal, mensaje.getContentEnc()), mensaje.getMediaId(),
-					mensaje.getCreatedAt());
+					descifrarSeguro(claveReal, mensaje.getContentEnc()), mensaje.getMediaId(), mensaje.getCreatedAt());
 			resultado.add(fila);
 		}
 
@@ -286,12 +285,15 @@ public class AdminService {
 		return crypto.recuperarLlave(chat.getKeyEnc());
 	}
 
-	// ============================================================ UTILIDADES
-
 	/** Busca un chat por id o responde 404 si no existe. */
 	private Chat buscarChat(Long chatId) {
-		return chatRepo.findById(chatId)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chat no encontrado"));
+	    Optional<Chat> chat = chatRepo.findById(chatId);
+
+	    if (chat.isEmpty()) {
+	        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chat no encontrado");
+	    }
+
+	    return chat.get();
 	}
 
 	/** Compara dos claves en tiempo constante; devuelve false si alguna es null. */
@@ -303,7 +305,10 @@ public class AdminService {
 				recibida.getBytes(StandardCharsets.UTF_8));
 	}
 
-	/** Descifra un mensaje; si falla, devuelve un texto de aviso en vez de romper la lista. */
+	/**
+	 * Descifra un mensaje; si falla, devuelve un texto de aviso en vez de romper la
+	 * lista.
+	 */
 	private String descifrarSeguro(String clave, String contenidoCifrado) {
 		if (contenidoCifrado == null) {
 			return null;
@@ -313,5 +318,49 @@ public class AdminService {
 		} catch (RuntimeException e) {
 			return MENSAJE_ILEGIBLE;
 		}
+	}
+
+	/** Busca coincidencias de auditoría desde el evento más reciente. */
+	private List<AuditLog> filtrarEventos(Long usuario, AuditAction accion, LocalDateTime desde, LocalDateTime hasta,
+			int limite) {
+
+		List<AuditLog> encontrados = new ArrayList<>();
+		long antes = Long.MAX_VALUE;
+
+		while (encontrados.size() < limite) {
+			List<AuditLog> bloque = auditRepo.findByIdLessThanOrderByIdDesc(antes, PageRequest.of(0, 100));
+
+			for (AuditLog evento : bloque) {
+				antes = evento.getId();
+
+				if (usuario != null && !usuario.equals(evento.getUserId())) {
+					continue;
+				}
+
+				if (accion != null && accion != evento.getAction()) {
+					continue;
+				}
+
+				if (desde != null && evento.getCreatedAt().isBefore(desde)) {
+					continue;
+				}
+
+				if (hasta != null && !evento.getCreatedAt().isBefore(hasta)) {
+					continue;
+				}
+
+				encontrados.add(evento);
+
+				if (encontrados.size() == limite) {
+					return encontrados;
+				}
+			}
+
+			if (bloque.size() < 100) {
+				break;
+			}
+		}
+
+		return encontrados;
 	}
 }

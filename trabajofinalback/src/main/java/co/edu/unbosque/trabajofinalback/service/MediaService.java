@@ -24,25 +24,16 @@ public class MediaService {
 
   /** Tamaño máximo de una imagen: 5 MB. */
   private static final long MAX_IMAGEN = 5L * 1024 * 1024;
-
   /** Tamaño máximo de un audio: 10 MB. */
   private static final long MAX_AUDIO = 10L * 1024 * 1024;
-
   /** Longitud máxima del texto que acompaña al archivo. */
   private static final int MAX_CARACTERES = 2000;
-
   @Autowired private ChatService chatServ;
-
   @Autowired private ChatRepository chatRepo;
-
   @Autowired private ChatParticipantRepository participantRepo;
-
   @Autowired private MediaRepository mediaRepo;
-
   @Autowired private MessageRepository messageRepo;
-
   @Autowired private ChatCryptoService crypto;
-
   @Autowired private AuditService auditService;
 
   /** Constructor vacío. */
@@ -100,6 +91,7 @@ public class MediaService {
             new Message(chat, p.getUser(), tipo, crypto.cifrar(llave, texto), media.getId()));
     chat.setLastMessageAt(m.getCreatedAt());
     chatRepo.save(chat);
+    chatServ.agregarContactoAlRecibir(chatId, userId);
 
     auditService.log(
         AuditAction.MESSAGE_SENT,
