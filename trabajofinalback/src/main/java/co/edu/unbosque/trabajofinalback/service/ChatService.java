@@ -453,8 +453,6 @@ public class ChatService {
         }
     }
 
-    }
-
     /** Genera un código de conversación que todavía no esté registrado. */
     private String generarCodigo() {
         String codigo;

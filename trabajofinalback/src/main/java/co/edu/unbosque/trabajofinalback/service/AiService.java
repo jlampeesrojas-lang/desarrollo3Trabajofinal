@@ -13,13 +13,12 @@ import co.edu.unbosque.trabajofinalback.model.MessageType;
 import co.edu.unbosque.trabajofinalback.repository.ChatRepository;
 import co.edu.unbosque.trabajofinalback.repository.MediaRepository;
 import co.edu.unbosque.trabajofinalback.repository.MessageRepository;
-
+import org.springframework.transaction.annotation.Transactional;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -37,11 +36,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -176,6 +173,7 @@ public class AiService {
     }
 
     /** Responde al último mensaje o adjunto y tiene en cuenta su leyenda. */
+    @Transactional
     public int reply(Long userId, Long chatId, String pregunta, ChatMessageDTO data, String ip) {
         int acceso = chatServ.checkAccess(userId, chatId);
         if (acceso != 0) {

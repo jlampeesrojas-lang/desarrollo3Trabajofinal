@@ -101,6 +101,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         this.solicitudes.add(apertura.subscribe({
             next: id => {
                 this.chatId = id;
+                this.cdr.markForCheck();
                 this.leerMensajes(id);
             },
             error: error => {
@@ -624,10 +625,11 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         );
     }
 
-    /** Abre el formulario de la acción seleccionada. */
+    /** Abre el cuadro para ver la clave o desbloquear la conversación. */
     abrirDialogo(tipo: 'clave' | 'desbloquear'): void {
         this.cerrarDialogo();
         this.dialogo = tipo;
+        this.cdr.markForCheck();
     }
 
     /** Limpia la contraseña, la clave y los avisos del cuadro. */
@@ -672,7 +674,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
                     this.desbloqueado = true;
                     this.mensajes = [];
                     this.cargado = false;
-                    this.venceBloqueo = setTimeout(() => this.bloquear(), 300000);
+                    this.venceBloqueo = setTimeout(() => this.bloquear(), 900000);
                     this.leerMensajes(id);
                 }
 
