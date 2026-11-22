@@ -151,6 +151,26 @@ button:focus-visible {
     transform: translateY(-1px);
 }
 
+.administrador {
+    flex: none;
+    margin-left: auto;
+    padding: 7px 14px;
+    border: 1px solid var(--rojo);
+    border-radius: 18px;
+    background: var(--rojo);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.administrador:hover {
+    background: var(--rojo-oscuro);
+    transform: translateY(-1px);
+}
+
 .fila-chat {
     position: relative;
     width: calc(100% - 16px);

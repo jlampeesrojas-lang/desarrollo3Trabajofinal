@@ -94,10 +94,14 @@ export class Chatsservice {
         );
     }
 
-    /** Sube los bytes del archivo al chat seleccionado. */
-    enviarArchivo(chatId: number, archivo: File) {
+    /** Sube los bytes del archivo al chat seleccionado, con el texto opcional que lo acompaña. */
+    enviarArchivo(chatId: number, archivo: File, texto = '') {
         const datos = new FormData();
         datos.append('archivo', archivo, archivo.name);
+
+        if (texto) {
+            datos.append('texto', texto);
+        }
 
         return this.http.post(
             `${API}/media/chat/${chatId}`,

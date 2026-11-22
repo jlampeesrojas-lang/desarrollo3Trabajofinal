@@ -1,5 +1,7 @@
 repomix-output.xml
 node_modules/
 *.class
-trabajofinalback/secrets.propertiessecrets.properties
-trabajofinalback/secrets.properties
+secrets.properties
+/trabajofinalback/target/
+.angular/
+*.tsbuildinfo

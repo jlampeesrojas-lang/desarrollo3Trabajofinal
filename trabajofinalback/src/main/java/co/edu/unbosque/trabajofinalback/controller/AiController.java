@@ -89,4 +89,35 @@ public class AiController {
 		return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
 				.body("La IA no está disponible en este momento. Intenta más tarde.");
 	}
+
+	/**
+	 * Hace que la IA responda al último mensaje del chat: una imagen, una nota de
+	 * voz, un GIF, un archivo o un texto ya enviados, junto con el texto opcional
+	 * que escribió el usuario.
+	 */
+	@Operation(summary = "Respuesta de la IA al último mensaje del chat", description = "Primero se envía el adjunto con /media/chat/{chatId} o el GIF con"
+			+ " /chats/sendmessage/{chatId}; luego se llama esta ruta. Body opcional: {\"contenido\": \"texto"
+			+ " escrito junto con el adjunto\"}. La IA entiende imágenes, notas de voz, GIF y archivos de texto.")
+	@PostMapping("/reply/{chatId}")
+	public ResponseEntity<String> reply(@PathVariable Long chatId,
+			@RequestBody(required = false) ChatMessageDTO pregunta, HttpServletRequest request) {
+		String texto = pregunta == null ? null : pregunta.getContenido();
+		ChatMessageDTO respuesta = new ChatMessageDTO();
+		int status = aiServ.reply(authContext.getUserId(), chatId, texto, respuesta, request.getRemoteAddr());
+
+		if (status == 0) {
+			return new ResponseEntity<>(respuesta.getContenido(), HttpStatus.CREATED);
+		} else if (status == 1) {
+			return new ResponseEntity<>("El chat no existe", HttpStatus.NOT_FOUND);
+		} else if (status == 2) {
+			return new ResponseEntity<>("No participas en este chat", HttpStatus.FORBIDDEN);
+		} else if (status == 3) {
+			return new ResponseEntity<>("No hay ningún mensaje tuyo para responder", HttpStatus.BAD_REQUEST);
+		} else if (status == 4) {
+			return new ResponseEntity<>("El texto supera los 2000 caracteres", HttpStatus.BAD_REQUEST);
+		} else {
+			return new ResponseEntity<>("La IA no está disponible en este momento. Intenta más tarde",
+					HttpStatus.BAD_GATEWAY);
+		}
+	}
 }

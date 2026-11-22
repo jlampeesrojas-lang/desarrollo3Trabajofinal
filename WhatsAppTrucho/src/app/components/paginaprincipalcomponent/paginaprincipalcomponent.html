@@ -4,6 +4,14 @@
             <div class="titulo">
                 <h1>Chats</h1>
 
+                @if (esAdmin) {
+                    <button type="button"
+                            class="administrador"
+                            (click)="irAAdmin()">
+                       Admin
+                    </button>
+                }
+
                 <button type="button"
                         class="contactos"
                         (click)="irAContactos()">

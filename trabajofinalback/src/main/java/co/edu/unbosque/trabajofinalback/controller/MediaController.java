@@ -76,12 +76,14 @@ public class MediaController {
 		this.random = new SecureRandom();
 	}
 
-	/** Guarda un archivo enviado desde la barra de mensajes. */
-	@Operation(summary = "Enviar un adjunto al chat")
+	/** Recibe el adjunto enviado desde la barra de mensajes del frontend, con un texto opcional. */
+	@Operation(summary = "Enviar un adjunto al chat", description = "Multipart con el campo archivo y, opcional, el campo texto que se muestra"
+			+ " en el mismo mensaje. Tamaño máximo: 10 MB.")
 	@Transactional
 	@PostMapping(path = "/chat/{chatId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<String> subir(@PathVariable("chatId") Long chatId,
-			@RequestParam("archivo") MultipartFile archivo) throws IOException {
+			@RequestParam("archivo") MultipartFile archivo,
+			@RequestParam(value = "texto", required = false) String texto) throws IOException {
 
 		Long usuarioId = auth.getUserId();
 		Optional<ChatParticipant> encontrado = participantes.findByChatIdAndUserId(chatId, usuarioId);
@@ -97,6 +99,11 @@ public class MediaController {
 		}
 		if (archivo.getSize() > MAX_BYTES) {
 			return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE).body("El archivo supera los 10 MB.");
+		}
+
+		String leyenda = texto == null ? "" : texto.trim();
+		if (leyenda.length() > 2000) {
+			return ResponseEntity.badRequest().body("El texto supera los 2000 caracteres.");
 		}
 
 		ChatParticipant participante = encontrado.get();
@@ -119,6 +126,9 @@ public class MediaController {
 
 		Message mensaje = new Message(chat, participante.getUser(), tipo, crypto.cifrar(llave, nombre),
 				adjunto.getId());
+		if (!leyenda.isEmpty()) {
+			mensaje.setCaptionEnc(crypto.cifrar(llave, leyenda));
+		}
 		mensaje = mensajes.save(mensaje);
 
 		chatServ.agregarContactoAlRecibir(chatId, usuarioId);

@@ -93,6 +93,11 @@ export class Admincomponent implements OnInit {
         }
     }
 
+    /** Abre la página de chats para que el administrador vea sus propias conversaciones. */
+    irAChats() {
+        this.router.navigate(["/principal"]);
+    }
+
     /** Cierra la sesión y vuelve al login. */
     salir() {
         this.auth.cerrarSesion();

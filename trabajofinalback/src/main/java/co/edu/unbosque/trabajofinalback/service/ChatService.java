@@ -434,10 +434,15 @@ public class ChatService {
         }
 
         dto.setMediaUrl(null);
+        dto.setLeyenda(null);
 
         if (legible) {
             dto.setContenido(crypto.descifrar(llave, mensaje.getContentEnc()));
             dto.setTipo(mensaje.getType().name());
+
+            if (mensaje.getCaptionEnc() != null) {
+                dto.setLeyenda(crypto.descifrar(llave, mensaje.getCaptionEnc()));
+            }
 
             if (mensaje.getMediaId() != null) {
                 dto.setMediaUrl("/media/getbyid/" + mensaje.getMediaId());
@@ -446,6 +451,8 @@ public class ChatService {
             dto.setContenido(mensaje.getContentEnc());
             dto.setTipo("CIFRADO");
         }
+    }
+
     }
 
     /** Genera un código de conversación que todavía no esté registrado. */

@@ -37,4 +37,13 @@ export class Iaservice {
             {headers: this.headers(), responseType: 'text'}
         );
     }
+
+    /** Pide a la IA que responda al último adjunto o GIF enviado al chat, con el texto opcional que lo acompaña. */
+    responder(chatId: number, contenido = '') {
+        return this.http.post(
+            `${API}/ai/reply/${chatId}`,
+            {contenido},
+            {headers: this.headers(), responseType: 'text'}
+        );
+    }
 }

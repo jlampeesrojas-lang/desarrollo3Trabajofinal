@@ -1,13 +1,14 @@
-import {ContactService} from "../../services/contactservice";
-import {Contacto} from "../../models/contacto";
-import {GifService} from "../../services/gifservice";
-import {ChangeDetectorRef, Component, OnInit, OnDestroy} from '@angular/core';
+import {ChangeDetectorRef, Component, OnDestroy, OnInit} from '@angular/core';
 import {Router} from '@angular/router';
-import {AuthService} from '../../services/authservice';
-import {Gif} from "../../models/gif";
 import {Subscription} from 'rxjs';
 
-/** Página principal: lista de chats, conversación, adjuntos, GIFs y audio. */
+import {Contacto} from '../../models/contacto';
+import {Gif} from '../../models/gif';
+import {AuthService} from '../../services/authservice';
+import {ContactService} from '../../services/contactservice';
+import {GifService} from '../../services/gifservice';
+
+/** Muestra las conversaciones, los contactos y el acceso a administración. */
 @Component({
     selector: 'app-paginaprincipalcomponent',
     standalone: false,
@@ -26,16 +27,16 @@ export class Paginaprincipalcomponent implements OnInit, OnDestroy {
     buscandoGif = false;
     avisoGif = '';
     preguntaIA = '';
+    esAdmin = false;
 
     busquedaContacto = '';
     mensajeContacto = '';
     errorContacto = '';
+
     private temporizadorContactos?: ReturnType<typeof setTimeout>;
     private solicitudContactos?: Subscription;
 
-    /**
-     * Inicializa los servicios de autenticación y navegación.
-     */
+    /** Recibe los servicios de sesión, contactos, GIF y navegación. */
     constructor(
         private contactosApi: ContactService,
         private auth: AuthService,
@@ -45,15 +46,15 @@ export class Paginaprincipalcomponent implements OnInit, OnDestroy {
     ) {
     }
 
-    /**
-     * Obtiene el nombre del usuario al iniciar el componente.
-     */
+    /** Comprueba la sesión, identifica al administrador y carga los contactos. */
     ngOnInit(): void {
         if (!this.auth.estaLogueado()) {
             this.router.navigate(['/error', '401']);
             return;
         }
+
         this.miUsuario = this.auth.obtenerUsuario() || 'Usuario';
+        this.esAdmin = this.auth.obtenerRol() === 'ADMIN';
         this.cargarContactos();
     }
 
@@ -79,25 +80,28 @@ export class Paginaprincipalcomponent implements OnInit, OnDestroy {
         });
     }
 
-    /** Espera dos segundos antes de consultar la lista otra vez. */
+    /** Espera dos segundos antes de actualizar los contactos otra vez. */
     private programarCargaContactos(): void {
         this.temporizadorContactos = setTimeout(() => this.cargarContactos(), 2000);
     }
 
-    /** Cancela el temporizador y la petición al salir de la pantalla. */
+    /** Cancela la actualización de contactos al salir de la pantalla. */
     ngOnDestroy(): void {
         clearTimeout(this.temporizadorContactos);
         this.solicitudContactos?.unsubscribe();
     }
 
-    /** Busca GIF con el texto ingresado y actualiza los resultados del chat. */
+    /** Busca GIF con el texto ingresado. */
     buscarGifs(texto: string): void {
         if (!this.auth.estaLogueado()) return;
+
         const query = texto.trim();
         if (!query || this.buscandoGif) return;
+
         this.buscandoGif = true;
         this.gifs = [];
         this.avisoGif = '';
+
         this.gifsApi.buscar(query).subscribe({
             next: lista => {
                 this.gifs = lista;
@@ -106,37 +110,40 @@ export class Paginaprincipalcomponent implements OnInit, OnDestroy {
                 this.cdr.markForCheck();
             },
             error: fallo => {
-                if (fallo.status === 401) this.auth.avisarVencimiento();
-                else this.avisoGif = typeof fallo.error === 'string' ? fallo.error : 'No se pudieron cargar los GIFs.';
+                if (fallo.status === 401) {
+                    this.auth.avisarVencimiento();
+                } else {
+                    this.avisoGif = typeof fallo.error === 'string'
+                        ? fallo.error
+                        : 'No se pudieron cargar los GIFs.';
+                }
+
                 this.buscandoGif = false;
                 this.cdr.markForCheck();
             }
         });
     }
 
-    /**
-     * Cambia la sección que se muestra en la página principal.
-     */
-    irASeccion(
-        seccion: 'chats' | 'ia' | 'contactos'
-    ): void {
+    /** Cambia la sección que se muestra en la página principal. */
+    irASeccion(seccion: 'chats' | 'ia' | 'contactos'): void {
         this.seccion = seccion;
         this.mensajeContacto = '';
         this.errorContacto = '';
     }
 
-    /**
-     * Cierra la sesión y redirige al usuario al inicio de sesión.
-     */
+    /** Cierra la sesión y vuelve al inicio de sesión. */
     salir(): void {
         this.auth.cerrarSesion();
         this.router.navigate(['/login']);
     }
 
-    /**
-     * Abre la pantalla de contactos.
-     */
+    /** Abre la pantalla de contactos. */
     irAContactos(): void {
         this.router.navigate(['/contactos']);
+    }
+
+    /** Abre el panel de administración. */
+    irAAdmin(): void {
+        this.router.navigate(['/admin']);
     }
 }
