@@ -24,236 +24,216 @@ import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Asistente de inteligencia artificial de los chats. Usa la API de Groq; la clave nunca sale del
- * back. Las respuestas se guardan cifradas como mensajes de tipo IA.
- */
+/** Consulta la API de Groq y guarda las conversaciones con la IA. */
 @Service
 public class AiService {
 
-  /** Instrucciones que recibe la IA antes de cada conversación. */
-  private static final String INSTRUCCIONES =
-      "Eres el asistente de un chat llamado WhatsApp Trucho. Responde siempre en español, de"
-          + " forma clara y breve (máximo tres párrafos).";
+	private static final String INSTRUCCIONES = "Eres el asistente de un chat llamado WhatsApp Trucho. Responde siempre en español, "
+			+ "de forma clara y breve (máximo tres párrafos).";
 
-  /** Longitud máxima de la pregunta. */
-  private static final int MAX_CARACTERES = 2000;
+	private static final int MAX_CARACTERES = 2000;
+	private static final int MAX_RESPUESTA = 4000;
+	private static final int MENSAJES_CONTEXTO = 10;
 
-  /** Longitud máxima de la respuesta que se guarda. */
-  private static final int MAX_RESPUESTA = 4000;
+	private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10))
+			.build();
 
-  /** Cantidad de mensajes anteriores del chat que se envían como contexto. */
-  private static final int MENSAJES_CONTEXTO = 10;
+	@Value("${groq.url}")
+	private String url;
 
-  /** Cliente HTTP compartido, con 10 segundos de espera para conectar. */
-  private static final HttpClient HTTP_CLIENT =
-      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+	@Value("${groq.api.key:}")
+	private String apiKey;
 
-  /** Dirección de la API (groq.url en application.properties). */
-  @Value("${groq.url}")
-  private String url;
+	@Value("${groq.model}")
+	private String modelo;
 
-  /** Clave de la API (variable de entorno GROQ_API_KEY). */
-  @Value("${groq.api.key:}")
-  private String apiKey;
+	@Autowired
+	private ChatService chatServ;
 
-  /** Modelo de IA que se usa (variable de entorno GROQ_MODEL o el valor por defecto). */
-  @Value("${groq.model}")
-  private String modelo;
+	@Autowired
+	private ChatUnlockService permisos;
 
-  @Autowired private ChatService chatServ;
+	@Autowired
+	private ChatRepository chatRepo;
 
-  @Autowired private ChatRepository chatRepo;
+	@Autowired
+	private MessageRepository messageRepo;
 
-  @Autowired private MessageRepository messageRepo;
+	@Autowired
+	private ChatCryptoService crypto;
 
-  @Autowired private ChatCryptoService crypto;
+	@Autowired
+	private AuditService auditService;
 
-  @Autowired private AuditService auditService;
+	/** Responde una pregunta directa sin consultar ni guardar historial. */
+	public String preguntar(String pregunta) throws AiApiException {
+		List<GroqMessageDTO> mensajes = new ArrayList<>();
+		mensajes.add(new GroqMessageDTO("system", INSTRUCCIONES));
+		mensajes.add(new GroqMessageDTO("user", pregunta));
+		return consultar(mensajes);
+	}
 
-  /** Constructor vacío. */
-  public AiService() {}
+	/**
+	 * Consulta a la IA con el historial del chat y guarda la pregunta y la
+	 * respuesta.
+	 */
+	public int askInChat(Long userId, Long chatId, ChatMessageDTO data, String ip) {
+		int acceso = chatServ.checkAccess(userId, chatId);
+		if (acceso != 0) {
+			return acceso;
+		}
 
-  /**
-   * Hace una pregunta directa a la IA, sin guardar nada.
-   *
-   * @param pregunta texto de la pregunta
-   * @return la respuesta de la IA
-   * @throws AiApiException si la API falla o no hay clave configurada
-   */
-  public String preguntar(String pregunta) throws AiApiException {
-    List<GroqMessageDTO> mensajes = new ArrayList<>();
-    mensajes.add(new GroqMessageDTO("system", INSTRUCCIONES));
-    mensajes.add(new GroqMessageDTO("user", pregunta));
-    return consultar(mensajes);
-  }
+		if (!permisos.abierto(chatId)) {
+			throw new ResponseStatusException(HttpStatus.LOCKED, "Desbloquea el chat para consultar a la IA.");
+		}
 
-  /**
-   * Pregunta a la IA dentro de un chat. Guarda la pregunta como mensaje de texto del usuario y la
-   * respuesta como mensaje de tipo IA, ambas cifradas. Llena los datos de la respuesta en el mismo
-   * DTO.
-   *
-   * @return 0 = respondió, 1 = el chat no existe, 2 = no participa, 3 = pregunta vacía, 4 = más de
-   *     2000 caracteres, 5 = la IA no está disponible
-   */
-  public int askInChat(Long userId, Long chatId, ChatMessageDTO data, String ip) {
-    int acceso = chatServ.checkAccess(userId, chatId);
-    if (acceso != 0) {
-      return acceso;
-    }
-    String texto = data.getContenido();
-    if (texto == null || texto.isBlank()) {
-      return 3;
-    }
-    texto = texto.trim();
-    if (texto.length() > MAX_CARACTERES) {
-      return 4;
-    }
+		String texto = data.getContenido();
+		if (texto == null || texto.isBlank()) {
+			return 3;
+		}
 
-    String respuesta;
-    try {
-      respuesta = consultar(construirContexto(chatId, texto));
-    } catch (AiApiException e) {
-      System.err.println("IA no disponible: " + e.getMessage());
-      return 5;
-    }
+		texto = texto.trim();
+		if (texto.length() > MAX_CARACTERES) {
+			return 4;
+		}
 
-    ChatMessageDTO pregunta = new ChatMessageDTO();
-    pregunta.setContenido(texto);
-    chatServ.sendMessage(userId, chatId, pregunta, ip);
+		String respuesta;
+		try {
+			respuesta = consultar(construirContexto(chatId, texto));
+		} catch (AiApiException e) {
+			return 5;
+		}
 
-    Chat chat = chatRepo.findById(chatId).get();
-    String llave = crypto.recuperarLlave(chat.getKeyEnc());
-    Message m =
-        messageRepo.save(
-            new Message(chat, null, MessageType.IA, crypto.cifrar(llave, respuesta), null));
-    chat.setLastMessageAt(m.getCreatedAt());
-    chatRepo.save(chat);
+		ChatMessageDTO pregunta = new ChatMessageDTO();
+		pregunta.setContenido(texto);
+		int estado = chatServ.sendMessage(userId, chatId, pregunta, ip);
+		if (estado != 0) {
+			return estado;
+		}
 
-    auditService.log(
-        AuditAction.MESSAGE_SENT,
-        userId,
-        ip,
-        "chatId=" + chatId + " messageId=" + m.getId() + " tipo=IA caracteres=" + respuesta.length());
+		Chat chat = chatRepo.findById(chatId).orElseThrow();
+		String llave = crypto.recuperarLlave(chat.getKeyEnc());
+		Message mensaje = new Message(chat, null, MessageType.IA, crypto.cifrar(llave, respuesta), null);
+		mensaje = messageRepo.save(mensaje);
 
-    data.setId(m.getId());
-    data.setChatId(chatId);
-    data.setRemitenteId(null);
-    data.setRemitenteNombre("IA");
-    data.setContenido(respuesta);
-    data.setTipo(MessageType.IA.name());
-    data.setFechaEnvio(m.getCreatedAt().toString());
-    return 0;
-  }
+		chat.setLastMessageAt(mensaje.getCreatedAt());
+		chatRepo.save(chat);
 
-  /**
-   * Arma la conversación que se envía a la IA: las instrucciones, los últimos mensajes del chat y
-   * la pregunta nueva.
-   */
-  private List<GroqMessageDTO> construirContexto(Long chatId, String pregunta) {
-    List<GroqMessageDTO> mensajes = new ArrayList<>();
-    mensajes.add(new GroqMessageDTO("system", INSTRUCCIONES));
+		auditService.log(AuditAction.MESSAGE_SENT, userId, ip,
+				"chatId=" + chatId + " messageId=" + mensaje.getId() + " tipo=IA caracteres=" + respuesta.length());
 
-    List<ChatMessageDTO> recientes =
-        new ArrayList<>(chatServ.getMessages(chatId, 0, MENSAJES_CONTEXTO));
-    Collections.reverse(recientes);
+		data.setId(mensaje.getId());
+		data.setChatId(chatId);
+		data.setRemitenteId(null);
+		data.setRemitenteNombre("IA");
+		data.setFechaEnvio(mensaje.getCreatedAt().toString());
+		data.setMediaUrl(null);
 
-    for (ChatMessageDTO m : recientes) {
-      if (m.getContenido() == null || m.getContenido().isBlank()) {
-        continue;
-      }
-      if (MessageType.IA.name().equals(m.getTipo())) {
-        mensajes.add(new GroqMessageDTO("assistant", m.getContenido()));
-      } else {
-        mensajes.add(new GroqMessageDTO("user", m.getRemitenteNombre() + ": " + m.getContenido()));
-      }
-    }
+		if (permisos.abierto(chatId)) {
+			data.setContenido(respuesta);
+			data.setTipo(MessageType.IA.name());
+		} else {
+			data.setContenido(mensaje.getContentEnc());
+			data.setTipo("CIFRADO");
+		}
+		return 0;
+	}
 
-    mensajes.add(new GroqMessageDTO("user", pregunta));
-    return mensajes;
-  }
+	/** Arma las instrucciones, el historial cronológico y la pregunta para Groq. */
+	private List<GroqMessageDTO> construirContexto(Long chatId, String pregunta) {
+		List<GroqMessageDTO> mensajes = new ArrayList<>();
+		mensajes.add(new GroqMessageDTO("system", INSTRUCCIONES));
 
-  /** Revisa que la clave de la API de Groq esté configurada. */
-  private void validarClaveApi() throws AiApiException {
-    if (apiKey == null || apiKey.isBlank()) {
-      throw new AiApiException("Falta configurar la clave de la API de IA (GROQ_API_KEY).");
-    }
-  }
-  /** Arma la petición que se envía a Groq. */
-  private HttpRequest crearSolicitudGroq(List<GroqMessageDTO> mensajes) {
-    GroqRequestDTO cuerpo = new GroqRequestDTO(modelo, mensajes);
-    if (modelo.startsWith("openai/gpt-oss")) {
-      cuerpo.setReasoningEffort("low");
-    }
-    String json = new Gson().toJson(cuerpo);
+		List<ChatMessageDTO> recientes = new ArrayList<>(chatServ.historialParaIa(chatId, MENSAJES_CONTEXTO));
+		Collections.reverse(recientes);
 
-    return HttpRequest.newBuilder()
-        .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
-        .uri(URI.create(url))
-        .header("Content-Type", "application/json")
-        .header("Authorization", "Bearer " + apiKey)
-        .timeout(Duration.ofSeconds(30))
-        .build();
-  }
-  /**
-   * Envía la conversación a la API de Groq y devuelve el texto de la respuesta.
-   *
-   * @throws AiApiException si no hay clave, la API no responde, responde con error o devuelve algo
-   *     inesperado
-   */
-  private String consultar(List<GroqMessageDTO> mensajes) throws AiApiException {
-    validarClaveApi();
+		for (ChatMessageDTO mensaje : recientes) {
+			String contenido = mensaje.getContenido();
+			if (contenido == null || contenido.isBlank()) {
+				continue;
+			}
 
-    HttpRequest request = crearSolicitudGroq(mensajes);
+			if (MessageType.IA.name().equals(mensaje.getTipo())) {
+				mensajes.add(new GroqMessageDTO("assistant", contenido));
+			} else {
+				mensajes.add(new GroqMessageDTO("user", mensaje.getRemitenteNombre() + ": " + contenido));
+			}
+		}
 
-    HttpResponse<String> response = null;
-    try {
-      response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      e.printStackTrace();
-    }
+		mensajes.add(new GroqMessageDTO("user", pregunta));
+		return mensajes;
+	}
 
-    if (response == null) {
-      throw new AiApiException();
-    }
-    if (response.statusCode() == 401) {
-      throw new AiApiException("La clave de la API de IA no es válida.");
-    }
-    if (response.statusCode() == 429) {
-      throw new AiApiException("Se alcanzó el límite gratuito de la IA. Intenta en un momento.");
-    }
-    if (response.statusCode() != 200) {
-      System.err.println("Groq respondió " + response.statusCode() + ": " + response.body());
-      throw new AiApiException();
-    }
+	/** Comprueba que el backend tenga configurada la clave de Groq. */
+	private void validarClaveApi() throws AiApiException {
+		if (apiKey == null || apiKey.isBlank()) {
+			throw new AiApiException("Falta configurar la clave de la API de IA (GROQ_API_KEY).");
+		}
+	}
 
-    GroqResponseDTO respuesta = null;
-    try {
-      respuesta = new Gson().fromJson(response.body(), GroqResponseDTO.class);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+	/** Construye la petición HTTP que se envía a Groq. */
+	private HttpRequest crearSolicitudGroq(List<GroqMessageDTO> mensajes) {
+		GroqRequestDTO cuerpo = new GroqRequestDTO(modelo, mensajes);
+		if (modelo.startsWith("openai/gpt-oss")) {
+			cuerpo.setReasoningEffort("low");
+		}
 
-    if (respuesta == null
-        || respuesta.getChoices() == null
-        || respuesta.getChoices().isEmpty()
-        || respuesta.getChoices().get(0).getMessage() == null) {
-      throw new AiApiException("La API de IA devolvió una respuesta inesperada.");
-    }
+		String json = new Gson().toJson(cuerpo);
+		return HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+				.uri(URI.create(url)).header("Content-Type", "application/json")
+				.header("Authorization", "Bearer " + apiKey).timeout(Duration.ofSeconds(30)).build();
+	}
 
-    String contenido = respuesta.getChoices().get(0).getMessage().getContent();
-    if (contenido == null || contenido.isBlank()) {
-      throw new AiApiException("La IA no generó una respuesta.");
-    }
-    contenido = contenido.trim();
-    if (contenido.length() > MAX_RESPUESTA) {
-      contenido = contenido.substring(0, MAX_RESPUESTA);
-    }
-    return contenido;
-  }
+	/** Envía la conversación a Groq y extrae el texto de su respuesta. */
+	private String consultar(List<GroqMessageDTO> mensajes) throws AiApiException {
+		validarClaveApi();
+		HttpRequest request = crearSolicitudGroq(mensajes);
+		HttpResponse<String> response;
+
+		try {
+			response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+		} catch (IOException e) {
+			throw new AiApiException("No se pudo conectar con la API de IA.");
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new AiApiException("Se interrumpió la consulta a la IA.");
+		}
+
+		if (response.statusCode() == 401) {
+			throw new AiApiException("La clave de la API de IA no es válida.");
+		}
+		if (response.statusCode() == 429) {
+			throw new AiApiException("Se alcanzó el límite de la API de IA. Intenta en un momento.");
+		}
+		if (response.statusCode() != 200) {
+			throw new AiApiException();
+		}
+
+		GroqResponseDTO respuesta;
+		try {
+			respuesta = new Gson().fromJson(response.body(), GroqResponseDTO.class);
+		} catch (RuntimeException e) {
+			throw new AiApiException("La API de IA devolvió una respuesta inesperada.");
+		}
+
+		if (respuesta == null || respuesta.getChoices() == null || respuesta.getChoices().isEmpty()
+				|| respuesta.getChoices().get(0) == null || respuesta.getChoices().get(0).getMessage() == null) {
+			throw new AiApiException("La API de IA devolvió una respuesta inesperada.");
+		}
+
+		String contenido = respuesta.getChoices().get(0).getMessage().getContent();
+		if (contenido == null || contenido.isBlank()) {
+			throw new AiApiException("La IA no generó una respuesta.");
+		}
+
+		contenido = contenido.trim();
+		if (contenido.length() > MAX_RESPUESTA) {
+			contenido = contenido.substring(0, MAX_RESPUESTA);
+		}
+		return contenido;
+	}
 }

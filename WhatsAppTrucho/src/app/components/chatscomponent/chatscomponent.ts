@@ -13,6 +13,7 @@ import {
     OnDestroy
 } from '@angular/core';
 import {Iaservice} from "../../services/iaservice";
+import {BloqueoChatService} from "../../services/bloqueochatservice";
 
 /** Muestra la conversación del contacto seleccionado y permite enviar mensajes y adjuntos. */
 @Component({
@@ -42,7 +43,15 @@ export class Chatscomponent implements OnChanges, OnDestroy {
     menuAbierto = false;
     vistaAudio = '';
     @Input() modoIa = false;
+    desbloqueado = false;
+    dialogo: 'clave' | 'desbloquear' | null = null;
+    datoSecreto = '';
+    claveVisible = '';
+    errorBloqueo = '';
+    procesandoClave = false;
 
+    private venceBloqueo?: ReturnType<typeof setTimeout>;
+    private venceClaveVisible?: ReturnType<typeof setTimeout>;
     private solicitudes = new Subscription();
     private cargandoImagenes = new Set<number>();
     private temporizador?: ReturnType<typeof setTimeout>;
@@ -57,7 +66,8 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         private auth: AuthService,
         private cdr: ChangeDetectorRef,
         private gifsApi: GifService,
-        private iaApi: Iaservice
+        private iaApi: Iaservice,
+        private bloqueo: BloqueoChatService
     ) {
         this.usuario = this.auth.obtenerUsuario() || '';
     }
@@ -106,6 +116,10 @@ export class Chatscomponent implements OnChanges, OnDestroy {
         const versionAlConsultar = this.versionEnvio;
         this.solicitudes.add(this.servicio.obtenerMensajes(id).subscribe({
             next: lista => {
+                if (this.desbloqueado && lista.some(m => m.tipo === 'CIFRADO')) {
+                    this.bloquear();
+                    return;
+                }
                 if (this.textoEnProceso || versionAlConsultar !== this.versionEnvio) {
                     this.programarLectura(id);
                     return;
@@ -209,6 +223,7 @@ export class Chatscomponent implements OnChanges, OnDestroy {
 
     /** Envía el archivo seleccionado o el texto escrito. */
     enviar(historial: HTMLDivElement): void {
+        if (!this.desbloqueado) return;
         if (this.chatId === null || this.enviando) return;
 
         const contenido = this.texto.trim();
@@ -365,6 +380,11 @@ export class Chatscomponent implements OnChanges, OnDestroy {
 
     /** Cancela las consultas pendientes y libera los recursos de la conversación. */
     private limpiar(): void {
+        clearTimeout(this.venceBloqueo);
+        this.bloqueo.cerrar(this.chatId);
+        this.desbloqueado = false;
+        this.procesandoClave = false;
+        this.cerrarDialogo();
         this.menuAbierto = false;
         this.quitarAdjunto();
         clearTimeout(this.temporizador);
@@ -501,8 +521,6 @@ export class Chatscomponent implements OnChanges, OnDestroy {
                     this.versionEnvio++;
                     this.textoEnProceso = false;
                     this.enviando = false;
-
-                    // Spring ya guardó la pregunta y la respuesta con sus ids reales.
                     this.leerMensajes(chatId);
                     this.cdr.markForCheck();
                 },
@@ -559,5 +577,88 @@ export class Chatscomponent implements OnChanges, OnDestroy {
                 }
             })
         );
+    }
+
+    /** Abre el formulario de la acción seleccionada. */
+    abrirDialogo(tipo: 'clave' | 'desbloquear'): void {
+        this.cerrarDialogo();
+        this.dialogo = tipo;
+    }
+
+    /** Limpia la contraseña, la clave y los avisos del cuadro. */
+    cerrarDialogo(): void {
+        clearTimeout(this.venceClaveVisible);
+        this.dialogo = null;
+        this.datoSecreto = '';
+        this.claveVisible = '';
+        this.errorBloqueo = '';
+    }
+
+    /** Comprueba la contraseña de cuenta o la clave de conversación. */
+    confirmarDialogo(): void {
+        const id = this.chatId;
+        const accion = this.dialogo;
+
+        if (id === null || !accion || !this.datoSecreto || this.procesandoClave) return;
+
+        const valor = this.datoSecreto;
+        this.datoSecreto = '';
+        this.errorBloqueo = '';
+        this.procesandoClave = true;
+
+        const consulta = accion === 'clave'
+            ? this.bloqueo.verClave(id, valor)
+            : this.bloqueo.desbloquear(id, valor);
+
+        this.solicitudes.add(consulta.subscribe({
+            next: respuesta => {
+                this.procesandoClave = false;
+
+                if (accion === 'clave') {
+                    this.claveVisible = respuesta;
+                    this.venceClaveVisible = setTimeout(() => {
+                        this.cerrarDialogo();
+                        this.cdr.markForCheck();
+                    }, 15000);
+                } else {
+                    this.cerrarDialogo();
+                    this.limpiar();
+                    this.bloqueo.guardarPermiso(respuesta);
+                    this.desbloqueado = true;
+                    this.mensajes = [];
+                    this.cargado = false;
+                    this.venceBloqueo = setTimeout(() => this.bloquear(), 300000);
+                    this.leerMensajes(id);
+                }
+
+                this.cdr.markForCheck();
+            },
+            error: fallo => {
+                this.procesandoClave = false;
+                this.errorBloqueo = fallo.status === 403
+                    ? 'No se pudo verificar el dato ingresado.'
+                    : 'No se pudo completar la solicitud.';
+                this.comprobarSesion(fallo.status);
+                this.cdr.markForCheck();
+            }
+        }));
+    }
+
+    /** Borra el contenido legible y vuelve a cargar las burbujas cifradas. */
+    bloquear(): void {
+        const id = this.chatId;
+        this.limpiar();
+        this.texto = '';
+        this.textoEnProceso = false;
+        this.enviando = false;
+        this.panelGifAbierto = false;
+        this.resultadosGif = [];
+        this.avisoEnvio = '';
+        this.versionEnvio++;
+        this.mensajes = [];
+        this.cargado = false;
+
+        if (id !== null) this.leerMensajes(id);
+        this.cdr.markForCheck();
     }
 }

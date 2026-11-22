@@ -22,7 +22,9 @@
                          [class.propia]="m.tipo !== 'IA' && m.remitenteNombre === usuario"
                          [class.ajena]="m.tipo === 'IA' || m.remitenteNombre !== usuario">
 
-                    @if (m.tipo === 'GIF') {
+                    @if (m.tipo === 'CIFRADO') {
+                        <p class="texto texto-cifrado">{{ m.contenido }}</p>
+                    } @else if (m.tipo === 'GIF') {
                         <img class="foto" [src]="m.contenido" alt="GIF del chat">
 
                     } @else if (m.tipo === 'IMAGEN') {
@@ -135,53 +137,99 @@
             <p class="aviso" role="status">{{ avisoEnvio }}</p>
         }
 
-        <form class="barra" (ngSubmit)="enviar(historial)">
-            @if (!modoIa) {
-                <input #selectorArchivo type="file" hidden
-                       (change)="seleccionarArchivo(selectorArchivo)">
+        @if (desbloqueado) {
+            <form class="barra" (ngSubmit)="enviar(historial)">
+                @if (!modoIa) {
+                    <input #selectorArchivo type="file" hidden
+                           (change)="seleccionarArchivo(selectorArchivo)">
 
-                <div class="adjuntos" (keydown.escape)="menuAbierto = false; mas.focus()">
-                    <button #mas class="icono mas" type="button"
-                            aria-label="Opciones de adjuntos"
-                            [attr.aria-expanded]="menuAbierto"
-                            [disabled]="chatId === null || enviando || camaraAbierta"
-                            (click)="menuAbierto = !menuAbierto">
-                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                    </button>
+                    <div class="adjuntos" (keydown.escape)="menuAbierto = false; mas.focus()">
+                        <button #mas class="icono mas" type="button"
+                                aria-label="Opciones de adjuntos"
+                                [attr.aria-expanded]="menuAbierto"
+                                [disabled]="chatId === null || enviando || camaraAbierta"
+                                (click)="menuAbierto = !menuAbierto">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        </button>
 
-                    @if (menuAbierto) {
-                        <div class="menu">
-                            <button type="button"
-                                    (click)="menuAbierto = false; panelGifAbierto = true">
-                                <i class="fa-solid fa-film"></i> GIF
-                            </button>
-                            <button type="button"
-                                    (click)="menuAbierto = false; panelGifAbierto = false; selectorArchivo.click()">
-                                <i class="fa-solid fa-paperclip"></i> Archivo
-                            </button>
-                            <button type="button"
-                                    (click)="menuAbierto = false; panelGifAbierto = false; abrirCamara(videoCamara)">
-                                <i class="fa-solid fa-camera"></i> Cámara
-                            </button>
-                        </div>
+                        @if (menuAbierto) {
+                            <div class="menu">
+                                <button type="button"
+                                        (click)="menuAbierto = false; panelGifAbierto = true">
+                                    <i class="fa-solid fa-film"></i> GIF
+                                </button>
+                                <button type="button"
+                                        (click)="menuAbierto = false; panelGifAbierto = false; selectorArchivo.click()">
+                                    <i class="fa-solid fa-paperclip"></i> Archivo
+                                </button>
+                                <button type="button"
+                                        (click)="menuAbierto = false; panelGifAbierto = false; abrirCamara(videoCamara)">
+                                    <i class="fa-solid fa-camera"></i> Cámara
+                                </button>
+                            </div>
+                        }
+                    </div>
+
+                    @if (chatId !== null && !enviando && !archivo && !camaraAbierta) {
+                        <app-audiocomponent
+                                (audioListo)="prepararAdjunto($event)">
+                        </app-audiocomponent>
                     }
-                </div>
-
-                @if (chatId !== null && !enviando && !archivo && !camaraAbierta) {
-                    <app-audiocomponent
-                            (audioListo)="prepararAdjunto($event)">
-                    </app-audiocomponent>
                 }
-            }
-            <input class="entrada" type="text" name="textoMensaje"
-                   aria-label="Mensaje" placeholder="Escribe un mensaje..."
-                   maxlength="2000" [(ngModel)]="texto"
-                   [disabled]="chatId === null || enviando || !!archivo">
+                <input class="entrada" type="text" name="textoMensaje"
+                       aria-label="Mensaje" placeholder="Escribe un mensaje..."
+                       maxlength="2000" [(ngModel)]="texto"
+                       [disabled]="chatId === null || enviando || !!archivo">
 
-            <button class="accion enviar" type="submit"
-                    [disabled]="chatId === null || enviando || (!archivo && !texto.trim())">
-                {{ enviando ? 'Enviando…' : 'Enviar' }}
-            </button>
-        </form>
+                <button class="accion enviar" type="submit"
+                        [disabled]="chatId === null || enviando || (!archivo && !texto.trim())">
+                    {{ enviando ? 'Enviando…' : 'Enviar' }}
+                </button>
+            </form>
+        } @else {
+            <p class="barra-bloqueada">Desbloquea el chat para escribir.</p>
+        }
+        @if (dialogo) {
+            <div class="fondo-clave">
+                <form class="cuadro-clave"
+                      role="dialog"
+                      aria-modal="true"
+                      aria-labelledby="titulo-clave"
+                      (ngSubmit)="confirmarDialogo()">
+
+                    <h3 id="titulo-clave">
+                        {{ dialogo === 'clave' ? 'Ver clave del chat' : 'Desbloquear conversación' }}
+                    </h3>
+
+                    @if (claveVisible) {
+                        <p>Clave de esta conversación</p>
+                        <code>{{ claveVisible }}</code>
+                    } @else {
+                        <label for="secreto-chat">
+                            {{ dialogo === 'clave' ? 'Contraseña de tu cuenta' : 'Clave del chat' }}
+                        </label>
+                        <input id="secreto-chat" name="secretoChat" type="password"
+                               [(ngModel)]="datoSecreto" [disabled]="procesandoClave">
+
+                        @if (errorBloqueo) {
+                            <p class="aviso" role="alert">{{ errorBloqueo }}</p>
+                        }
+                    }
+
+                    <div class="botones-clave">
+                        <button type="button" class="secundario"
+                                [disabled]="procesandoClave" (click)="cerrarDialogo()">
+                            Cerrar
+                        </button>
+                        @if (!claveVisible) {
+                            <button type="submit" class="accion"
+                                    [disabled]="!datoSecreto || procesandoClave">
+                                {{ procesandoClave ? 'Verificando…' : 'Confirmar' }}
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
+        }
     </section>
 }

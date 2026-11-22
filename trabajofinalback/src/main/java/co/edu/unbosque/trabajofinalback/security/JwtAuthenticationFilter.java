@@ -57,7 +57,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           }
         }
       } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
-        // Token vencido, manipulado o de un usuario que ya no existe: se ignora y queda sin sesión.
         logger.debug("JWT rechazado: " + e.getMessage());
         SecurityContextHolder.clearContext();
       }

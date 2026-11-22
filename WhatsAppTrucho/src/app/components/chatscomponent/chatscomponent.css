@@ -395,3 +395,62 @@ input::placeholder {
         width: min(200px, 48vw);
     }
 }
+
+.texto-cifrado {
+    overflow-wrap: anywhere;
+    font-family: ui-monospace, monospace;
+    font-size: .85em;
+    line-height: 1.4;
+}
+
+.barra-bloqueada {
+    margin: 0;
+    padding: 16px;
+    text-align: center;
+    color: #b9bbc6;
+    background: #191b21;
+    border-top: 1px solid #30323b;
+}
+
+.fondo-clave {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgb(0 0 0 / 68%);
+}
+
+.cuadro-clave {
+    box-sizing: border-box;
+    width: min(100%, 370px);
+    display: grid;
+    gap: 14px;
+    padding: 22px;
+    color: #fff;
+    background: #191b21;
+    border: 1px solid #353842;
+    border-top: 3px solid #ed1745;
+    border-radius: 18px;
+}
+
+.cuadro-clave h3,
+.cuadro-clave p {
+    margin: 0;
+}
+
+.cuadro-clave input,
+.cuadro-clave code {
+    padding: 11px 14px;
+    color: #fff;
+    background: #101115;
+    border: 1px solid #40434e;
+    border-radius: 10px;
+}
+
+.botones-clave {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}

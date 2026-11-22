@@ -4,6 +4,7 @@ import {catchError, map, of, switchMap, throwError} from 'rxjs';
 
 import {API, AuthService} from './authservice';
 import type {Chat, MensajeHistorial} from '../models/chat';
+import {BloqueoChatService} from "./bloqueochatservice";
 
 @Injectable({
     providedIn: 'root'
@@ -12,17 +13,13 @@ export class Chatsservice {
 
     constructor(
         private http: HttpClient,
-        private auth: AuthService
+        private bloqueo: BloqueoChatService
     ) {
     }
 
     /** Crea las cabeceras HTTP con el token de acceso de la sesión actual. */
     private headers(): HttpHeaders {
-        const token = this.auth.obtenerToken();
-
-        return token
-            ? new HttpHeaders({Authorization: `Bearer ${token}`})
-            : new HttpHeaders();
+        return this.bloqueo.headers();
     }
 
     /** Busca una conversación usando el id del usuario contacto. */

@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {API, AuthService} from './authservice';
+import {BloqueoChatService} from "./bloqueochatservice";
 
 /** Abre la conversación privada del usuario y envía preguntas a la IA. */
 @Injectable({
@@ -10,19 +11,13 @@ export class Iaservice {
 
     constructor(
         private http: HttpClient,
-        private auth: AuthService
+        private bloqueo: BloqueoChatService
     ) {
     }
 
     /** Incluye el token de la sesión en las peticiones al backend. */
     private headers(): HttpHeaders {
-        const token = this.auth.obtenerToken();
-
-        if (token) {
-            return new HttpHeaders({Authorization: `Bearer ${token}`});
-        }
-
-        return new HttpHeaders();
+        return this.bloqueo.headers();
     }
 
     /** Obtiene el mismo id cada vez que el usuario abre su conversación. */
