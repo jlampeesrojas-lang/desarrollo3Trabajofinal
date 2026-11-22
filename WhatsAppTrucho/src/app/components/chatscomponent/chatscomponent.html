@@ -24,6 +24,10 @@
 
                     @if (m.tipo === 'CIFRADO') {
                         <p class="texto texto-cifrado">{{ m.contenido }}</p>
+                    } @else if (m.tipo === 'ELIMINADO') {
+                        <p class="texto eliminado">
+                            <i class="fa-solid fa-ban" aria-hidden="true"></i> {{ m.contenido }}
+                        </p>
                     } @else if (m.tipo === 'GIF') {
                         <img class="foto" [src]="m.contenido" alt="GIF del chat">
 
@@ -54,7 +58,7 @@
                         <p class="texto">{{ m.contenido }}</p>
                     }
 
-                     @if (m.tipo !== 'CIFRADO' && m.leyenda) {
+                    @if (m.tipo !== 'CIFRADO' && m.leyenda) {
                         <p class="texto">{{ m.leyenda }}</p>
                     }
                     <small>
@@ -62,6 +66,13 @@
                             Enviando…
                         } @else {
                             {{ m.fechaEnvio | date:'HH:mm' }}
+                        }
+                        @if (desbloqueado && m.id > 0 && m.tipo !== 'ELIMINADO' && m.tipo !== 'CIFRADO'
+                        && m.remitenteNombre === usuario) {
+                            <button type="button" class="borrar" aria-label="Eliminar mensaje"
+                                    (click)="eliminarMensaje(m)">
+                                <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                            </button>
                         }
                     </small>
                 </article>

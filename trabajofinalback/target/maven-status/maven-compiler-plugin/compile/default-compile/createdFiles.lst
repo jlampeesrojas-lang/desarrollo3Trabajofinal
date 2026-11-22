@@ -1,5 +1,6 @@
 co\edu\unbosque\trabajofinalback\util\TokenUtil.class
 co\edu\unbosque\trabajofinalback\model\EmailToken$TokenType.class
+co\edu\unbosque\trabajofinalback\repository\PermisoChatRepository.class
 co\edu\unbosque\trabajofinalback\controller\GifController.class
 co\edu\unbosque\trabajofinalback\dto\MensajeAdminDTO.class
 co\edu\unbosque\trabajofinalback\security\JwtAuthenticationFilter.class
@@ -18,6 +19,7 @@ co\edu\unbosque\trabajofinalback\dto\ChatMessageDTO.class
 co\edu\unbosque\trabajofinalback\repository\ChatParticipantRepository.class
 co\edu\unbosque\trabajofinalback\config\OpenApiConfig.class
 co\edu\unbosque\trabajofinalback\dto\RecuperarDTO.class
+co\edu\unbosque\trabajofinalback\controller\ChatLockController.class
 co\edu\unbosque\trabajofinalback\security\AuthContext.class
 co\edu\unbosque\trabajofinalback\service\IpLocationService.class
 co\edu\unbosque\trabajofinalback\dto\ResendConfirmationDTO.class
@@ -61,9 +63,11 @@ co\edu\unbosque\trabajofinalback\service\ContactService.class
 co\edu\unbosque\trabajofinalback\controller\AiController.class
 co\edu\unbosque\trabajofinalback\dto\ChatDTO.class
 co\edu\unbosque\trabajofinalback\exception\IpApiException.class
+co\edu\unbosque\trabajofinalback\service\ChatService$1.class
 co\edu\unbosque\trabajofinalback\model\MessageType.class
 co\edu\unbosque\trabajofinalback\dto\GroqChoiceDTO.class
 co\edu\unbosque\trabajofinalback\dto\ConfirmEmailDTO.class
+co\edu\unbosque\trabajofinalback\service\ChatUnlockService.class
 co\edu\unbosque\trabajofinalback\controller\AdminController.class
 co\edu\unbosque\trabajofinalback\dto\MessageDTO.class
 co\edu\unbosque\trabajofinalback\repository\MediaRepository.class
@@ -93,5 +97,6 @@ co\edu\unbosque\trabajofinalback\controller\ContactController.class
 co\edu\unbosque\trabajofinalback\model\EmailToken.class
 co\edu\unbosque\trabajofinalback\repository\EmailTokenRepository.class
 co\edu\unbosque\trabajofinalback\model\Chat.class
+co\edu\unbosque\trabajofinalback\model\PermisoChat.class
 co\edu\unbosque\trabajofinalback\model\User.class
 co\edu\unbosque\trabajofinalback\service\CRUDOperation.class

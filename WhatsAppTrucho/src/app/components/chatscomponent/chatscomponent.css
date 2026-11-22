@@ -454,3 +454,25 @@ input::placeholder {
     justify-content: flex-end;
     gap: 8px;
 }
+
+.texto.eliminado {
+    color: #a0a6b2;
+    font-style: italic;
+}
+
+.borrar {
+    margin-left: 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 0.85em;
+    opacity: 0.6;
+    cursor: pointer;
+    transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.borrar:hover {
+    opacity: 1;
+    color: #ff5c72;
+}

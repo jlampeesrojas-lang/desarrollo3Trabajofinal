@@ -12,12 +12,6 @@ import {
     CambiarClaveRequest,
 } from '../models/authentication';
 
-/** Campos del token JWT que usa el front. */
-interface DatosToken {
-    exp?: number;
-    sub?: string;
-    role?: string;
-}
 
 export const API = 'http://localhost:8080';
 const USAR_MOCK = false;

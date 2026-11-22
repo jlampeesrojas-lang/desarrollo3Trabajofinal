@@ -1,8 +1,8 @@
 package co.edu.unbosque.trabajofinalback.model;
 
 /**
- * Tipos de eventos que se registran en la auditoría (tabla audit_log). Back 2 usa MESSAGE_SENT y
- * ADMIN_READ_CHAT; los demás los registra el módulo de seguridad.
+ * Tipos de eventos que se registran en la auditoría (tabla audit_log). Back 2 usa MESSAGE_SENT,
+ * MESSAGE_DELETED y ADMIN_READ_CHAT; los demás los registra el módulo de seguridad.
  */
 public enum AuditAction {
   REGISTER,
@@ -17,6 +17,7 @@ public enum AuditAction {
   PASSWORD_RESET_REQUESTED,
   PASSWORD_RESET_DONE,
   MESSAGE_SENT,
+  MESSAGE_DELETED,
   ADMIN_READ_CHAT,
   ADMIN_USER_UPDATED
 }

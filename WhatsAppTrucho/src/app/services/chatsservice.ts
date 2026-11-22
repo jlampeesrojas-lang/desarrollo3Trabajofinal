@@ -110,6 +110,14 @@ export class Chatsservice {
         );
     }
 
+    /** Marca como eliminado un mensaje propio; el chat debe estar desbloqueado. */
+    eliminarMensaje(mensajeId: number) {
+        return this.http.delete(
+            `${API}/chats/deletemessage/${mensajeId}`,
+            {headers: this.headers(), responseType: 'text'}
+        );
+    }
+
     /** Recupera un adjunto con el token del usuario. */
     obtenerArchivo(ruta: string) {
         return this.http.get(`${API}${ruta}`, {
